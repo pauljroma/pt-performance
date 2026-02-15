@@ -263,13 +263,17 @@ final class SubscriptionManager: ObservableObject {
 
     // MARK: - Formatted Display Helpers
 
-    /// Formatted string for the subscription expiration date.
-    var formattedExpirationDate: String? {
-        guard let date = expirationDate else { return nil }
+    private static let mediumDateFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateStyle = .medium
         formatter.timeStyle = .none
-        return formatter.string(from: date)
+        return formatter
+    }()
+
+    /// Formatted string for the subscription expiration date.
+    var formattedExpirationDate: String? {
+        guard let date = expirationDate else { return nil }
+        return Self.mediumDateFormatter.string(from: date)
     }
 
     /// Human-readable status summary.

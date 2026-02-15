@@ -234,7 +234,7 @@ struct AddOnCardView: View {
 
                 if isPurchased {
                     Image(systemName: "checkmark.seal.fill")
-                        .foregroundColor(.green)
+                        .foregroundColor(DesignTokens.statusSuccess)
                         .font(.title3)
                 }
 
@@ -243,8 +243,8 @@ struct AddOnCardView: View {
                         .font(.system(size: 9, weight: .bold))
                         .foregroundColor(.white)
                         .padding(.horizontal, Spacing.xxs)
-                        .padding(.vertical, 2)
-                        .background(Color.orange)
+                        .padding(.vertical, Spacing.xxs)
+                        .background(DesignTokens.statusWarning)
                         .cornerRadius(CornerRadius.xs)
                 }
             }
@@ -270,7 +270,7 @@ struct AddOnCardView: View {
                 Text("Purchased")
                     .font(.caption)
                     .fontWeight(.semibold)
-                    .foregroundColor(.green)
+                    .foregroundColor(DesignTokens.statusSuccess)
             } else {
                 Text(addOn.formattedPrice)
                     .font(.subheadline)
@@ -285,7 +285,7 @@ struct AddOnCardView: View {
         .overlay(
             RoundedRectangle(cornerRadius: CornerRadius.md)
                 .strokeBorder(
-                    isPurchased ? Color.green.opacity(0.3) : Color(.systemGray5),
+                    isPurchased ? DesignTokens.statusSuccess.opacity(0.3) : Color(.systemGray5),
                     lineWidth: 1
                 )
         )
@@ -351,10 +351,10 @@ struct AddOnDetailSheet: View {
                     if isPurchased {
                         HStack(spacing: Spacing.xs) {
                             Image(systemName: "checkmark.seal.fill")
-                                .foregroundColor(.green)
+                                .foregroundColor(DesignTokens.statusSuccess)
                             Text("You own this add-on")
                                 .font(.headline)
-                                .foregroundColor(.green)
+                                .foregroundColor(DesignTokens.statusSuccess)
                         }
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, Spacing.md)
@@ -369,7 +369,10 @@ struct AddOnDetailSheet: View {
                                 .font(.caption)
                                 .foregroundColor(.secondary)
 
-                            Button(action: onPurchase) {
+                            Button {
+                                HapticFeedback.medium()
+                                onPurchase()
+                            } label: {
                                 HStack {
                                     if service.isPurchasing {
                                         ProgressView()
@@ -386,6 +389,7 @@ struct AddOnDetailSheet: View {
                                 .cornerRadius(CornerRadius.md)
                             }
                             .disabled(service.isPurchasing)
+                            .accessibilityLabel("Purchase \(addOn.name) for \(addOn.formattedPrice)")
                         }
                         .frame(maxWidth: .infinity)
                     }

@@ -295,7 +295,7 @@ struct StandardPaywallLayout: View {
             .font(.headline)
             .foregroundStyle(.white)
             .frame(maxWidth: .infinity)
-            .padding(.vertical, Spacing.md + 2)
+            .padding(.vertical, Spacing.lg)
             .background(
                 LinearGradient(
                     colors: [variant.ctaColor, variant.ctaColor.opacity(0.85)],
@@ -353,13 +353,17 @@ struct StandardPaywallLayout: View {
 
     // MARK: - Helpers
 
+    private static let currencyFormatter: NumberFormatter = {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .currency
+        formatter.locale = Locale.current
+        return formatter
+    }()
+
     private var monthlyEquivalent: String {
         if let annual = storeKit.annualProduct {
             let monthlyPrice = annual.price / 12
-            let formatter = NumberFormatter()
-            formatter.numberStyle = .currency
-            formatter.locale = Locale.current
-            return "(\(formatter.string(from: monthlyPrice as NSDecimalNumber) ?? "$5.00")/mo)"
+            return "(\(Self.currencyFormatter.string(from: monthlyPrice as NSDecimalNumber) ?? "$5.00")/mo)"
         }
         return "($5.00/mo)"
     }

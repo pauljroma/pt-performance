@@ -494,6 +494,10 @@ class StoreKitService: ObservableObject {
         return Self.productIDs.contains(productId)
     }
 
+    // MARK: - Formatters
+
+    private static let isoFormatter = ISO8601DateFormatter()
+
     // MARK: - Subscription Sync Request Model
 
     /// Request body for syncing subscription status to backend
@@ -539,8 +543,8 @@ class StoreKitService: ObservableObject {
                 purchased_products: Array(purchasedProductIDs),
                 owns_baseball_pack: ownsBaseballPack,
                 is_in_trial: isInTrialPeriod,
-                synced_at: ISO8601DateFormatter().string(from: Date()),
-                expires_at: expirationDate.map { ISO8601DateFormatter().string(from: $0) }
+                synced_at: Self.isoFormatter.string(from: Date()),
+                expires_at: expirationDate.map { Self.isoFormatter.string(from: $0) }
             )
 
             // Call edge function to update backend

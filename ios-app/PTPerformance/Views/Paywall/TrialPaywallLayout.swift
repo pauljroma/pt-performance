@@ -303,7 +303,7 @@ struct TrialPaywallLayout: View {
                 .font(.headline)
                 .foregroundStyle(.white)
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, Spacing.md + 2)
+                .padding(.vertical, Spacing.lg)
                 .background(
                     LinearGradient(
                         colors: [.modusCyan, .modusTealAccent],

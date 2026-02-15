@@ -195,7 +195,12 @@ class ReferralService: ObservableObject {
         let code = referralCode.isEmpty ? "MODUS" : referralCode
         let urlString = "https://app.moduspt.com/invite/\(code)"
         logger.info("Referral", "Generated referral link: \(urlString)")
-        return URL(string: urlString) ?? URL(string: "https://app.moduspt.com")!
+        guard let url = URL(string: urlString) else {
+            // Percent-encode the code in case it contains special characters
+            let fallback = "https://app.moduspt.com/invite/MODUS"
+            return URL(string: fallback)!  // Known-valid literal
+        }
+        return url
     }
 
     /// Copy referral code to clipboard

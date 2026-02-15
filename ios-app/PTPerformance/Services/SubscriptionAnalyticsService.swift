@@ -37,6 +37,26 @@ actor SubscriptionAnalyticsService {
 
     static let shared = SubscriptionAnalyticsService()
 
+    // MARK: - Shared Formatters (nonisolated to avoid repeated allocation)
+
+    private nonisolated static let iso8601Decoder: JSONDecoder = {
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        return decoder
+    }()
+
+    private nonisolated static let iso8601Encoder: JSONEncoder = {
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+        return encoder
+    }()
+
+    private nonisolated static let isoDateFormatter: ISO8601DateFormatter = {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        return formatter
+    }()
+
     // MARK: - Dependencies
 
     private let supabase: PTSupabaseClient
@@ -141,9 +161,7 @@ actor SubscriptionAnalyticsService {
                 .single()
                 .execute()
 
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
-            let metrics = try decoder.decode(SubscriptionMetrics.self, from: response.data)
+            let metrics = try Self.iso8601Decoder.decode(SubscriptionMetrics.self, from: response.data)
 
             // Update cache
             cachedMetrics = metrics
@@ -193,19 +211,14 @@ actor SubscriptionAnalyticsService {
         }
 
         do {
-            let formatter = ISO8601DateFormatter()
-            formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-
             let response = try await supabase.client
                 .from("daily_revenue")
                 .select("id, date, revenue, subscribers")
-                .gte("date", value: formatter.string(from: startDate))
+                .gte("date", value: Self.isoDateFormatter.string(from: startDate))
                 .order("date", ascending: true)
                 .execute()
 
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
-            let dataPoints = try decoder.decode([RevenueDataPoint].self, from: response.data)
+            let dataPoints = try Self.iso8601Decoder.decode([RevenueDataPoint].self, from: response.data)
 
             cachedRevenueHistory = dataPoints
             logger.success("SubscriptionAnalytics", "Fetched \(dataPoints.count) revenue data points for last \(days) days")
@@ -239,9 +252,7 @@ actor SubscriptionAnalyticsService {
                 .limit(limit)
                 .execute()
 
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
-            let events = try decoder.decode([ChurnEvent].self, from: response.data)
+            let events = try Self.iso8601Decoder.decode([ChurnEvent].self, from: response.data)
 
             logger.success("SubscriptionAnalytics", "Fetched \(events.count) churn events")
             return events
@@ -268,9 +279,7 @@ actor SubscriptionAnalyticsService {
                 .limit(limit)
                 .execute()
 
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
-            let events = try decoder.decode([ConversionEvent].self, from: response.data)
+            let events = try Self.iso8601Decoder.decode([ConversionEvent].self, from: response.data)
 
             logger.success("SubscriptionAnalytics", "Fetched \(events.count) conversion events")
             return events
@@ -297,9 +306,6 @@ actor SubscriptionAnalyticsService {
         logger.info("SubscriptionAnalytics", "Syncing \(eventsToSync.count) events to Supabase")
 
         do {
-            let encoder = JSONEncoder()
-            encoder.dateEncodingStrategy = .iso8601
-
             // Batch insert events
             try await supabase.client
                 .from("subscription_events")
@@ -334,9 +340,7 @@ actor SubscriptionAnalyticsService {
 
     private func persistPendingEvents() {
         do {
-            let encoder = JSONEncoder()
-            encoder.dateEncodingStrategy = .iso8601
-            let data = try encoder.encode(eventQueue)
+            let data = try Self.iso8601Encoder.encode(eventQueue)
             UserDefaults.standard.set(data, forKey: DefaultsKeys.pendingEvents)
         } catch {
             logger.warning("SubscriptionAnalytics", "Failed to persist pending events: \(error.localizedDescription)")
@@ -347,9 +351,7 @@ actor SubscriptionAnalyticsService {
         guard let data = UserDefaults.standard.data(forKey: DefaultsKeys.pendingEvents) else { return }
 
         do {
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
-            let events = try decoder.decode([SubscriptionEvent].self, from: data)
+            let events = try Self.iso8601Decoder.decode([SubscriptionEvent].self, from: data)
             if !events.isEmpty {
                 eventQueue.append(contentsOf: events)
                 logger.info("SubscriptionAnalytics", "Restored \(events.count) pending events from previous session")
@@ -361,9 +363,7 @@ actor SubscriptionAnalyticsService {
 
     private func persistCachedMetrics(_ metrics: SubscriptionMetrics) {
         do {
-            let encoder = JSONEncoder()
-            encoder.dateEncodingStrategy = .iso8601
-            let data = try encoder.encode(metrics)
+            let data = try Self.iso8601Encoder.encode(metrics)
             UserDefaults.standard.set(data, forKey: DefaultsKeys.cachedMetrics)
         } catch {
             logger.warning("SubscriptionAnalytics", "Failed to persist cached metrics: \(error.localizedDescription)")
@@ -374,9 +374,7 @@ actor SubscriptionAnalyticsService {
         guard let data = UserDefaults.standard.data(forKey: DefaultsKeys.cachedMetrics) else { return nil }
 
         do {
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
-            return try decoder.decode(SubscriptionMetrics.self, from: data)
+            return try Self.iso8601Decoder.decode(SubscriptionMetrics.self, from: data)
         } catch {
             logger.warning("SubscriptionAnalytics", "Failed to load persisted metrics: \(error.localizedDescription)")
             return nil

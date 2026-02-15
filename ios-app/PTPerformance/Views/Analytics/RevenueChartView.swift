@@ -290,7 +290,7 @@ struct RevenueChartView: View {
                         Text(String(format: "%@%.1f%%", isPositive ? "+" : "", percentChange))
                             .font(.subheadline.bold())
                     }
-                    .foregroundColor(isPositive ? .green : .red)
+                    .foregroundColor(isPositive ? DesignTokens.statusSuccess : DesignTokens.statusError)
                 }
             }
         }
@@ -395,12 +395,16 @@ struct RevenueChartView: View {
         }
     }
 
-    private func formatCurrency(_ value: Double) -> String {
+    private static let wholeCurrencyFormatter: NumberFormatter = {
         let formatter = NumberFormatter()
         formatter.numberStyle = .currency
         formatter.currencyCode = "USD"
         formatter.maximumFractionDigits = 0
-        return formatter.string(from: NSNumber(value: value)) ?? "$\(Int(value))"
+        return formatter
+    }()
+
+    private func formatCurrency(_ value: Double) -> String {
+        Self.wholeCurrencyFormatter.string(from: NSNumber(value: value)) ?? "$\(Int(value))"
     }
 }
 

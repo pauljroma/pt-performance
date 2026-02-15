@@ -155,26 +155,26 @@ struct StreakView: View {
             if streakService.todayCompleted {
                 HStack(spacing: Spacing.xxs) {
                     Image(systemName: "checkmark.shield.fill")
-                        .foregroundColor(.green)
+                        .foregroundColor(DesignTokens.statusSuccess)
                     Text("Streak Protected")
                         .font(.caption.weight(.semibold))
-                        .foregroundColor(.green)
+                        .foregroundColor(DesignTokens.statusSuccess)
                 }
                 .padding(.horizontal, Spacing.sm)
                 .padding(.vertical, Spacing.xxs)
-                .background(Color.green.opacity(0.1))
+                .background(DesignTokens.statusSuccess.opacity(0.1))
                 .cornerRadius(CornerRadius.xl)
             } else if streakService.streakAtRisk {
                 HStack(spacing: Spacing.xxs) {
                     Image(systemName: "exclamationmark.triangle.fill")
-                        .foregroundColor(.orange)
+                        .foregroundColor(DesignTokens.statusWarning)
                     Text("Streak at Risk!")
                         .font(.caption.weight(.semibold))
-                        .foregroundColor(.orange)
+                        .foregroundColor(DesignTokens.statusWarning)
                 }
                 .padding(.horizontal, Spacing.sm)
                 .padding(.vertical, Spacing.xxs)
-                .background(Color.orange.opacity(0.1))
+                .background(DesignTokens.statusWarning.opacity(0.1))
                 .cornerRadius(CornerRadius.xl)
             }
 
@@ -242,7 +242,7 @@ struct StreakView: View {
             HStack {
                 Image(systemName: "shield.fill")
                     .font(.title3)
-                    .foregroundColor(.blue)
+                    .foregroundColor(DesignTokens.statusInfo)
                     .accessibilityHidden(true)
 
                 VStack(alignment: .leading, spacing: Spacing.xxs) {
@@ -260,13 +260,14 @@ struct StreakView: View {
                     ForEach(0..<freezeService.inventory.maxFreezes, id: \.self) { index in
                         Image(systemName: index < streakService.freezesAvailable ? "shield.fill" : "shield")
                             .font(.caption)
-                            .foregroundColor(index < streakService.freezesAvailable ? .blue : .gray.opacity(0.3))
+                            .foregroundColor(index < streakService.freezesAvailable ? DesignTokens.statusInfo : .gray.opacity(0.3))
                     }
                 }
 
                 // Use freeze button (only when at risk)
                 if streakService.streakAtRisk && streakService.freezesAvailable > 0 {
                     Button(action: {
+                        HapticFeedback.medium()
                         _ = streakService.useStreakFreeze()
                     }) {
                         Text("Use")
@@ -274,9 +275,10 @@ struct StreakView: View {
                             .foregroundColor(.white)
                             .padding(.horizontal, Spacing.sm)
                             .padding(.vertical, Spacing.xxs)
-                            .background(Color.blue)
+                            .background(DesignTokens.statusInfo)
                             .cornerRadius(CornerRadius.sm)
                     }
+                    .accessibilityLabel("Use streak shield")
                 }
             }
         }
@@ -468,8 +470,8 @@ struct StreakView: View {
     }
 
     private func legendItem(color: Color, label: String) -> some View {
-        HStack(spacing: 4) {
-            RoundedRectangle(cornerRadius: 2)
+        HStack(spacing: Spacing.xxs) {
+            RoundedRectangle(cornerRadius: Spacing.xxs)
                 .fill(color)
                 .frame(width: 12, height: 12)
             Text(label)
@@ -513,10 +515,14 @@ struct StreakView: View {
         }
     }
 
-    private func monthYearString(for date: Date) -> String {
+    private static let monthYearFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateFormat = "MMMM yyyy"
-        return formatter.string(from: date)
+        return formatter
+    }()
+
+    private func monthYearString(for date: Date) -> String {
+        Self.monthYearFormatter.string(from: date)
     }
 
     /// Build an array of optional Dates for the calendar grid.

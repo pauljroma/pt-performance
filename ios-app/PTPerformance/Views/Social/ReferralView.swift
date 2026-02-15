@@ -94,7 +94,7 @@ struct ReferralView: View {
 
                     Image(systemName: service.codeCopied ? "checkmark.circle.fill" : "doc.on.doc")
                         .font(.title3)
-                        .foregroundColor(service.codeCopied ? .green : .modusCyan)
+                        .foregroundColor(service.codeCopied ? DesignTokens.statusSuccess : .modusCyan)
                         .animation(.easeInOut(duration: AnimationDuration.standard), value: service.codeCopied)
                 }
                 .padding(.vertical, Spacing.md)
@@ -112,7 +112,7 @@ struct ReferralView: View {
             if service.codeCopied {
                 Text("Copied to clipboard!")
                     .font(.caption)
-                    .foregroundColor(.green)
+                    .foregroundColor(DesignTokens.statusSuccess)
                     .transition(.opacity.combined(with: .move(edge: .top)))
             }
         }
@@ -266,7 +266,7 @@ struct ReferralView: View {
                     if reward.isUnlocked {
                         Image(systemName: "checkmark.circle.fill")
                             .font(.caption)
-                            .foregroundColor(.green)
+                            .foregroundColor(DesignTokens.statusSuccess)
                     }
                 }
 
@@ -401,7 +401,7 @@ struct ReferralView: View {
                 if let error = redeemError {
                     Text(error)
                         .font(.caption)
-                        .foregroundColor(.red)
+                        .foregroundColor(DesignTokens.statusError)
                 }
 
                 LoadingButton(
@@ -452,10 +452,14 @@ struct ReferralView: View {
 
     // MARK: - Helpers
 
-    private func formattedDate(_ date: Date) -> String {
+    private static let mediumDateFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateStyle = .medium
-        return formatter.string(from: date)
+        return formatter
+    }()
+
+    private func formattedDate(_ date: Date) -> String {
+        Self.mediumDateFormatter.string(from: date)
     }
 }
 

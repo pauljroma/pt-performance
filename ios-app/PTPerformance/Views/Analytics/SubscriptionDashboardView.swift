@@ -124,7 +124,7 @@ struct SubscriptionDashboardView: View {
                 title: "Churn Rate",
                 value: metrics.formattedChurnRate,
                 icon: "person.fill.xmark",
-                iconColor: metrics.churnRate > 5.0 ? .red : .orange,
+                iconColor: metrics.churnRate > 5.0 ? DesignTokens.statusError : DesignTokens.statusWarning,
                 trend: nil,
                 subtitle: "Monthly",
                 sparklineData: viewModel.churnSparklineData
@@ -363,7 +363,7 @@ struct SubscriptionDashboardView: View {
                     VStack(spacing: Spacing.xs) {
                         Image(systemName: "checkmark.circle")
                             .font(.title2)
-                            .foregroundColor(.green)
+                            .foregroundColor(DesignTokens.statusSuccess)
 
                         Text("No recent churn events")
                             .font(.subheadline)
@@ -391,7 +391,7 @@ struct SubscriptionDashboardView: View {
         HStack(spacing: Spacing.sm) {
             Image(systemName: event.reason.icon)
                 .font(.body)
-                .foregroundColor(.orange)
+                .foregroundColor(DesignTokens.statusWarning)
                 .frame(width: 28, height: 28)
 
             VStack(alignment: .leading, spacing: Spacing.xxs) {
@@ -455,7 +455,7 @@ struct SubscriptionDashboardView: View {
         VStack(spacing: Spacing.md) {
             Image(systemName: "exclamationmark.triangle.fill")
                 .font(.system(size: 48))
-                .foregroundColor(.orange)
+                .foregroundColor(DesignTokens.statusWarning)
 
             Text("Unable to Load Analytics")
                 .font(.headline)
@@ -520,7 +520,7 @@ private struct MetricCardView: View {
                 if let trend = trend {
                     Image(systemName: trend.icon)
                         .font(.caption)
-                        .foregroundColor(trend.isPositive ? .green : .red)
+                        .foregroundColor(trend.isPositive ? DesignTokens.statusSuccess : DesignTokens.statusError)
                 }
             }
 

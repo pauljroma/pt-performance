@@ -215,6 +215,10 @@ class AddOnService: ObservableObject {
         logger.info("AddOnService", "Restored \(restored.count) add-on purchases")
     }
 
+    // MARK: - Formatters
+
+    private static let isoFormatter = ISO8601DateFormatter()
+
     // MARK: - Private Helpers
 
     /// Verifies a StoreKit transaction's cryptographic signature.
@@ -243,7 +247,7 @@ class AddOnService: ObservableObject {
                 .upsert([
                     "user_id": userId,
                     "product_id": productId,
-                    "purchased_at": ISO8601DateFormatter().string(from: Date())
+                    "purchased_at": Self.isoFormatter.string(from: Date())
                 ])
                 .execute()
 

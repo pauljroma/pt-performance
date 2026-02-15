@@ -380,9 +380,7 @@ class DeepLinkService: ObservableObject {
 
             // Process the deferred URL
             if let url = URL(string: deferredLink.url) {
-                await MainActor.run {
-                    _ = handleURL(url)
-                }
+                _ = handleURL(url)
             }
 
         } catch {

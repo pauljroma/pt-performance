@@ -59,13 +59,14 @@ struct WinbackOfferView: View {
                     if let error = winbackService.redeemError {
                         Text(error)
                             .font(.caption)
-                            .foregroundColor(.red)
+                            .foregroundColor(DesignTokens.statusError)
                             .multilineTextAlignment(.center)
                             .padding(.horizontal, Spacing.lg)
                     }
 
                     // MARK: - Dismiss
                     Button {
+                        HapticFeedback.light()
                         winbackService.dismissOffer()
                         dismiss()
                     } label: {
@@ -73,6 +74,7 @@ struct WinbackOfferView: View {
                             .font(.subheadline)
                             .foregroundColor(.secondary)
                     }
+                    .accessibilityLabel("Dismiss offer")
                     .padding(.bottom, Spacing.lg)
                 }
                 .padding(.top, Spacing.md)
@@ -360,7 +362,7 @@ private struct TimeUnitBlock: View {
     let label: String
 
     var body: some View {
-        VStack(spacing: 2) {
+        VStack(spacing: Spacing.xxs) {
             Text(String(format: "%02d", value))
                 .font(.system(size: 28, weight: .bold, design: .monospaced))
                 .foregroundColor(.primary)

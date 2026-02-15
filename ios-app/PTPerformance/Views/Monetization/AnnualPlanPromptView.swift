@@ -51,7 +51,7 @@ struct AnnualPlanPromptView: View {
                     if let error = errorMessage {
                         Text(error)
                             .font(.caption)
-                            .foregroundColor(.red)
+                            .foregroundColor(DesignTokens.statusError)
                             .multilineTextAlignment(.center)
                             .padding(.horizontal, Spacing.lg)
                     }
@@ -98,6 +98,7 @@ struct AnnualPlanPromptView: View {
                         Image(systemName: "xmark.circle.fill")
                             .foregroundColor(.secondary)
                     }
+                    .accessibilityLabel("Close annual plan prompt")
                 }
             }
         }
@@ -185,14 +186,14 @@ struct AnnualPlanPromptView: View {
                 Text("Annual")
                     .font(.caption)
                     .fontWeight(.semibold)
-                    .foregroundColor(.green)
+                    .foregroundColor(DesignTokens.statusSuccess)
 
                 Text(annualPrice)
                     .font(.title2)
                     .fontWeight(.bold)
                     .foregroundStyle(
                         LinearGradient(
-                            colors: [.green, .modusCyan],
+                            colors: [DesignTokens.statusSuccess, .modusCyan],
                             startPoint: .leading,
                             endPoint: .trailing
                         )
@@ -206,10 +207,10 @@ struct AnnualPlanPromptView: View {
             .padding(Spacing.md)
             .background(
                 RoundedRectangle(cornerRadius: CornerRadius.md)
-                    .fill(Color.green.opacity(0.06))
+                    .fill(DesignTokens.statusSuccess.opacity(0.06))
                     .overlay(
                         RoundedRectangle(cornerRadius: CornerRadius.md)
-                            .strokeBorder(Color.green.opacity(0.3), lineWidth: 1.5)
+                            .strokeBorder(DesignTokens.statusSuccess.opacity(0.3), lineWidth: 1.5)
                     )
             )
         }
@@ -224,17 +225,17 @@ struct AnnualPlanPromptView: View {
     private var monthsFreeCallout: some View {
         HStack(spacing: Spacing.xs) {
             Image(systemName: "gift.fill")
-                .foregroundColor(.green)
+                .foregroundColor(DesignTokens.statusSuccess)
 
             Text("That is like getting \(monthsFree) months free!")
                 .font(.headline)
-                .foregroundColor(.green)
+                .foregroundColor(DesignTokens.statusSuccess)
         }
         .padding(Spacing.md)
         .frame(maxWidth: .infinity)
         .background(
             RoundedRectangle(cornerRadius: CornerRadius.md)
-                .fill(Color.green.opacity(0.08))
+                .fill(DesignTokens.statusSuccess.opacity(0.08))
         )
         .padding(.horizontal, Spacing.md)
         .scaleEffect(animateIn ? 1.0 : 0.9)

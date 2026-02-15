@@ -230,7 +230,7 @@ struct AppStoreReviewPromptView: View {
         VStack(spacing: Spacing.md) {
             Image(systemName: "checkmark.circle.fill")
                 .font(.system(size: 48))
-                .foregroundStyle(.green)
+                .foregroundStyle(DesignTokens.statusSuccess)
                 .accessibilityHidden(true)
 
             Text("Thank you!")

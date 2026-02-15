@@ -67,6 +67,7 @@ struct LimitedTimeOfferBanner: View {
 
                 // Dismiss button
                 Button {
+                    HapticFeedback.light()
                     withAnimation {
                         service.dismissCurrentOffer()
                     }
@@ -75,16 +76,17 @@ struct LimitedTimeOfferBanner: View {
                         .font(.caption)
                         .fontWeight(.bold)
                         .foregroundColor(.white.opacity(0.7))
-                        .frame(width: 24, height: 24)
+                        .frame(width: DesignTokens.iconSizeMedium, height: DesignTokens.iconSizeMedium)
                         .background(Color.white.opacity(0.15))
                         .clipShape(Circle())
                 }
                 .buttonStyle(.plain)
+                .accessibilityLabel("Dismiss offer")
             }
 
             HStack(spacing: Spacing.md) {
                 // Discount badge
-                VStack(spacing: 2) {
+                VStack(spacing: Spacing.xxs) {
                     Text(offer.formattedDiscount)
                         .font(.title3)
                         .fontWeight(.black)
@@ -106,6 +108,7 @@ struct LimitedTimeOfferBanner: View {
 
                 // Claim button
                 Button {
+                    HapticFeedback.medium()
                     if let productId = service.claimOffer() {
                         onClaimOffer?(productId)
                     }
@@ -120,6 +123,7 @@ struct LimitedTimeOfferBanner: View {
                         .cornerRadius(CornerRadius.lg)
                 }
                 .buttonStyle(.plain)
+                .accessibilityLabel("Claim limited time offer")
             }
         }
         .padding(Spacing.sm)
@@ -154,14 +158,14 @@ struct LimitedTimeOfferBanner: View {
                 .fontWeight(.bold)
                 .foregroundColor(.white)
                 .frame(width: 28)
-                .padding(.vertical, 2)
+                .padding(.vertical, Spacing.xxs)
                 .background(Color.white.opacity(0.15))
                 .cornerRadius(CornerRadius.xs)
 
             Text(label)
                 .font(.system(size: 8, weight: .medium))
                 .foregroundColor(.white.opacity(0.6))
-                .padding(.top, 1)
+                .padding(.top, Spacing.xxs)
         }
     }
 
@@ -202,7 +206,7 @@ struct LimitedTimeOfferCompactBanner: View {
                     .background(Color.modusCyan)
                     .cornerRadius(CornerRadius.xs)
 
-                VStack(alignment: .leading, spacing: 1) {
+                VStack(alignment: .leading, spacing: Spacing.xxs) {
                     Text(offer.title)
                         .font(.caption)
                         .fontWeight(.semibold)
@@ -217,6 +221,7 @@ struct LimitedTimeOfferCompactBanner: View {
                 Spacer()
 
                 Button {
+                    HapticFeedback.medium()
                     if let productId = service.claimOffer() {
                         onClaimOffer?(productId)
                     }
@@ -231,6 +236,7 @@ struct LimitedTimeOfferCompactBanner: View {
                         .cornerRadius(CornerRadius.sm)
                 }
                 .buttonStyle(.plain)
+                .accessibilityLabel("Claim offer")
             }
             .padding(Spacing.sm)
             .background(Color(.systemBackground))

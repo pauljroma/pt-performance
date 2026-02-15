@@ -55,8 +55,8 @@ enum InviteMethod: String, CaseIterable, Identifiable {
 
     var color: Color {
         switch self {
-        case .message: return .green
-        case .email: return .blue
+        case .message: return DesignTokens.statusSuccess
+        case .email: return DesignTokens.statusInfo
         case .shareLink: return .modusCyanStatic
         }
     }
@@ -208,7 +208,7 @@ struct InviteFriendsView: View {
                     } label: {
                         Image(systemName: referralService.codeCopied ? "checkmark" : "doc.on.doc")
                             .font(.caption2)
-                            .foregroundColor(referralService.codeCopied ? .green : .modusCyan)
+                            .foregroundColor(referralService.codeCopied ? DesignTokens.statusSuccess : .modusCyan)
                     }
                     .accessibilityLabel("Copy referral code")
                 }
@@ -377,14 +377,14 @@ struct InviteFriendsView: View {
                 HStack(spacing: Spacing.xxs) {
                     Image(systemName: "checkmark.circle.fill")
                         .font(.caption)
-                        .foregroundColor(.green)
+                        .foregroundColor(DesignTokens.statusSuccess)
                     Text("Invited")
                         .font(.caption)
-                        .foregroundColor(.green)
+                        .foregroundColor(DesignTokens.statusSuccess)
                 }
                 .padding(.horizontal, Spacing.sm)
                 .padding(.vertical, Spacing.xs)
-                .background(Color.green.opacity(0.1))
+                .background(DesignTokens.statusSuccess.opacity(0.1))
                 .cornerRadius(CornerRadius.sm)
             } else {
                 Button {

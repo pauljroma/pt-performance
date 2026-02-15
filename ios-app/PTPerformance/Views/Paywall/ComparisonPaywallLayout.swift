@@ -118,8 +118,8 @@ struct ComparisonPaywallLayout: View {
                         Text(badge)
                             .font(.system(size: 9, weight: .bold))
                             .foregroundStyle(.white)
-                            .padding(.horizontal, 6)
-                            .padding(.vertical, 2)
+                            .padding(.horizontal, Spacing.xs)
+                            .padding(.vertical, Spacing.xxs)
                             .background(
                                 Capsule()
                                     .fill(tier.isHighlighted ? Color.modusCyan : Color.modusTealAccent)
@@ -233,8 +233,8 @@ struct ComparisonPaywallLayout: View {
                                 .font(.caption2)
                                 .fontWeight(.bold)
                                 .foregroundStyle(.white)
-                                .padding(.horizontal, 6)
-                                .padding(.vertical, 2)
+                                .padding(.horizontal, Spacing.xs)
+                                .padding(.vertical, Spacing.xxs)
                                 .background(
                                     Capsule()
                                         .fill(tier.isHighlighted ? Color.modusCyan : Color.modusTealAccent)

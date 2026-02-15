@@ -477,16 +477,24 @@ struct ShareCardView: View {
         return String(format: "%.0f", volume)
     }
 
-    private func formattedDate(_ date: Date) -> String {
+    private static let mediumDateFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateStyle = .medium
-        return formatter.string(from: date)
+        return formatter
+    }()
+
+    private static let shortDateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "MMM d"
+        return formatter
+    }()
+
+    private func formattedDate(_ date: Date) -> String {
+        Self.mediumDateFormatter.string(from: date)
     }
 
     private func formattedShortDate(_ date: Date) -> String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "MMM d"
-        return formatter.string(from: date)
+        Self.shortDateFormatter.string(from: date)
     }
 
     private func tierColor(_ tier: String) -> Color {

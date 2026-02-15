@@ -294,7 +294,7 @@ class ReEngagementService: ObservableObject {
         // Only schedule if notifications are enabled
         let notificationsEnabled = await PushNotificationService.shared.areNotificationsEnabled()
         guard notificationsEnabled else {
-            logger.log("Skipping re-engagement notification scheduling: notifications not enabled", level: .info)
+            logger.info("ReEngagementService", "Skipping re-engagement notification scheduling: notifications not enabled")
             return
         }
 

@@ -131,7 +131,8 @@ class AffiliateService: ObservableObject {
 
     /// Whether an affiliate code has been applied
     var hasAffiliateCode: Bool {
-        affiliateCode != nil && !affiliateCode!.isEmpty
+        guard let code = affiliateCode else { return false }
+        return !code.isEmpty
     }
 
     // MARK: - Initialization

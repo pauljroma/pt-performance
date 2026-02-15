@@ -141,7 +141,7 @@ class StreakService: ObservableObject {
     /// qualifying activity is completed.
     func recordActivity() async {
         guard let patientId = currentPatientId else {
-            logger.log("Cannot record activity: no patient ID", level: .warning)
+            logger.warning("StreakService", "Cannot record activity: no patient ID")
             return
         }
 
@@ -152,10 +152,10 @@ class StreakService: ObservableObject {
             try await trackingService.recordWorkoutCompletion(for: patientId)
 
             // Update local state immediately for responsive UI
-            let previousStreak = currentStreak
+            let alreadyCompletedToday = todayCompleted
             todayCompleted = true
             streakAtRisk = false
-            currentStreak += (previousStreak == currentStreak ? 1 : 0)
+            if !alreadyCompletedToday { currentStreak += 1 }
             lastActivityDate = Date()
 
             // Persist to UserDefaults
@@ -179,7 +179,7 @@ class StreakService: ObservableObject {
             // Refresh from server for authoritative data
             await checkStreak()
         } catch {
-            logger.log("Failed to record activity: \(error.localizedDescription)", level: .error)
+            logger.error("StreakService", "Failed to record activity: \(error.localizedDescription)")
         }
 
         isLoading = false
@@ -233,7 +233,7 @@ class StreakService: ObservableObject {
                 await scheduleStreakAtRiskNotification()
             }
         } catch {
-            logger.log("Failed to check streak: \(error.localizedDescription)", level: .error)
+            logger.error("StreakService", "Failed to check streak: \(error.localizedDescription)")
         }
     }
 
@@ -278,7 +278,7 @@ class StreakService: ObservableObject {
 
             logger.success("StreakService", "Loaded \(history.count) calendar entries for last \(days) days")
         } catch {
-            logger.log("Failed to load calendar data: \(error.localizedDescription)", level: .error)
+            logger.error("StreakService", "Failed to load calendar data: \(error.localizedDescription)")
         }
     }
 
@@ -287,7 +287,7 @@ class StreakService: ObservableObject {
     /// - Returns: True if the freeze was successfully applied.
     func useStreakFreeze() -> Bool {
         guard streakAtRisk && !todayCompleted else {
-            logger.log("Cannot use freeze: streak not at risk or already completed", level: .warning)
+            logger.warning("StreakService", "Cannot use freeze: streak not at risk or already completed")
             return false
         }
 

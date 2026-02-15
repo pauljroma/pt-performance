@@ -258,6 +258,7 @@ struct ContentHubView: View {
                         .multilineTextAlignment(.center)
 
                     Button {
+                        HapticFeedback.medium()
                         showingPaywall = true
                     } label: {
                         Text("Upgrade to Pro")
@@ -270,6 +271,7 @@ struct ContentHubView: View {
                             .cornerRadius(CornerRadius.lg)
                     }
                     .buttonStyle(.plain)
+                    .accessibilityLabel("Upgrade to Pro for full content access")
                 }
                 .padding(Spacing.md)
                 .frame(maxWidth: .infinity)
@@ -335,7 +337,7 @@ struct ArticleRowView: View {
 
                     // Premium badge
                     if article.isPremium {
-                        HStack(spacing: 2) {
+                        HStack(spacing: Spacing.xxs) {
                             Image(systemName: isLocked ? "lock.fill" : "star.fill")
                                 .font(.system(size: 8))
                             Text("PRO")
@@ -343,7 +345,7 @@ struct ArticleRowView: View {
                         }
                         .foregroundColor(isLocked ? .secondary : .modusCyan)
                         .padding(.horizontal, Spacing.xxs)
-                        .padding(.vertical, 2)
+                        .padding(.vertical, Spacing.xxs)
                         .background(isLocked ? Color(.systemGray5) : Color.modusCyan.opacity(0.1))
                         .cornerRadius(CornerRadius.xs)
                     }

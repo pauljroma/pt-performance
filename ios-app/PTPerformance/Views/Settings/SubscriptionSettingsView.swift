@@ -172,15 +172,15 @@ struct SubscriptionSettingsView: View {
             if subscriptionManager.isInGracePeriod {
                 HStack(spacing: Spacing.xs) {
                     Image(systemName: "exclamationmark.triangle.fill")
-                        .foregroundStyle(.orange)
+                        .foregroundStyle(DesignTokens.statusWarning)
                     Text("Billing issue - please update your payment method")
                         .font(.caption)
-                        .foregroundStyle(.orange)
+                        .foregroundStyle(DesignTokens.statusWarning)
                 }
                 .padding(Spacing.sm)
                 .background(
                     RoundedRectangle(cornerRadius: CornerRadius.sm)
-                        .fill(Color.orange.opacity(0.1))
+                        .fill(DesignTokens.statusWarning.opacity(0.1))
                 )
                 .accessibilityLabel("Billing issue. Please update your payment method.")
             }
@@ -278,7 +278,7 @@ struct SubscriptionSettingsView: View {
         if hasAccess {
             Image(systemName: "checkmark.circle.fill")
                 .font(.caption)
-                .foregroundStyle(.green)
+                .foregroundStyle(DesignTokens.statusSuccess)
         } else {
             Image(systemName: "minus.circle")
                 .font(.caption)

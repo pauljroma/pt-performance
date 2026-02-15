@@ -68,7 +68,7 @@ struct UpgradePathView: View {
                     if let error = errorMessage {
                         Text(error)
                             .font(.caption)
-                            .foregroundColor(.red)
+                            .foregroundColor(DesignTokens.statusError)
                             .multilineTextAlignment(.center)
                             .padding(.horizontal, Spacing.lg)
                     }
@@ -97,6 +97,7 @@ struct UpgradePathView: View {
                         Image(systemName: "xmark.circle.fill")
                             .foregroundColor(.secondary)
                     }
+                    .accessibilityLabel("Close upgrade view")
                 }
             }
         }
@@ -258,7 +259,7 @@ struct UpgradePathView: View {
                             Text(SubscriptionTier.elite.annualSavingsDisplay ?? "Save 33%")
                                 .font(.caption2)
                                 .fontWeight(.semibold)
-                                .foregroundColor(.green)
+                                .foregroundColor(DesignTokens.statusSuccess)
                         }
                     }
                     .frame(maxWidth: .infinity)
@@ -483,7 +484,7 @@ private struct FeatureComparisonRow: View {
         if included {
             Image(systemName: "checkmark.circle.fill")
                 .font(.caption)
-                .foregroundColor(.green)
+                .foregroundColor(DesignTokens.statusSuccess)
         } else {
             Image(systemName: "minus.circle")
                 .font(.caption)

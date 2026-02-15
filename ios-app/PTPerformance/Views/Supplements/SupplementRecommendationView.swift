@@ -150,7 +150,7 @@ struct SupplementCardView: View {
                             .font(.system(size: 10))
                     }
                     .foregroundColor(.modusCyan)
-                    .padding(.top, 2)
+                    .padding(.top, Spacing.xxs)
                 }
 
                 Spacer(minLength: 0)
@@ -158,12 +158,12 @@ struct SupplementCardView: View {
 
             // Benefits
             if !recommendation.benefits.isEmpty {
-                VStack(alignment: .leading, spacing: 2) {
+                VStack(alignment: .leading, spacing: Spacing.xxs) {
                     ForEach(recommendation.benefits.prefix(2), id: \.self) { benefit in
                         HStack(spacing: Spacing.xxs) {
                             Image(systemName: "checkmark")
                                 .font(.system(size: 9, weight: .bold))
-                                .foregroundColor(.green)
+                                .foregroundColor(DesignTokens.statusSuccess)
                             Text(benefit)
                                 .font(.caption2)
                                 .foregroundColor(.secondary)

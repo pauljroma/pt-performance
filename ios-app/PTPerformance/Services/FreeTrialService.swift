@@ -302,7 +302,7 @@ class FreeTrialService: ObservableObject {
 
         if let startDateInterval = defaults.object(forKey: UDKeys.trialStartDate) as? TimeInterval {
             trialStartDate = Date(timeIntervalSince1970: startDateInterval)
-            logger.diagnostic("FreeTrial: Loaded persisted trial start date: \(trialStartDate!)")
+            logger.diagnostic("FreeTrial: Loaded persisted trial start date: \(trialStartDate?.description ?? "nil")")
         }
     }
 

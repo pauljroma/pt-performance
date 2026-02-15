@@ -50,7 +50,7 @@ struct UpsellBannerView: View {
             iconView
 
             // Text content
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: Spacing.xxs) {
                 Text(prompt.title)
                     .font(.subheadline)
                     .fontWeight(.semibold)
@@ -133,7 +133,7 @@ struct UpsellBannerView: View {
                 .fontWeight(.bold)
                 .foregroundColor(.white)
                 .padding(.horizontal, Spacing.sm)
-                .padding(.vertical, Spacing.xxs + 2)
+                .padding(.vertical, Spacing.xs)
                 .background(
                     Capsule()
                         .fill(

@@ -364,6 +364,8 @@ class PaywallService: ObservableObject {
 
     // MARK: - Analytics Dispatch
 
+    private static let isoFormatter = ISO8601DateFormatter()
+
     /// Sends an analytics event to the backend (stub — wire to your analytics pipeline).
     private func sendAnalyticsEvent(_ impression: PaywallImpression) {
         // Encode to dictionary for analytics dispatch
@@ -373,7 +375,7 @@ class PaywallService: ObservableObject {
             "variant_name": impression.variantName,
             "layout": impression.layout.rawValue,
             "action": impression.action.rawValue,
-            "timestamp": ISO8601DateFormatter().string(from: impression.timestamp)
+            "timestamp": Self.isoFormatter.string(from: impression.timestamp)
         ]
 
         logger.diagnostic("Paywall: Analytics event dispatched — \(payload)")

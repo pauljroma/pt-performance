@@ -88,11 +88,24 @@ struct SubscriptionMetrics: Codable, Equatable {
 
     // MARK: - Helpers
 
-    private func formatCurrency(_ value: Double) -> String {
+    private static let currencyFormatterWhole: NumberFormatter = {
         let formatter = NumberFormatter()
         formatter.numberStyle = .currency
         formatter.currencyCode = "USD"
-        formatter.maximumFractionDigits = value >= 1000 ? 0 : 2
+        formatter.maximumFractionDigits = 0
+        return formatter
+    }()
+
+    private static let currencyFormatterDecimal: NumberFormatter = {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .currency
+        formatter.currencyCode = "USD"
+        formatter.maximumFractionDigits = 2
+        return formatter
+    }()
+
+    private func formatCurrency(_ value: Double) -> String {
+        let formatter = value >= 1000 ? Self.currencyFormatterWhole : Self.currencyFormatterDecimal
         return formatter.string(from: NSNumber(value: value)) ?? "$\(value)"
     }
 }
@@ -127,18 +140,26 @@ struct RevenueDataPoint: Identifiable, Codable, Equatable {
     let revenue: Double
     let subscribers: Int
 
-    var formattedRevenue: String {
+    private static let revenueCurrencyFormatter: NumberFormatter = {
         let formatter = NumberFormatter()
         formatter.numberStyle = .currency
         formatter.currencyCode = "USD"
         formatter.maximumFractionDigits = 0
-        return formatter.string(from: NSNumber(value: revenue)) ?? "$\(Int(revenue))"
+        return formatter
+    }()
+
+    private static let shortDateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "MMM d"
+        return formatter
+    }()
+
+    var formattedRevenue: String {
+        Self.revenueCurrencyFormatter.string(from: NSNumber(value: revenue)) ?? "$\(Int(revenue))"
     }
 
     var formattedDate: String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "MMM d"
-        return formatter.string(from: date)
+        Self.shortDateFormatter.string(from: date)
     }
 
     // MARK: - CodingKeys
