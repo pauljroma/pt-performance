@@ -16,7 +16,7 @@ import Sentry
 #endif
 
 /// Performance monitoring service for tracking app launch time, view load times, and other metrics
-/// ACP-932: Enhanced for cold start optimization tracking (<2 second target)
+/// ACP-932: Enhanced for cold start optimization tracking (<1 second target)
 class PerformanceMonitor {
 
     // MARK: - Singleton
@@ -45,7 +45,7 @@ class PerformanceMonitor {
     private let coldStartBegin = CFAbsoluteTimeGetCurrent()
 
     /// ACP-932: Target cold start time in seconds
-    static let coldStartTargetSeconds: TimeInterval = 2.0
+    static let coldStartTargetSeconds: TimeInterval = 1.0
 
     // MARK: - Thresholds
 
@@ -56,7 +56,7 @@ class PerformanceMonitor {
         static let highMemoryMB: Double = 500
         static let criticalMemoryMB: Double = 750
         // ACP-932: Cold start threshold
-        static let coldStartTargetMs: Double = 2000
+        static let coldStartTargetMs: Double = 1000
     }
 
     // MARK: - Initialization

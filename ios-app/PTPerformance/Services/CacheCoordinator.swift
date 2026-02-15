@@ -5,6 +5,8 @@
 //  Unified cache management for coordinated memory cleanup
 //  Responds to memory warnings and provides central cache control
 //
+//  ACP-937: Audited for retain cycles and memory leaks
+//
 
 import Foundation
 import UIKit
@@ -71,6 +73,7 @@ final class CacheCoordinator {
         if let observer = memoryWarningObserver {
             NotificationCenter.default.removeObserver(observer)
         }
+        DebugLogger.shared.log("[CacheCoordinator] deinit", level: .diagnostic)
     }
 
     // MARK: - Setup
@@ -96,8 +99,8 @@ final class CacheCoordinator {
     func handleMemoryWarning() {
         logger.log("[CacheCoordinator] Memory warning received - clearing caches", level: .warning)
 
-        Task {
-            await clearAllCaches(aggressive: true)
+        Task { [weak self] in
+            await self?.clearAllCaches(aggressive: true)
         }
 
         // Log the event for monitoring

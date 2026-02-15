@@ -198,84 +198,33 @@ struct PTPerformanceApp: App {
     @StateObject private var asoService = ASOService.shared
     @Environment(\.scenePhase) private var scenePhase
 
-    // ACP-932: Cold Start Optimization - Track launch time for <2 second target
+    // ACP-932: Cold Start Optimization - Track launch time for <1 second target
+    // Use mach_absolute_time() via LaunchOptimizer for precise timing
     private static let launchStartTime = CFAbsoluteTimeGetCurrent()
 
     init() {
-        // ACP-932: Cold Start Optimization - Minimal synchronous init
-        // Only track launch time synchronously - everything else deferred
-        PerformanceMonitor.shared.trackAppLaunch()
+        // ACP-932: Cold Start Optimization - Phase 1: Critical path only (<200ms)
+        // Only PerformanceMonitor.trackAppLaunch runs synchronously
+        LaunchOptimizer.shared.runCriticalPath()
 
-        // ACP-932: Defer heavy initialization to background
-        // This moves blocking work off the main thread during cold start
+        #if DEBUG
+        // ACP-945: Start main thread watchdog in debug builds
+        MainThreadGuard.shared.start()
+        #endif
+
+        // ACP-932: Phase 3: Defer all heavy initialization to background
+        // Sentry, security, push notifications, health sync, etc.
         Task(priority: .utility) {
-            // Initialize Sentry error monitoring (ACP-599)
-            // Deferred to avoid blocking main thread
-            SentryConfig.initialize()
+            // ACP-956: Install crash prevention handlers before Sentry
+            CrashPreventionService.shared.install()
 
-            // ACP-826: Register App Shortcuts for Siri integration
-            // Safe to defer - shortcuts are registered before user interaction
-            if #available(iOS 16.0, *) {
-                await MainActor.run {
-                    PTPerformanceShortcuts.updateAppShortcutParameters()
-                }
-            }
+            await LaunchOptimizer.shared.runBackground()
 
-            // ACP-827: Register background tasks for Apple Health sync
-            // Must be done early but doesn't need to block launch
-            await MainActor.run {
-                HealthSyncManager.shared.registerBackgroundTasks()
-            }
+            // ACP-956: Report any crash from previous session (after Sentry is initialized)
+            SentryConfig.reportPreviousCrash()
 
-            // Initialize CacheCoordinator for unified memory management
-            // Deferred - memory warning observer setup is not launch-critical
-            await MainActor.run {
-                _ = CacheCoordinator.shared
-            }
-
-            // Initialize PushNotificationService for prescription alerts
-            // Sets up notification categories and actions
-            await PushNotificationService.shared.initialize()
-
-            // ACP-1044: Keychain security migration and audit
-            // Migrates keychain items from afterFirstUnlock to whenUnlocked access level
-            // Safe to run on every launch — skips if already migrated
-            SecureStore.shared.migrateIfNeeded()
-
-            #if DEBUG
-            // ACP-1044: Log keychain audit in debug builds for compliance verification
-            SecureStore.shared.auditKeychainItems()
-            #endif
-
-            // ACP-1043: Initialize data encryption key on first launch
-            // Generates and stores AES-256 key in Keychain if not already present
-            do {
-                try DataEncryptionService.shared.initializeKeyIfNeeded()
-            } catch {
-                DebugLogger.shared.error("PTPerformanceApp", "Failed to initialize encryption key: \(error.localizedDescription)")
-            }
-
-            // ACP-1045: Apply file protection to app directories
-            // Sets NSFileProtectionComplete on Documents, Caches, AppSupport, and Temp
-            SecureFileManager.shared.applyFileProtection()
-
-            // ACP-1045: Jailbreak detection — log warning but do not block
-            JailbreakDetector.shared.check()
-
-            // ACP-1043: Verify App Transport Security configuration
-            TransportSecurityService.shared.verifyConfiguration()
-
-            // ACP-1056: Start real-time security monitoring
-            await MainActor.run {
-                SecurityMonitor.shared.startMonitoring()
-            }
-
-            // ACP-1051: Log app launch in audit trail
-            await AuditLogger.shared.logAuthentication(
-                action: "app_launched",
-                success: true,
-                details: "cold_start"
-            )
+            // ACP-956: Start ANR detection
+            ANRDetector.shared.start()
 
             // ACP-932: Log app startup with deferred device info collection
             // UIDevice.current access can be slow, so defer it
@@ -286,6 +235,9 @@ struct PTPerformanceApp: App {
     // ACP-932: Deferred launch logging to avoid UIDevice access during init
     @MainActor
     private static func logDeferredLaunch() {
+        // Use high-precision mach_absolute_time via LaunchOptimizer
+        let coldStartMs = Int(LaunchOptimizer.elapsedSinceLaunchMs)
+        // Keep CFAbsoluteTime as fallback for wall-clock duration
         let launchDuration = CFAbsoluteTimeGetCurrent() - launchStartTime
         ErrorLogger.shared.logUserAction(
             action: "app_launched",
@@ -294,7 +246,8 @@ struct PTPerformanceApp: App {
                 "build": Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "unknown",
                 "device": UIDevice.current.model,
                 "os_version": UIDevice.current.systemVersion,
-                "cold_start_ms": Int(launchDuration * 1000)
+                "cold_start_ms": coldStartMs,
+                "cold_start_wall_ms": Int(launchDuration * 1000)
             ]
         )
     }
@@ -314,20 +267,14 @@ struct PTPerformanceApp: App {
                     PerformanceMonitor.shared.finishAppLaunch()
                 }
                 .task {
-                    // ACP-932: Cold Start Optimization - Parallelize independent async work
-                    // Group 1: Critical path - StoreKit needs to complete for premium features
-                    async let storeKitProducts = storeKit.loadProducts()
-                    async let subscriptionStatus = storeKit.updateSubscriptionStatus()
+                    // ACP-932: Phase 2 - Visible UI (<500ms)
+                    // StoreKit products and subscription status needed for premium feature gating
+                    await LaunchOptimizer.shared.runVisibleUI()
 
-                    // Group 2: Background work - can run independently
-                    // These don't block UI rendering
+                    // Background work - can run independently after visible UI is ready
                     async let offlineSync: () = OfflineQueueManager.shared.syncPendingLogs()
                     async let healthSync: () = HealthSyncManager.shared.syncOnLaunchIfEnabled()
                     async let workoutPreload: () = WorkoutPreloadService.shared.preloadOnLaunch()
-
-                    // Wait for StoreKit first (may affect UI state)
-                    _ = await storeKitProducts
-                    _ = await subscriptionStatus
 
                     // Background tasks can complete whenever
                     _ = await (offlineSync, healthSync, workoutPreload)

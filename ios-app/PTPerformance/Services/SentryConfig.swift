@@ -81,7 +81,8 @@ enum SentryConfig {
     /// Production alert thresholds for monitoring
     enum AlertThresholds {
         /// Crash rate threshold (percentage) - alert if exceeded
-        static let crashRatePercent: Double = 1.0
+        /// ACP-956: Tightened from 1.0 to 0.1 to target 99.9% crash-free sessions
+        static let crashRatePercent: Double = 0.1
 
         /// Error rate threshold (errors per user session) - alert if exceeded
         static let errorRatePerSession: Double = 5.0
@@ -96,7 +97,8 @@ enum SentryConfig {
         static let memoryUsageMB: Double = 500.0
 
         /// App launch time threshold (seconds) - warn if p95 exceeds
-        static let appLaunchTimeSeconds: Double = 2.0
+        /// ACP-932: Tightened from 2.0 to 1.0 to match cold start optimization target
+        static let appLaunchTimeSeconds: Double = 1.0
     }
 
     // MARK: - Initialization
@@ -122,6 +124,12 @@ enum SentryConfig {
             options.attachScreenshot = true
             options.attachViewHierarchy = true
 
+            // ACP-956: Enhanced crash and ANR detection
+            options.enableWatchdogTerminationTracking = true
+            options.enableAppHangTracking = true
+            options.appHangTimeoutInterval = 2.0
+            options.maxBreadcrumbs = 200
+
             options.beforeSend = { event in
                 return filterSensitiveData(event)
             }
@@ -136,6 +144,56 @@ enum SentryConfig {
         DebugLogger.shared.warning("Sentry", "SDK not installed. Add sentry-cocoa SPM package to enable.")
         DebugLogger.shared.info("Sentry", "Environment: \(environment), Release: \(releaseName)")
         #endif
+    }
+
+    // MARK: - ACP-956: Previous Crash Reporting
+
+    /// Check for crash info saved by CrashPreventionService during a previous session
+    /// and forward it to Sentry. Call this after Sentry has been initialized.
+    static func reportPreviousCrash() {
+        guard let crashInfo = CrashPreventionService.retrievePreviousCrashInfo() else {
+            return
+        }
+
+        let name = crashInfo["name"] ?? "Unknown"
+        let reason = crashInfo["reason"] ?? "Unknown"
+        let timestamp = crashInfo["timestamp"] ?? "Unknown"
+        let callStack = crashInfo["callStack"] ?? ""
+        let signalName = crashInfo["signal"]
+
+        DebugLogger.shared.warning("CrashReport", "Reporting previous crash: \(name) - \(reason) at \(timestamp)")
+
+        #if canImport(Sentry)
+        let event = Event(level: .fatal)
+        let description: String
+        if let signalName = signalName {
+            description = "Previous session crash (signal: \(signalName)): \(reason)"
+        } else {
+            description = "Previous session crash (\(name)): \(reason)"
+        }
+        event.message = SentryMessage(formatted: description)
+        event.timestamp = ISO8601DateFormatter().date(from: timestamp) ?? Date()
+
+        event.tags = [
+            "crash.previous_session": "true",
+            "crash.name": name
+        ]
+        if let signalName = signalName {
+            event.tags?["crash.signal"] = signalName
+        }
+
+        event.extra = [
+            "crash_name": name,
+            "crash_reason": reason,
+            "crash_timestamp": timestamp,
+            "crash_call_stack": callStack
+        ]
+
+        SentrySDK.capture(event: event)
+        #endif
+
+        // Clear the stored crash info so it is not reported again
+        CrashPreventionService.clearPreviousCrashInfo()
     }
 
     // MARK: - Privacy Filtering
