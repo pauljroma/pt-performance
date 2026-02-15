@@ -67,7 +67,7 @@ struct SecurityLogView: View {
             // Search bar
             HStack {
                 Image(systemName: "magnifyingglass")
-                    .foregroundColor(.secondary)
+                    .foregroundStyle(.secondary)
                     .accessibilityHidden(true)
                 TextField("Search audit log...", text: $searchText)
                     .textFieldStyle(.plain)
@@ -75,14 +75,14 @@ struct SecurityLogView: View {
                 if !searchText.isEmpty {
                     Button(action: { searchText = "" }) {
                         Image(systemName: "xmark.circle.fill")
-                            .foregroundColor(.secondary)
+                            .foregroundStyle(.secondary)
                     }
                     .accessibilityLabel("Clear search")
                 }
             }
             .padding(.horizontal)
             .padding(.vertical, Spacing.xs)
-            .background(Color.gray.opacity(0.1))
+            .background(Color(.tertiarySystemGroupedBackground))
 
             // Event type filter
             ScrollView(.horizontal, showsIndicators: false) {
@@ -107,11 +107,11 @@ struct SecurityLogView: View {
             HStack {
                 Text("\(filteredEntries.count) entries")
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundStyle(.secondary)
                 Spacer()
                 Text("Total on disk: \(entryCount)")
                     .font(.caption2)
-                    .foregroundColor(.secondary)
+                    .foregroundStyle(.secondary)
             }
             .padding(.horizontal)
             .padding(.vertical, Spacing.xxs)
@@ -154,13 +154,13 @@ struct SecurityLogView: View {
                 HStack {
                     Text("\(securityMonitor.unacknowledgedAlertCount) unacknowledged")
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundStyle(.secondary)
                     Spacer()
                     Button("Dismiss Reviewed") {
                         securityMonitor.dismissAcknowledgedAlerts()
                     }
                     .font(.caption)
-                    .foregroundColor(.blue)
+                    .foregroundColor(.modusCyan)
                     .disabled(securityMonitor.securityAlerts.allSatisfy { !$0.acknowledged })
                 }
                 .padding(.horizontal)
@@ -185,28 +185,28 @@ struct SecurityLogView: View {
     // MARK: - Subviews
 
     private func auditEntryRow(_ entry: AuditEntry) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
+        VStack(alignment: .leading, spacing: Spacing.xxs) {
             HStack {
                 eventTypeBadge(entry.eventType)
                 Spacer()
                 Text(formatTimestamp(entry.timestamp))
                     .font(.caption2)
-                    .foregroundColor(.secondary)
+                    .foregroundStyle(.secondary)
             }
 
             Text(entry.action)
                 .font(.system(size: 12, weight: .medium, design: .monospaced))
-                .foregroundColor(.primary)
+                .foregroundStyle(.primary)
 
             HStack(spacing: Spacing.xs) {
                 Label(entry.resource, systemImage: "doc")
                     .font(.caption2)
-                    .foregroundColor(.secondary)
+                    .foregroundStyle(.secondary)
 
                 if let details = entry.details, !details.isEmpty {
                     Text(details)
                         .font(.caption2)
-                        .foregroundColor(.secondary)
+                        .foregroundStyle(.secondary)
                         .lineLimit(1)
                 }
             }
@@ -219,36 +219,36 @@ struct SecurityLogView: View {
     private func alertRow(_ alert: SecurityAlert) -> some View {
         HStack(alignment: .top, spacing: Spacing.sm) {
             Image(systemName: alert.severity.icon)
-                .foregroundColor(alert.severity.color)
+                .foregroundStyle(alert.severity.color)
                 .font(.title3)
                 .accessibilityHidden(true)
 
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: Spacing.xxs) {
                 HStack {
                     Text(alert.severity.rawValue)
                         .font(.caption)
                         .fontWeight(.bold)
-                        .foregroundColor(alert.severity.color)
+                        .foregroundStyle(alert.severity.color)
                     Spacer()
                     Text(alert.timestamp, style: .relative)
                         .font(.caption2)
-                        .foregroundColor(.secondary)
+                        .foregroundStyle(.secondary)
                 }
 
                 Text(alert.message)
                     .font(.subheadline)
-                    .foregroundColor(alert.acknowledged ? .secondary : .primary)
+                    .foregroundStyle(alert.acknowledged ? .secondary : .primary)
 
                 if !alert.acknowledged {
                     Button("Acknowledge") {
                         securityMonitor.acknowledgeAlert(alert.id)
                     }
                     .font(.caption)
-                    .foregroundColor(.blue)
+                    .foregroundColor(.modusCyan)
                 } else {
                     Text("Acknowledged")
                         .font(.caption2)
-                        .foregroundColor(.secondary)
+                        .foregroundStyle(.secondary)
                 }
             }
         }
@@ -280,27 +280,27 @@ struct SecurityLogView: View {
         Text(eventType.displayName)
             .font(.caption2)
             .fontWeight(.semibold)
-            .padding(.horizontal, 6)
-            .padding(.vertical, 2)
+            .padding(.horizontal, Spacing.xxs)
+            .padding(.vertical, Spacing.xxs)
             .background(colorForEventType(eventType).opacity(0.15))
-            .foregroundColor(colorForEventType(eventType))
-            .cornerRadius(4)
+            .foregroundStyle(colorForEventType(eventType))
+            .cornerRadius(CornerRadius.xs)
     }
 
     private func emptyStateView(icon: String, title: String, subtitle: String) -> some View {
         VStack(spacing: Spacing.md) {
             Image(systemName: icon)
                 .font(.system(size: 48))
-                .foregroundColor(.secondary)
+                .foregroundStyle(.secondary)
                 .accessibilityHidden(true)
 
             Text(title)
                 .font(.headline)
-                .foregroundColor(.primary)
+                .foregroundStyle(.primary)
 
             Text(subtitle)
                 .font(.subheadline)
-                .foregroundColor(.secondary)
+                .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -336,18 +336,24 @@ struct SecurityLogView: View {
         }
     }
 
-    private func formatTimestamp(_ isoString: String) -> String {
-        let formatter = ISO8601DateFormatter()
-        guard let date = formatter.date(from: isoString) else { return isoString }
+    /// Cached ISO8601 formatter for parsing audit log timestamps
+    private static let iso8601Formatter = ISO8601DateFormatter()
 
-        let displayFormatter = DateFormatter()
-        displayFormatter.dateFormat = "MMM d, HH:mm:ss"
-        return displayFormatter.string(from: date)
+    /// Cached DateFormatter for displaying audit log timestamps
+    private static let displayDateFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateFormat = "MMM d, HH:mm:ss"
+        return f
+    }()
+
+    private func formatTimestamp(_ isoString: String) -> String {
+        guard let date = Self.iso8601Formatter.date(from: isoString) else { return isoString }
+        return Self.displayDateFormatter.string(from: date)
     }
 
     private func colorForEventType(_ eventType: AuditEventType) -> Color {
         switch eventType {
-        case .dataAccess: return .blue
+        case .dataAccess: return .modusCyan
         case .dataModification: return .orange
         case .authentication: return .green
         case .authorization: return .purple

@@ -179,6 +179,24 @@ class HealthKitService: ObservableObject {
     private let errorLogger = ErrorLogger.shared
     private var authorizationObserver: NSObjectProtocol?
 
+    /// Cached DateFormatter for database date strings (yyyy-MM-dd)
+    private static let dbDateFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateFormat = "yyyy-MM-dd"
+        f.timeZone = TimeZone.current
+        return f
+    }()
+
+    /// Cached ISO8601 formatter for synced_at timestamps
+    private static let iso8601Formatter = ISO8601DateFormatter()
+
+    /// Cached RelativeDateTimeFormatter for last sync display
+    private static let relativeDateFormatter: RelativeDateTimeFormatter = {
+        let f = RelativeDateTimeFormatter()
+        f.unitsStyle = .abbreviated
+        return f
+    }()
+
     // MARK: - Focused Services (lazy initialization)
 
     private var _hrvService: HRVService?
@@ -776,10 +794,7 @@ class HealthKitService: ObservableObject {
         defer { isLoading = false }
 
         // Format date for database
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "yyyy-MM-dd"
-        dateFormatter.timeZone = TimeZone.current
-        let dateString = dateFormatter.string(from: data.date)
+        let dateString = Self.dbDateFormatter.string(from: data.date)
 
         // Prepare data for upsert
         let dbData = HealthKitDBRecord(
@@ -795,7 +810,7 @@ class HealthKitService: ObservableObject {
             exerciseMinutes: data.exerciseMinutes,
             stepCount: data.stepCount,
             dataSource: "apple_watch",
-            syncedAt: ISO8601DateFormatter().string(from: Date())
+            syncedAt: Self.iso8601Formatter.string(from: Date())
         )
 
         do {
@@ -866,9 +881,7 @@ extension HealthKitService {
             return "Never synced"
         }
 
-        let formatter = RelativeDateTimeFormatter()
-        formatter.unitsStyle = .abbreviated
-        return formatter.localizedString(for: date, relativeTo: Date())
+        return Self.relativeDateFormatter.localizedString(for: date, relativeTo: Date())
     }
 
     /// Sync and save today's data in one call

@@ -36,6 +36,9 @@ final class PatientDataGuard {
     private let logger = DebugLogger.shared
     private let accessControl = AccessControlService.shared
 
+    /// Cached ISO8601 formatter to avoid repeated allocation in security logging
+    private static let iso8601Formatter = ISO8601DateFormatter()
+
     // MARK: - Initialization
 
     private init() {}
@@ -114,7 +117,7 @@ final class PatientDataGuard {
             "requested_patient_id=\(requestedPatientId), " +
             "current_user_id=\(currentUserId), " +
             "user_role=\(userRole), " +
-            "timestamp=\(ISO8601DateFormatter().string(from: Date()))"
+            "timestamp=\(Self.iso8601Formatter.string(from: Date()))"
 
         logger.log(message, level: .error)
 

@@ -79,11 +79,11 @@ struct DataExportView: View {
 
                 Text("Under GDPR and CCPA, you have the right to receive a copy of all personal data we hold about you in a portable, machine-readable format.")
                     .font(.subheadline)
-                    .foregroundColor(.secondary)
+                    .foregroundStyle(.secondary)
 
                 Text("This export includes all data stored in your Modus account. The file can be opened with any text editor or data analysis tool.")
                     .font(.subheadline)
-                    .foregroundColor(.secondary)
+                    .foregroundStyle(.secondary)
             }
             .padding(.vertical, Spacing.xs)
             .accessibilityElement(children: .combine)
@@ -129,7 +129,7 @@ struct DataExportView: View {
 
                 Text(" | ")
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundStyle(.secondary)
 
                 Button {
                     viewModel.deselectAll()
@@ -161,7 +161,7 @@ struct DataExportView: View {
                     Label {
                         Text("JSON is the recommended format for complete data portability. It preserves all data structure and relationships.")
                             .font(.caption)
-                            .foregroundColor(.secondary)
+                            .foregroundStyle(.secondary)
                     } icon: {
                         Image(systemName: "doc.text.fill")
                             .foregroundColor(.modusCyan)
@@ -170,7 +170,7 @@ struct DataExportView: View {
                     Label {
                         Text("CSV can be opened in spreadsheet applications like Excel or Google Sheets. Complex data structures are flattened.")
                             .font(.caption)
-                            .foregroundColor(.secondary)
+                            .foregroundStyle(.secondary)
                     } icon: {
                         Image(systemName: "tablecells.fill")
                             .foregroundColor(.modusCyan)
@@ -195,17 +195,17 @@ struct DataExportView: View {
             if let lastDate = viewModel.lastExportDate {
                 HStack {
                     Image(systemName: "clock.fill")
-                        .foregroundColor(.secondary)
+                        .foregroundStyle(.secondary)
                         .accessibilityHidden(true)
-                    VStack(alignment: .leading, spacing: 2) {
+                    VStack(alignment: .leading, spacing: Spacing.xxs) {
                         Text("Last Export")
                             .font(.subheadline)
                         Text(lastDate, style: .relative)
                             .font(.caption)
-                            .foregroundColor(.secondary)
+                            .foregroundStyle(.secondary)
                         + Text(" ago")
                             .font(.caption)
-                            .foregroundColor(.secondary)
+                            .foregroundStyle(.secondary)
                     }
                 }
                 .accessibilityElement(children: .combine)
@@ -239,13 +239,13 @@ struct DataExportView: View {
                     Spacer()
                 }
                 .padding(.vertical, Spacing.sm)
-                .foregroundColor(.white)
+                .foregroundStyle(.white)
                 .background(
                     viewModel.canExport
                     ? Color.modusCyan
                     : Color.gray.opacity(0.5)
                 )
-                .cornerRadius(CornerRadius.sm)
+                .cornerRadius(CornerRadius.md)
             }
             .buttonStyle(.plain)
             .disabled(!viewModel.canExport || viewModel.isExporting)
@@ -256,7 +256,7 @@ struct DataExportView: View {
         } footer: {
             Text("Your data will be packaged into a single file that you can save or share. No data is sent to third parties during this process.")
                 .font(.caption)
-                .foregroundColor(.secondary)
+                .foregroundStyle(.secondary)
         }
     }
 
@@ -274,14 +274,14 @@ struct DataExportView: View {
                 } currentValueLabel: {
                     Text("\(Int(viewModel.exportProgress * 100))%")
                         .font(.subheadline)
-                        .foregroundColor(.secondary)
+                        .foregroundStyle(.secondary)
                 }
                 .progressViewStyle(LinearProgressViewStyle(tint: .modusCyan))
                 .padding(.horizontal, Spacing.xl)
 
                 Text(viewModel.exportStatusMessage)
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
             }
             .padding(Spacing.xl)

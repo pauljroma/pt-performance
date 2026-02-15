@@ -81,20 +81,20 @@ struct AccountDeletionView: View {
                         .frame(width: 28)
                         .accessibilityHidden(true)
 
-                    VStack(alignment: .leading, spacing: 2) {
+                    VStack(alignment: .leading, spacing: Spacing.xxs) {
                         Text("Download My Data")
                             .font(.body)
-                            .foregroundColor(.primary)
+                            .foregroundStyle(.primary)
                         Text("Export a copy of all your data before deletion")
                             .font(.caption)
-                            .foregroundColor(.secondary)
+                            .foregroundStyle(.secondary)
                     }
 
                     Spacer()
 
                     Image(systemName: "chevron.right")
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundStyle(.secondary)
                         .accessibilityHidden(true)
                 }
             }
@@ -118,12 +118,12 @@ struct AccountDeletionView: View {
                         .font(.title2)
                         .accessibilityHidden(true)
 
-                    VStack(alignment: .leading, spacing: 2) {
+                    VStack(alignment: .leading, spacing: Spacing.xxs) {
                         Text("30-Day Grace Period")
                             .font(.headline)
                         Text("Your account will not be immediately deleted")
                             .font(.caption)
-                            .foregroundColor(.secondary)
+                            .foregroundStyle(.secondary)
                     }
                 }
 
@@ -145,7 +145,7 @@ struct AccountDeletionView: View {
 
     private var warningSection: some View {
         Section {
-            VStack(alignment: .leading, spacing: 12) {
+            VStack(alignment: .leading, spacing: Spacing.sm) {
                 Label("Warning", systemImage: "exclamationmark.triangle.fill")
                     .font(.headline)
                     .foregroundColor(DesignTokens.statusError)
@@ -155,7 +155,7 @@ struct AccountDeletionView: View {
                     .font(.subheadline)
                     .fontWeight(.semibold)
 
-                VStack(alignment: .leading, spacing: 8) {
+                VStack(alignment: .leading, spacing: Spacing.xs) {
                     bulletPoint("Permanently delete all your data")
                     bulletPoint("Remove all your workout history")
                     bulletPoint("Cancel any active programs")
@@ -165,7 +165,7 @@ struct AccountDeletionView: View {
 
                 Text("This action cannot be undone after the 30-day grace period.")
                     .font(.subheadline)
-                    .foregroundColor(DesignTokens.statusError)
+                    .foregroundStyle(DesignTokens.statusError)
                     .fontWeight(.medium)
                     .padding(.top, Spacing.xs)
             }
@@ -192,7 +192,7 @@ struct AccountDeletionView: View {
             if !viewModel.confirmationText.isEmpty && viewModel.confirmationText != "DELETE" {
                 Text("Must type 'DELETE' exactly")
                     .font(.caption)
-                    .foregroundColor(DesignTokens.statusError)
+                    .foregroundStyle(DesignTokens.statusError)
             }
         }
     }
@@ -217,7 +217,7 @@ struct AccountDeletionView: View {
                 }
                 .frame(maxWidth: .infinity)
             }
-            .foregroundColor(DesignTokens.buttonTextOnAccent)
+            .foregroundStyle(DesignTokens.buttonTextOnAccent)
             .listRowBackground(viewModel.isFormValid ? DesignTokens.statusError : Color(.secondaryLabel))
             .disabled(!viewModel.isFormValid || viewModel.isDeleting)
             .accessibilityLabel(viewModel.isDeleting ? "Deleting account" : "Delete My Account")
@@ -228,7 +228,7 @@ struct AccountDeletionView: View {
     // MARK: - Helper Views
 
     private func bulletPoint(_ text: String) -> some View {
-        HStack(alignment: .top, spacing: 8) {
+        HStack(alignment: .top, spacing: Spacing.xs) {
             Text("\u{2022}")
             Text(text)
                 .font(.subheadline)
@@ -239,7 +239,7 @@ struct AccountDeletionView: View {
         HStack(alignment: .top, spacing: Spacing.sm) {
             Text(number)
                 .font(.caption.bold())
-                .foregroundColor(.white)
+                .foregroundStyle(.white)
                 .frame(width: 20, height: 20)
                 .background(DesignTokens.statusInfo)
                 .clipShape(Circle())
@@ -247,7 +247,7 @@ struct AccountDeletionView: View {
 
             Text(text)
                 .font(.subheadline)
-                .foregroundColor(.secondary)
+                .foregroundStyle(.secondary)
         }
     }
 }

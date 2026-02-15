@@ -80,7 +80,7 @@ struct ConsentUpdateSheet: View {
 
             Text("We have updated our privacy and data processing policies to version \(ConsentManager.currentConsentVersion). Please review the changes below before continuing.")
                 .font(.subheadline)
-                .foregroundColor(.secondary)
+                .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal)
         }
@@ -104,7 +104,7 @@ struct ConsentUpdateSheet: View {
                 )
 
                 Divider()
-                    .padding(.leading, 52)
+                    .padding(.leading, Spacing.xxl)
 
                 changeItem(
                     icon: "figure.run",
@@ -114,7 +114,7 @@ struct ConsentUpdateSheet: View {
                 )
 
                 Divider()
-                    .padding(.leading, 52)
+                    .padding(.leading, Spacing.xxl)
 
                 changeItem(
                     icon: "chart.bar.fill",
@@ -124,7 +124,7 @@ struct ConsentUpdateSheet: View {
                 )
 
                 Divider()
-                    .padding(.leading, 52)
+                    .padding(.leading, Spacing.xxl)
 
                 changeItem(
                     icon: "bell.badge.fill",
@@ -141,19 +141,19 @@ struct ConsentUpdateSheet: View {
     private func changeItem(icon: String, iconColor: Color, title: String, description: String) -> some View {
         HStack(alignment: .top, spacing: Spacing.sm) {
             Image(systemName: icon)
-                .foregroundColor(iconColor)
+                .foregroundStyle(iconColor)
                 .frame(width: 28)
-                .padding(.top, 2)
+                .padding(.top, Spacing.xxs)
                 .accessibilityHidden(true)
 
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: Spacing.xxs) {
                 Text(title)
                     .font(.subheadline)
                     .fontWeight(.medium)
 
                 Text(description)
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
 
@@ -175,7 +175,7 @@ struct ConsentUpdateSheet: View {
                 ForEach(PrivacyConsentType.allCases) { type in
                     HStack(spacing: Spacing.sm) {
                         Image(systemName: type.iconName)
-                            .foregroundColor(type.iconColor)
+                            .foregroundStyle(type.iconColor)
                             .frame(width: 24)
                             .accessibilityHidden(true)
 
@@ -188,14 +188,14 @@ struct ConsentUpdateSheet: View {
                             Text("Required")
                                 .font(.caption2)
                                 .fontWeight(.bold)
-                                .padding(.horizontal, 6)
-                                .padding(.vertical, 2)
+                                .padding(.horizontal, Spacing.xxs)
+                                .padding(.vertical, Spacing.xxs)
                                 .background(Color.modusCyan.opacity(0.2))
                                 .foregroundColor(.modusCyan)
                                 .cornerRadius(CornerRadius.xs)
                         } else {
                             Image(systemName: consentManager.isGranted(type) ? "checkmark.circle.fill" : "circle")
-                                .foregroundColor(consentManager.isGranted(type) ? .green : .secondary)
+                                .foregroundStyle(consentManager.isGranted(type) ? .green : .secondary)
                         }
                     }
                     .padding(.vertical, Spacing.xxs)
@@ -207,7 +207,7 @@ struct ConsentUpdateSheet: View {
 
             Text("You can adjust individual consent settings at any time in Settings > Privacy & Data.")
                 .font(.caption)
-                .foregroundColor(.secondary)
+                .foregroundStyle(.secondary)
         }
     }
 
@@ -230,8 +230,8 @@ struct ConsentUpdateSheet: View {
                 .frame(maxWidth: .infinity)
                 .padding()
                 .background(Color.modusCyan)
-                .foregroundColor(.white)
-                .cornerRadius(CornerRadius.sm)
+                .foregroundStyle(.white)
+                .cornerRadius(CornerRadius.md)
             }
             .disabled(isAccepting)
             .accessibilityLabel(isAccepting ? "Updating consents" : "Acknowledge and continue")
@@ -254,7 +254,7 @@ struct ConsentUpdateSheet: View {
 
             Text("By continuing, you acknowledge that you have reviewed the updated privacy terms.")
                 .font(.caption)
-                .foregroundColor(.secondary)
+                .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal)
         }

@@ -60,6 +60,19 @@ actor AuditLogger {
     private let fileManager = FileManager.default
     private let logger = DebugLogger.shared
     private let encoder = JSONEncoder()
+
+    /// Cached ISO8601 formatter to avoid repeated allocation
+    private static let iso8601Formatter: ISO8601DateFormatter = {
+        let f = ISO8601DateFormatter()
+        return f
+    }()
+
+    /// Cached DateFormatter for log file rotation timestamps
+    private static let rotationDateFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateFormat = "yyyy-MM-dd_HHmmss"
+        return f
+    }()
     private var pendingEntries: [AuditEntry] = []
     private var syncTimer: Timer?
     private var isSyncing = false
@@ -93,7 +106,16 @@ actor AuditLogger {
         self.appVersion = "\(version).\(build)"
 
         // Set up audit log directory in Library (not Documents, not backed up)
-        let libraryDir = fileManager.urls(for: .libraryDirectory, in: .userDomainMask).first!
+        guard let libraryDir = fileManager.urls(for: .libraryDirectory, in: .userDomainMask).first else {
+            // Fallback to temporary directory if Library is unavailable (should never happen on iOS)
+            self.auditLogDirectory = fileManager.temporaryDirectory.appendingPathComponent("AuditLogs", isDirectory: true)
+            encoder.outputFormatting = [.sortedKeys]
+            Task {
+                await startPeriodicSync()
+                await cleanupOldEntries()
+            }
+            return
+        }
         self.auditLogDirectory = libraryDir.appendingPathComponent("AuditLogs", isDirectory: true)
 
         // Create directory if needed
@@ -288,7 +310,7 @@ actor AuditLogger {
 
         return AuditEntry(
             id: UUID(),
-            timestamp: ISO8601DateFormatter().string(from: Date()),
+            timestamp: Self.iso8601Formatter.string(from: Date()),
             userId: userId,
             eventType: eventType,
             resource: resource,
@@ -351,9 +373,7 @@ actor AuditLogger {
 
     /// Rotate the current log file by renaming it with a timestamp.
     private func rotateLogFile() {
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "yyyy-MM-dd_HHmmss"
-        let timestamp = dateFormatter.string(from: Date())
+        let timestamp = Self.rotationDateFormatter.string(from: Date())
         let archivedFile = auditLogDirectory.appendingPathComponent("audit_\(timestamp).log")
 
         try? fileManager.moveItem(at: currentLogFile, to: archivedFile)
@@ -392,7 +412,7 @@ actor AuditLogger {
     /// Remove entries older than the retention period.
     private func cleanupOldEntries() {
         let cutoffDate = Calendar.current.date(byAdding: .day, value: -Self.retentionDays, to: Date()) ?? Date()
-        let cutoffTimestamp = ISO8601DateFormatter().string(from: cutoffDate)
+        let cutoffTimestamp = Self.iso8601Formatter.string(from: cutoffDate)
 
         var entries = loadEntriesFromFile()
         let originalCount = entries.count

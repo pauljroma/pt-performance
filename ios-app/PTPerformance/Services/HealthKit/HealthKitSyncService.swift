@@ -115,6 +115,32 @@ class HealthKitSyncService: ObservableObject {
     private let logger = DebugLogger.shared
     private let errorLogger = ErrorLogger.shared
 
+    /// Cached DateFormatter for UTC metric date strings (yyyy-MM-dd)
+    private static let utcDateFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateFormat = "yyyy-MM-dd"
+        f.timeZone = TimeZone(identifier: "UTC")!
+        return f
+    }()
+
+    /// Cached DateFormatter for local metric date strings (yyyy-MM-dd)
+    private static let localDateFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateFormat = "yyyy-MM-dd"
+        f.timeZone = TimeZone.current
+        return f
+    }()
+
+    /// Cached ISO8601 formatter for recordedAt timestamps
+    private static let iso8601Formatter = ISO8601DateFormatter()
+
+    /// Cached RelativeDateTimeFormatter for last sync display
+    private static let relativeDateFormatter: RelativeDateTimeFormatter = {
+        let f = RelativeDateTimeFormatter()
+        f.unitsStyle = .abbreviated
+        return f
+    }()
+
     /// UserDefaults key for persisting last sync date
     private static let lastSyncDateKey = "PTPerformance.HealthKitSyncService.lastSyncDate"
 
@@ -225,14 +251,11 @@ class HealthKitSyncService: ObservableObject {
         }
 
         // 4. Package into payload matching Edge Function input with UTC-normalized date
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "yyyy-MM-dd"
-        dateFormatter.timeZone = TimeZone(identifier: "UTC")!
-        let metricDate = dateFormatter.string(from: normalizedDate)
+        let metricDate = Self.utcDateFormatter.string(from: normalizedDate)
 
         let payload = HealthKitSyncPayload(
             patientId: patientId.uuidString,
-            recordedAt: ISO8601DateFormatter().string(from: Date()),
+            recordedAt: Self.iso8601Formatter.string(from: Date()),
             metricDate: metricDate,
             hrvMs: dayData?.hrvSDNN ?? hrv,
             restingHeartRate: dayData?.restingHeartRate ?? rhr,
@@ -389,14 +412,11 @@ class HealthKitSyncService: ObservableObject {
         let sleep = try? await healthKitService.fetchSleepData(for: date)
         let rhr = try? await healthKitService.fetchRestingHeartRate(for: date)
 
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "yyyy-MM-dd"
-        dateFormatter.timeZone = TimeZone.current
-        let metricDate = dateFormatter.string(from: date)
+        let metricDate = Self.localDateFormatter.string(from: date)
 
         let payload = HealthKitSyncPayload(
             patientId: patientId.uuidString,
-            recordedAt: ISO8601DateFormatter().string(from: Date()),
+            recordedAt: Self.iso8601Formatter.string(from: Date()),
             metricDate: metricDate,
             hrvMs: hrv,
             restingHeartRate: rhr,
@@ -470,9 +490,7 @@ extension HealthKitSyncService {
             return "Never synced"
         }
 
-        let formatter = RelativeDateTimeFormatter()
-        formatter.unitsStyle = .abbreviated
-        return formatter.localizedString(for: date, relativeTo: Date())
+        return Self.relativeDateFormatter.localizedString(for: date, relativeTo: Date())
     }
 
     /// Whether there is a recovery score available

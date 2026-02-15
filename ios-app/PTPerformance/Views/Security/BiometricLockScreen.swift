@@ -97,7 +97,7 @@ struct BiometricLockScreen: View {
 
             Text("Modus")
                 .font(.subheadline)
-                .foregroundColor(.secondary)
+                .foregroundStyle(.secondary)
         }
         .accessibilityElement(children: .combine)
         .accessibilityLabel("PT Performance by Modus")
@@ -124,7 +124,7 @@ struct BiometricLockScreen: View {
 
             Text("Use \(biometricService.biometricType.rawValue) or your passcode to unlock")
                 .font(.subheadline)
-                .foregroundColor(.secondary)
+                .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
         }
         .accessibilityElement(children: .combine)
@@ -151,7 +151,7 @@ struct BiometricLockScreen: View {
                     Text(isAuthenticating ? "Authenticating..." : "Unlock with \(biometricService.biometricType.rawValue)")
                 }
                 .font(.headline)
-                .foregroundColor(.white)
+                .foregroundStyle(.white)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, Spacing.md)
                 .background(Color.modusCyan)

@@ -170,7 +170,7 @@ struct UnifiedSettingsView: View {
         } header: {
             HStack {
                 Image(systemName: "bolt.circle.fill")
-                    .foregroundColor(.modusCyan)
+                    .foregroundStyle(Color.modusCyan)
                 Text("Quick Toggles")
             }
             .accessibilityAddTraits(.isHeader)
@@ -187,14 +187,14 @@ struct UnifiedSettingsView: View {
                 // Header
                 HStack {
                     Image(systemName: "arrow.triangle.2.circlepath.circle.fill")
-                        .foregroundColor(.modusCyan)
+                        .foregroundStyle(Color.modusCyan)
                         .font(.title2)
-                    VStack(alignment: .leading, spacing: 2) {
+                    VStack(alignment: .leading, spacing: Spacing.xxs) {
                         Text("Health Data Sync")
                             .font(.headline)
                         Text(healthKitService.isAuthorized ? "Connected to Apple Health" : "Not connected")
                             .font(.caption)
-                            .foregroundColor(.secondary)
+                            .foregroundStyle(.secondary)
                     }
                     Spacer()
                 }
@@ -209,7 +209,7 @@ struct UnifiedSettingsView: View {
                         .frame(width: 12, height: 12)
                     Text("Status: \(syncHealthIndicator.label)")
                         .font(.subheadline)
-                        .foregroundColor(.secondary)
+                        .foregroundStyle(.secondary)
                     Spacer()
                 }
                 .accessibilityLabel("Sync status: \(syncHealthIndicator.label)")
@@ -218,11 +218,11 @@ struct UnifiedSettingsView: View {
                 if let lastSync = healthKitService.lastSyncDate {
                     HStack {
                         Image(systemName: "clock")
-                            .foregroundColor(.secondary)
+                            .foregroundStyle(.secondary)
                             .font(.caption)
                         Text("Last synced \(lastSync, style: .relative)")
                             .font(.subheadline)
-                            .foregroundColor(.secondary)
+                            .foregroundStyle(.secondary)
                         Spacer()
                     }
                     .accessibilityElement(children: .combine)
@@ -247,7 +247,7 @@ struct UnifiedSettingsView: View {
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, Spacing.sm)
                     .background(Color.modusCyan.opacity(0.1))
-                    .foregroundColor(.modusCyan)
+                    .foregroundStyle(Color.modusCyan)
                     .cornerRadius(CornerRadius.sm)
                 }
                 .disabled(isRefreshingSyncStatus)
@@ -259,7 +259,7 @@ struct UnifiedSettingsView: View {
         } header: {
             HStack {
                 Image(systemName: "waveform.path.ecg")
-                    .foregroundColor(.modusTealAccent)
+                    .foregroundStyle(Color.modusTealAccent)
                 Text("Sync Status")
             }
             .accessibilityAddTraits(.isHeader)
@@ -278,7 +278,7 @@ struct UnifiedSettingsView: View {
                 HStack {
                     if let icon = section.icon {
                         Image(systemName: icon)
-                            .foregroundColor(.modusCyan)
+                            .foregroundStyle(Color.modusCyan)
                     }
                     Text(section.title)
                 }
@@ -335,19 +335,19 @@ struct UnifiedSettingsView: View {
         HStack(spacing: Spacing.sm) {
             if let icon = item.icon {
                 Image(systemName: icon)
-                    .foregroundColor(item.iconColor ?? .modusCyan)
+                    .foregroundStyle(item.iconColor ?? .modusCyan)
                     .frame(width: 28)
                     .accessibilityHidden(true)
             }
 
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: Spacing.xxs) {
                 Text(item.title)
-                    .foregroundColor(item.isDestructive ? .red : .primary)
+                    .foregroundStyle(item.isDestructive ? .red : .primary)
 
                 if let subtitle = item.subtitle {
                     Text(subtitle)
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundStyle(.secondary)
                 }
             }
 
@@ -357,10 +357,10 @@ struct UnifiedSettingsView: View {
                 Text(badge)
                     .font(.caption2)
                     .fontWeight(.bold)
-                    .padding(.horizontal, 6)
-                    .padding(.vertical, 2)
+                    .padding(.horizontal, Spacing.xxs)
+                    .padding(.vertical, Spacing.xxs)
                     .background(item.badgeColor?.opacity(0.2) ?? Color.orange.opacity(0.2))
-                    .foregroundColor(item.badgeColor ?? .orange)
+                    .foregroundStyle(item.badgeColor ?? .orange)
                     .cornerRadius(CornerRadius.xs)
                     .accessibilityHidden(true)
             }
@@ -374,7 +374,7 @@ struct UnifiedSettingsView: View {
             VStack(spacing: Spacing.md) {
                 Image(systemName: "magnifyingglass")
                     .font(.system(size: 48))
-                    .foregroundColor(.secondary)
+                    .foregroundStyle(.secondary)
                     .accessibilityHidden(true)
 
                 Text("No Settings Found")
@@ -382,7 +382,7 @@ struct UnifiedSettingsView: View {
 
                 Text("Try searching for something else")
                     .font(.subheadline)
-                    .foregroundColor(.secondary)
+                    .foregroundStyle(.secondary)
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, Spacing.xl)
@@ -932,7 +932,7 @@ private struct QuickToggleRow: View {
     var body: some View {
         HStack(spacing: Spacing.sm) {
             Image(systemName: icon)
-                .foregroundColor(iconColor)
+                .foregroundStyle(iconColor)
                 .frame(width: 28)
                 .accessibilityHidden(true)
 
@@ -1093,7 +1093,7 @@ struct AboutView: View {
                 VStack(alignment: .center, spacing: Spacing.md) {
                     Image(systemName: "dumbbell.fill")
                         .font(.system(size: 64))
-                        .foregroundColor(.modusCyan)
+                        .foregroundStyle(Color.modusCyan)
                         .accessibilityHidden(true)
 
                     Text("PT Performance")
@@ -1102,7 +1102,7 @@ struct AboutView: View {
 
                     Text("Modus")
                         .font(.subheadline)
-                        .foregroundColor(.secondary)
+                        .foregroundStyle(.secondary)
                 }
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, Spacing.lg)
@@ -1115,7 +1115,7 @@ struct AboutView: View {
                     Spacer()
                     if let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String {
                         Text(version)
-                            .foregroundColor(.secondary)
+                            .foregroundStyle(.secondary)
                     }
                 }
 
@@ -1124,20 +1124,24 @@ struct AboutView: View {
                     Spacer()
                     if let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String {
                         Text(build)
-                            .foregroundColor(.secondary)
+                            .foregroundStyle(.secondary)
                     }
                 }
             }
 
             Section("Legal") {
-                Link("Terms of Service", destination: URL(string: "https://getmodus.com/terms")!)
-                Link("Privacy Policy", destination: URL(string: "https://getmodus.com/privacy")!)
+                if let termsURL = URL(string: "https://getmodus.com/terms") {
+                    Link("Terms of Service", destination: termsURL)
+                }
+                if let privacyURL = URL(string: "https://getmodus.com/privacy") {
+                    Link("Privacy Policy", destination: privacyURL)
+                }
             }
 
             Section {
                 Text("© 2026 Modus. All rights reserved.")
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, alignment: .center)
             }
         }

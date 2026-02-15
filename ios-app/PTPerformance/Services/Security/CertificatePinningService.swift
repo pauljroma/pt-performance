@@ -8,7 +8,6 @@
 //
 
 import Foundation
-import CommonCrypto
 import CryptoKit
 import os.log
 #if canImport(Sentry)
@@ -124,6 +123,9 @@ final class CertificatePinningService {
 
     private let logger = DebugLogger.shared
     private let osLogger = Logger(subsystem: "com.getmodus.app", category: "CertificatePinning")
+
+    /// Cached ISO8601 formatter to avoid repeated allocation
+    private static let iso8601Formatter = ISO8601DateFormatter()
 
     /// Pinning configurations indexed by domain for fast lookup
     private var configurations: [String: PinningConfiguration] = [:]
@@ -482,7 +484,7 @@ final class CertificatePinningService {
             "event": "CERTIFICATE_PIN_FAILURE",
             "host": host,
             "reason": reason,
-            "timestamp": ISO8601DateFormatter().string(from: Date()),
+            "timestamp": Self.iso8601Formatter.string(from: Date()),
             "enforcement_active": isEnforcementActive
         ]
 

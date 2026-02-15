@@ -73,7 +73,7 @@ struct PrivacySettingsView: View {
 
                     Image(systemName: consentManager.allConsentsUpToDate ? "checkmark.shield.fill" : "exclamationmark.shield.fill")
                         .font(.title2)
-                        .foregroundColor(consentManager.allConsentsUpToDate ? .green : .orange)
+                        .foregroundStyle(consentManager.allConsentsUpToDate ? .green : .orange)
                 }
                 .accessibilityHidden(true)
 
@@ -83,7 +83,7 @@ struct PrivacySettingsView: View {
 
                     Text(consentManager.statusSummary)
                         .font(.subheadline)
-                        .foregroundColor(.secondary)
+                        .foregroundStyle(.secondary)
                 }
 
                 Spacer()
@@ -92,8 +92,8 @@ struct PrivacySettingsView: View {
                 Text("\(consentManager.activeConsentCount)/\(consentManager.totalConsentCount)")
                     .font(.caption)
                     .fontWeight(.bold)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
+                    .padding(.horizontal, Spacing.xs)
+                    .padding(.vertical, Spacing.xxs)
                     .background(Color.modusCyan.opacity(0.15))
                     .foregroundColor(.modusCyan)
                     .cornerRadius(CornerRadius.xs)
@@ -137,11 +137,11 @@ struct PrivacySettingsView: View {
             Toggle(isOn: consentManager.binding(for: type)) {
                 HStack(spacing: Spacing.sm) {
                     Image(systemName: type.iconName)
-                        .foregroundColor(type.iconColor)
+                        .foregroundStyle(type.iconColor)
                         .frame(width: 28)
                         .accessibilityHidden(true)
 
-                    VStack(alignment: .leading, spacing: 2) {
+                    VStack(alignment: .leading, spacing: Spacing.xxs) {
                         HStack(spacing: Spacing.xs) {
                             Text(type.displayName)
                                 .font(.body)
@@ -150,8 +150,8 @@ struct PrivacySettingsView: View {
                                 Text("Required")
                                     .font(.caption2)
                                     .fontWeight(.bold)
-                                    .padding(.horizontal, 6)
-                                    .padding(.vertical, 2)
+                                    .padding(.horizontal, Spacing.xxs)
+                                    .padding(.vertical, Spacing.xxs)
                                     .background(Color.modusCyan.opacity(0.2))
                                     .foregroundColor(.modusCyan)
                                     .cornerRadius(CornerRadius.xs)
@@ -160,7 +160,7 @@ struct PrivacySettingsView: View {
 
                         Text(type.explanation)
                             .font(.caption)
-                            .foregroundColor(.secondary)
+                            .foregroundStyle(.secondary)
                             .fixedSize(horizontal: false, vertical: true)
                     }
                 }
@@ -185,7 +185,7 @@ struct PrivacySettingsView: View {
                         .font(.caption2)
                 }
                 .foregroundStyle(.tertiary)
-                .padding(.leading, 40)
+                .padding(.leading, Spacing.xl + Spacing.xs)
             }
         }
         .padding(.vertical, Spacing.xxs)
@@ -263,18 +263,18 @@ struct PrivacySettingsView: View {
     private func dataMinimizationItem(title: String, detail: String, icon: String) -> some View {
         HStack(alignment: .top, spacing: Spacing.sm) {
             Image(systemName: icon)
-                .foregroundColor(.secondary)
+                .foregroundStyle(.secondary)
                 .frame(width: 20)
                 .accessibilityHidden(true)
 
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: Spacing.xxs) {
                 Text(title)
                     .font(.subheadline)
                     .fontWeight(.medium)
 
                 Text(detail)
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
@@ -298,13 +298,13 @@ struct PrivacySettingsView: View {
 
                     Text("View Full Privacy Policy")
                         .font(.body)
-                        .foregroundColor(.primary)
+                        .foregroundStyle(.primary)
 
                     Spacer()
 
                     Image(systemName: "arrow.up.right.square")
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundStyle(.secondary)
                 }
             }
             .accessibilityLabel("View full privacy policy")
@@ -317,14 +317,14 @@ struct PrivacySettingsView: View {
                     .frame(width: 28)
                     .accessibilityHidden(true)
 
-                VStack(alignment: .leading, spacing: 2) {
+                VStack(alignment: .leading, spacing: Spacing.xxs) {
                     Text("HIPAA Compliant")
                         .font(.subheadline)
                         .fontWeight(.medium)
 
                     Text("All health data is protected under HIPAA regulations with AES-256 encryption")
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundStyle(.secondary)
                 }
             }
             .padding(.vertical, Spacing.xxs)
@@ -353,7 +353,7 @@ struct PrivacySettingsView: View {
                     Text("Revoke All Optional Consents")
                 }
                 .font(.headline)
-                .foregroundColor(DesignTokens.statusError)
+                .foregroundStyle(DesignTokens.statusError)
                 .frame(maxWidth: .infinity, alignment: .center)
                 .padding(.vertical, Spacing.xs)
             }

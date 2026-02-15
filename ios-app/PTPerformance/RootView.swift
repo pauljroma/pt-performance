@@ -49,11 +49,11 @@ struct RootView: View {
                     TherapistTabView()
                 } else {
                     // Role not yet determined — show loading with timeout
-                    VStack(spacing: 16) {
+                    VStack(spacing: Spacing.md) {
                         ProgressView()
                         Text("Setting up your account...")
                             .font(.subheadline)
-                            .foregroundColor(.secondary)
+                            .foregroundStyle(.secondary)
                     }
                 }
             }

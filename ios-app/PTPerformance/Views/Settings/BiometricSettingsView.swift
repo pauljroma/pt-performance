@@ -76,7 +76,7 @@ struct BiometricSettingsView: View {
 
                     Text(statusDescription)
                         .font(.subheadline)
-                        .foregroundColor(.secondary)
+                        .foregroundStyle(.secondary)
                 }
             }
             .padding(.vertical, Spacing.xs)
@@ -95,12 +95,12 @@ struct BiometricSettingsView: View {
                     .frame(width: 28)
                     .accessibilityHidden(true)
 
-                VStack(alignment: .leading, spacing: 2) {
+                VStack(alignment: .leading, spacing: Spacing.xxs) {
                     Text("Require \(biometricService.biometricType.rawValue)")
 
                     Text("Lock app with \(biometricService.biometricType.rawValue)")
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundStyle(.secondary)
                 }
 
                 Spacer()
@@ -168,16 +168,16 @@ struct BiometricSettingsView: View {
         Section {
             HStack(spacing: Spacing.sm) {
                 Image(systemName: "heart.text.square.fill")
-                    .foregroundColor(.red)
+                    .foregroundStyle(.red)
                     .frame(width: 28)
                     .accessibilityHidden(true)
 
-                VStack(alignment: .leading, spacing: 2) {
+                VStack(alignment: .leading, spacing: Spacing.xxs) {
                     Text("Protect Sensitive Data")
 
                     Text("Require authentication for labs and health data")
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundStyle(.secondary)
                 }
 
                 Spacer()
@@ -235,7 +235,7 @@ struct BiometricSettingsView: View {
 
             Text(text)
                 .font(.subheadline)
-                .foregroundColor(.secondary)
+                .foregroundStyle(.secondary)
         }
         .accessibilityElement(children: .combine)
     }

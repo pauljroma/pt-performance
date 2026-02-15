@@ -88,22 +88,22 @@ struct DataSharingView: View {
                         .font(.title2)
                         .accessibilityHidden(true)
 
-                    VStack(alignment: .leading, spacing: 2) {
+                    VStack(alignment: .leading, spacing: Spacing.xxs) {
                         Text("Who Can See Your Data")
                             .font(.headline)
                         Text("Manage therapist access to your health and workout data")
                             .font(.caption)
-                            .foregroundColor(.secondary)
+                            .foregroundStyle(.secondary)
                     }
                 }
 
                 HStack(alignment: .top, spacing: Spacing.sm) {
                     Image(systemName: "lock.shield.fill")
-                        .foregroundColor(.green)
+                        .foregroundStyle(.green)
                         .accessibilityHidden(true)
                     Text("You control who has access. Revoke at any time. All sharing changes are logged for your records.")
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundStyle(.secondary)
                 }
             }
             .padding(.vertical, Spacing.xs)
@@ -139,7 +139,7 @@ struct DataSharingView: View {
             VStack(spacing: Spacing.md) {
                 Image(systemName: "lock.circle")
                     .font(.system(size: 48))
-                    .foregroundColor(.secondary)
+                    .foregroundStyle(.secondary)
                     .accessibilityHidden(true)
 
                 Text("No Active Sharing")
@@ -147,7 +147,7 @@ struct DataSharingView: View {
 
                 Text("No therapists currently have access to your data. Link with a therapist to enable data sharing.")
                     .font(.subheadline)
-                    .foregroundColor(.secondary)
+                    .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
             }
             .frame(maxWidth: .infinity)
@@ -191,14 +191,14 @@ private struct TherapistShareRow: View {
                     .font(.title2)
                     .accessibilityHidden(true)
 
-                VStack(alignment: .leading, spacing: 2) {
+                VStack(alignment: .leading, spacing: Spacing.xxs) {
                     Text(share.therapistName)
                         .font(.body)
                         .fontWeight(.medium)
 
                     Text("Access level: \(share.accessLevel.displayName)")
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundStyle(.secondary)
                 }
 
                 Spacer()
@@ -214,12 +214,12 @@ private struct TherapistShareRow: View {
             HStack(spacing: Spacing.md) {
                 Label(share.grantedDateText, systemImage: "calendar")
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundStyle(.secondary)
 
                 if let expiresText = share.expiresDateText {
                     Label(expiresText, systemImage: "clock")
                         .font(.caption)
-                        .foregroundColor(.orange)
+                        .foregroundStyle(.orange)
                 }
             }
 
@@ -235,7 +235,7 @@ private struct TherapistShareRow: View {
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, Spacing.xs)
                 .background(DesignTokens.statusError.opacity(0.1))
-                .foregroundColor(DesignTokens.statusError)
+                .foregroundStyle(DesignTokens.statusError)
                 .cornerRadius(CornerRadius.sm)
             }
             .buttonStyle(.plain)
@@ -255,16 +255,16 @@ private struct AuditTrailRow: View {
     var body: some View {
         HStack(spacing: Spacing.sm) {
             Image(systemName: entry.action.icon)
-                .foregroundColor(entry.action.color)
+                .foregroundStyle(entry.action.color)
                 .frame(width: 24)
                 .accessibilityHidden(true)
 
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: Spacing.xxs) {
                 Text(entry.description)
                     .font(.subheadline)
                 Text(entry.dateText)
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundStyle(.secondary)
             }
         }
         .padding(.vertical, Spacing.xxs)
@@ -284,19 +284,21 @@ struct TherapistShare: Identifiable {
     let grantedAt: Date
     let expiresAt: Date?
 
+    /// Cached DateFormatter for medium-date display
+    private static let mediumDateFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateStyle = .medium
+        f.timeStyle = .none
+        return f
+    }()
+
     var grantedDateText: String {
-        let formatter = DateFormatter()
-        formatter.dateStyle = .medium
-        formatter.timeStyle = .none
-        return "Since \(formatter.string(from: grantedAt))"
+        return "Since \(Self.mediumDateFormatter.string(from: grantedAt))"
     }
 
     var expiresDateText: String? {
         guard let expiresAt = expiresAt else { return nil }
-        let formatter = DateFormatter()
-        formatter.dateStyle = .medium
-        formatter.timeStyle = .none
-        return "Expires \(formatter.string(from: expiresAt))"
+        return "Expires \(Self.mediumDateFormatter.string(from: expiresAt))"
     }
 }
 
@@ -323,10 +325,15 @@ struct SharingAuditEntry: Identifiable {
     let date: Date
     let description: String
 
+    /// Cached RelativeDateTimeFormatter for audit trail timestamps
+    private static let relativeDateFormatter: RelativeDateTimeFormatter = {
+        let f = RelativeDateTimeFormatter()
+        f.unitsStyle = .abbreviated
+        return f
+    }()
+
     var dateText: String {
-        let formatter = RelativeDateTimeFormatter()
-        formatter.unitsStyle = .abbreviated
-        return formatter.localizedString(for: date, relativeTo: Date())
+        return Self.relativeDateFormatter.localizedString(for: date, relativeTo: Date())
     }
 }
 
@@ -351,7 +358,7 @@ enum SharingAction {
         case .granted: return .green
         case .revoked: return .red
         case .expired: return .orange
-        case .modified: return .blue
+        case .modified: return .modusCyan
         }
     }
 }

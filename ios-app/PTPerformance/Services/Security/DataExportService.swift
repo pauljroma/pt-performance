@@ -208,6 +208,17 @@ final class DataExportService {
     private let supabase = PTSupabaseClient.shared
     private let logger = DebugLogger.shared
 
+    /// Cached ISO8601 formatter for export metadata timestamps
+    private static let iso8601Formatter = ISO8601DateFormatter()
+
+    /// Cached DateFormatter for filename date strings
+    private static let filenameDateFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateFormat = "yyyy-MM-dd_HHmmss"
+        f.locale = Locale(identifier: "en_US_POSIX")
+        return f
+    }()
+
     /// Key for storing last export date
     private let lastExportDateKey = "dataExport_lastExportDate"
 
@@ -372,7 +383,7 @@ final class DataExportService {
         }()
 
         let metadata = ExportMetadata(
-            exportDate: ISO8601DateFormatter().string(from: Date()),
+            exportDate: Self.iso8601Formatter.string(from: Date()),
             exportFormat: format.rawValue,
             userId: userId,
             dataVersion: "1.0",
@@ -618,10 +629,7 @@ final class DataExportService {
 
     /// Returns a date string suitable for filenames
     private func filenameDateString() -> String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd_HHmmss"
-        formatter.locale = Locale(identifier: "en_US_POSIX")
-        return formatter.string(from: Date())
+        return Self.filenameDateFormatter.string(from: Date())
     }
 
     /// Creates and returns the export directory in the temporary folder
