@@ -143,13 +143,8 @@ final class SessionManager: ObservableObject {
     func forceLogout(reason: LogoutReason) {
         debugLogger.log("[SessionManager] Force logout triggered: \(reason.displayMessage)", level: .warning)
 
-        // Clear all stored credentials from keychain
-        do {
-            try secureStore.clearAll()
-            debugLogger.log("[SessionManager] All keychain credentials cleared", level: .diagnostic)
-        } catch {
-            debugLogger.error("SessionManager", "Failed to clear keychain on force logout: \(error.localizedDescription)")
-        }
+        // Clear auth credentials only (preserve encryption keys)
+        secureStore.clearAuthCredentials()
 
         // Clear the hasActiveSession flag
         UserDefaults.standard.set(false, forKey: "hasActiveSession")

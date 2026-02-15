@@ -210,6 +210,23 @@ final class SecureStore {
         }
     }
 
+    /// Clears only authentication credentials, preserving encryption keys and other non-auth data.
+    /// Use this for session expiry / logout instead of clearAll().
+    func clearAuthCredentials() {
+        let authKeys = [
+            Keys.authToken,
+            Keys.refreshToken,
+            Keys.userIdentifier,
+            Keys.whoopAccessToken,
+            Keys.whoopRefreshToken,
+            Keys.sessionFingerprint
+        ]
+        for key in authKeys {
+            try? delete(forKey: key)
+        }
+        logger.diagnostic("SecureStore: Cleared auth credentials (encryption keys preserved)")
+    }
+
     // MARK: - Keychain Migration (ACP-1044)
 
     /// Migrates keychain items from old access levels to the current secure level.

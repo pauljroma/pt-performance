@@ -5,6 +5,7 @@ struct RootView: View {
     @StateObject private var onboardingCoordinator = OnboardingCoordinator.shared
     @StateObject private var modeService = ModeService.shared
     @StateObject private var consentManager = ConsentManager.shared
+    @StateObject private var sessionManager = SessionManager.shared
     @AppStorage("hasAcceptedPrivacyNotice") private var hasAcceptedPrivacyNotice = false
     @AppStorage("hasCompletedQuickSetup") private var hasCompletedQuickSetup = false
     @State private var showPrivacyNotice = false
@@ -82,6 +83,16 @@ struct RootView: View {
             if isAuthenticated && hasAcceptedPrivacyNotice && consentManager.needsReConsent() {
                 consentManager.showConsentUpdateSheet = true
             }
+        }
+        .onChange(of: sessionManager.shouldLogout) { _, shouldLogout in
+            guard shouldLogout else { return }
+            // Session expired or was force-terminated — navigate to login
+            appState.isAuthenticated = false
+            appState.userId = nil
+            appState.userRole = nil
+            PTSupabaseClient.shared.currentSession = nil
+            PTSupabaseClient.shared.currentUser = nil
+            sessionManager.resetSession()
         }
     }
 
