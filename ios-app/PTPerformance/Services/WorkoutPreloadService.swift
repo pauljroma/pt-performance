@@ -143,7 +143,8 @@ final class WorkoutPreloadService: ObservableObject {
     /// Internal preload implementation
     private func performPreload() async {
         guard let patientId = supabase.userId else {
-            logger.log("[WorkoutPreloadService] No patient ID, skipping preload", level: .warning)
+            // No patient ID means user is not authenticated yet — this is normal on launch.
+            // Return silently to avoid spamming logs.
             return
         }
 
@@ -189,8 +190,14 @@ final class WorkoutPreloadService: ObservableObject {
             logger.log("[WorkoutPreloadService] Preload complete! Session: \(session?.name ?? "none"), \(exercises.count) exercises", level: .success)
 
         } catch is CancellationError {
-            logger.log("[WorkoutPreloadService] Preload cancelled", level: .warning)
+            logger.log("[WorkoutPreloadService] Preload cancelled", level: .diagnostic)
         } catch {
+            // Check for other cancellation variants (e.g. URLError.cancelled)
+            guard !error.isCancellation else {
+                logger.log("[WorkoutPreloadService] Preload cancelled", level: .diagnostic)
+                isPreloading = false
+                return
+            }
             lastError = error.localizedDescription
             logger.log("[WorkoutPreloadService] Preload failed: \(error.localizedDescription)", level: .error)
         }

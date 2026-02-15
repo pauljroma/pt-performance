@@ -322,7 +322,8 @@ class ReadinessService: ObservableObject {
         if let rawJSON = String(data: responseData, encoding: .utf8) {
             DebugLogger.shared.info("READINESS", "Raw response: \(rawJSON)")
             if rawJSON == "null" || rawJSON.isEmpty {
-                DebugLogger.shared.warning("READINESS", "No readiness found for date: \(today)")
+                // No data is normal — not every user does a readiness check every day.
+                DebugLogger.shared.logOnce(key: "readiness_no_data_\(today)", "[READINESS] No readiness found for date: \(today)", level: .diagnostic)
                 return nil  // No data - this is expected for users who haven't checked in
             }
         }

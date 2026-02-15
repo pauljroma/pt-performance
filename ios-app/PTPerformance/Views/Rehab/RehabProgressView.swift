@@ -139,9 +139,19 @@ struct RehabProgressView: View {
             let data = try await adherenceService.fetchAdherence(patientId: patientId)
             adherenceData = data
         } catch {
-            DebugLogger.shared.warning("RehabProgressView", "Could not load adherence: \(error.localizedDescription)")
-            loadError = error.localizedDescription
-            adherenceData = nil
+            // "Cannot coerce the result to a single JSON object" means no data exists yet — show empty state
+            let desc = error.localizedDescription
+            if desc.contains("Cannot coerce") || desc.contains("single JSON object") {
+                DebugLogger.shared.log("[RehabProgressView] No adherence data available yet (empty result)", level: .diagnostic)
+                adherenceData = nil
+                // Don't set loadError — this is a normal empty state, not a real error
+            } else if error.isCancellation {
+                // Navigation cancellation — ignore silently
+            } else {
+                DebugLogger.shared.warning("RehabProgressView", "Could not load adherence: \(desc)")
+                loadError = desc
+                adherenceData = nil
+            }
         }
 
         isLoading = false

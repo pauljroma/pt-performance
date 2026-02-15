@@ -8,6 +8,8 @@ struct ROMExercisesView: View {
     @State private var measurements: [ROMeasurement] = []
     @State private var isLoading = true
     @State private var loadError: String?
+    /// Track whether we already logged the "table not found" diagnostic to avoid spamming on every appearance
+    @State private var hasLoggedTableMissing = false
 
     var body: some View {
         NavigationStack {
@@ -142,8 +144,19 @@ struct ROMExercisesView: View {
             )
             measurements = decoded
         } catch {
-            DebugLogger.shared.error("ROMExercisesView", "Failed to load ROM measurements: \(error.localizedDescription)")
-            loadError = error.localizedDescription
+            let errorDesc = error.localizedDescription
+            // Check if the error is about the table not existing (schema cache miss)
+            if errorDesc.contains("rom_measurements") && (errorDesc.contains("schema cache") || errorDesc.contains("Could not find")) {
+                // Table doesn't exist yet — show empty state, not an error
+                measurements = []
+                if !hasLoggedTableMissing {
+                    DebugLogger.shared.diagnostic("ROMExercisesView: rom_measurements table not found in schema — showing empty state")
+                    hasLoggedTableMissing = true
+                }
+            } else {
+                DebugLogger.shared.error("ROMExercisesView", "Failed to load ROM measurements: \(errorDesc)")
+                loadError = errorDesc
+            }
         }
 
         isLoading = false

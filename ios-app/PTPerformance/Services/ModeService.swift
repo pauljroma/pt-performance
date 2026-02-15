@@ -60,25 +60,35 @@ class ModeService: ObservableObject {
         defer { isLoading = false }
 
         do {
-            // Query patient mode using user_id
+            // Query patient mode using user_id — use execute() + limit(1) instead
+            // of .single() to gracefully handle 0 or multiple rows instead of
+            // throwing "Cannot coerce the result to a single JSON object".
             let response = try await supabase.client
                 .from("patients")
                 .select("id, mode, mode_changed_at, mode_changed_by")
                 .eq("user_id", value: userId)
-                .single()
+                .limit(1)
                 .execute()
 
             let decoder = JSONDecoder()
             decoder.dateDecodingStrategy = .iso8601
 
-            let patientMode = try decoder.decode(PatientMode.self, from: response.data)
-            currentMode = patientMode.mode
-            loadError = nil
+            let results = try decoder.decode([PatientMode].self, from: response.data)
 
-            // Load features for this mode
-            await loadModeFeatures(for: patientMode.mode)
+            if let patientMode = results.first {
+                currentMode = patientMode.mode
+                loadError = nil
 
-            debugLogger.log("[ModeService] Loaded patient mode: \(patientMode.mode.displayName)", level: .success)
+                // Load features for this mode
+                await loadModeFeatures(for: patientMode.mode)
+
+                debugLogger.log("[ModeService] Loaded patient mode: \(patientMode.mode.displayName)", level: .success)
+            } else {
+                debugLogger.log("[ModeService] No patient record found for user, defaulting to rehab mode", level: .warning)
+                currentMode = .rehab
+                loadError = nil
+                await loadModeFeatures(for: .rehab)
+            }
         } catch {
             debugLogger.log("[ModeService] Failed to load patient mode: \(error)", level: .error)
             loadError = ModeServiceError.loadFailed(underlying: error).localizedDescription
@@ -102,7 +112,8 @@ class ModeService: ObservableObject {
             let features = try decoder.decode([ModeFeature].self, from: response.data)
 
             if features.isEmpty {
-                debugLogger.log("[ModeService] No features in mode_features table for \(mode.displayName), using defaults", level: .warning)
+                // Using defaults is normal behavior — only log once per mode
+                debugLogger.logOnce(key: "mode_features_empty_\(mode.rawValue)", "[ModeService] No features in mode_features table for \(mode.displayName), using defaults", level: .diagnostic)
                 modeFeatures = Self.defaultFeatures(for: mode)
             } else {
                 modeFeatures = features

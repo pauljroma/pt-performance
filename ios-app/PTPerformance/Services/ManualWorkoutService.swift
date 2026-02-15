@@ -343,7 +343,7 @@ class ManualWorkoutService: ObservableObject {
             }
             #endif
             // Return empty array instead of throwing - table may not exist yet
-            logger.log("Returning empty patient templates (table may not exist)", level: .warning)
+            logger.log("Returning empty patient templates (table may not exist)", level: .diagnostic)
             return []
         }
     }

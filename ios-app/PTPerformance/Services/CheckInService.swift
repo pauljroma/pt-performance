@@ -181,8 +181,11 @@ class CheckInService: ObservableObject {
             return savedCheckIn
 
         } catch {
-            // Fall back to direct table insert if RPC doesn't exist
-            logger.log("[CheckInService] RPC failed, trying direct insert: \(error.localizedDescription)", level: .warning)
+            // Cancelled requests — re-throw without logging
+            if error.isCancellation { throw error }
+
+            // Fall back to direct table insert if RPC doesn't exist — this is expected behavior
+            logger.logWithCooldown(key: "checkin_rpc_fallback_insert", cooldown: 5, "[CheckInService] RPC failed, trying direct insert: \(error.localizedDescription)", level: .diagnostic)
 
             do {
                 let insertData: [String: AnyEncodable] = [
@@ -284,8 +287,11 @@ class CheckInService: ObservableObject {
             return checkIn
 
         } catch {
-            // Fall back to direct query
-            logger.log("[CheckInService] RPC failed, trying direct query: \(error.localizedDescription)", level: .warning)
+            // Cancelled requests (e.g. navigation) — don't log at all
+            guard !error.isCancellation else { return nil }
+
+            // Fall back to direct query — this is expected behavior, not an error
+            logger.logWithCooldown(key: "checkin_rpc_fallback_query", cooldown: 5, "[CheckInService] RPC failed, trying direct query: \(error.localizedDescription)", level: .diagnostic)
 
             do {
                 let response = try await client.client
@@ -309,6 +315,7 @@ class CheckInService: ObservableObject {
                 return nil
 
             } catch let queryError {
+                guard !queryError.isCancellation else { return nil }
                 errorLogger.logError(queryError, context: "CheckInService.getTodayCheckIn")
                 return nil
             }
@@ -343,8 +350,11 @@ class CheckInService: ObservableObject {
             return checkIns
 
         } catch {
-            // Fall back to direct query
-            logger.log("[CheckInService] RPC failed, trying direct query", level: .warning)
+            // Cancelled requests — return empty without logging
+            guard !error.isCancellation else { return [] }
+
+            // Fall back to direct query — expected behavior
+            logger.logWithCooldown(key: "checkin_rpc_fallback_history", cooldown: 5, "[CheckInService] RPC failed, trying direct query for history", level: .diagnostic)
 
             let dateFormatter = DateFormatter()
             dateFormatter.dateFormat = "yyyy-MM-dd"
@@ -412,8 +422,11 @@ class CheckInService: ObservableObject {
             return streak
 
         } catch {
-            // Fall back to calculating from history
-            logger.log("[CheckInService] RPC failed, calculating streak from history", level: .warning)
+            // Cancelled requests — return empty streak without logging
+            guard !error.isCancellation else { return CheckInStreak() }
+
+            // Fall back to calculating from history — expected behavior
+            logger.logWithCooldown(key: "checkin_rpc_fallback_streak", cooldown: 5, "[CheckInService] RPC failed, calculating streak from history", level: .diagnostic)
 
             let history = await getCheckInHistory(days: 365)
             let streak = calculateStreak(from: history)

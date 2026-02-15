@@ -129,11 +129,16 @@ class TodaySessionViewModel: ObservableObject {
 
                 isLoading = false
             } catch is CancellationError {
-                // Task was cancelled, don't update state
-                logger.log("⏹️ fetchTodaySession cancelled (superseded by new request)", level: .warning)
+                // Task was cancelled — normal during navigation, don't update state
+                logger.log("fetchTodaySession cancelled (superseded by new request)", level: .diagnostic)
                 return
             } catch let error {
-                logger.log("❌ Supabase fetch failed: \(error.localizedDescription)", level: .error)
+                // Check for other cancellation variants (e.g. URLError.cancelled)
+                guard !error.isCancellation else {
+                    logger.log("fetchTodaySession cancelled (superseded by new request)", level: .diagnostic)
+                    return
+                }
+                logger.log("Supabase fetch failed: \(error.localizedDescription)", level: .error)
 
                 // Serve cached data when offline (ACP-600)
                 if supabase.isOffline,
@@ -723,7 +728,7 @@ class TodaySessionViewModel: ObservableObject {
 
             // Check for cancellation before network calls
             guard !Task.isCancelled else {
-                logger.log("⏹️ fetchTodaysCompletedWorkouts cancelled (superseded by new request)", level: .warning)
+                logger.log("fetchTodaysCompletedWorkouts cancelled (superseded by new request)", level: .diagnostic)
                 return
             }
 
@@ -780,7 +785,7 @@ class TodaySessionViewModel: ObservableObject {
 
             // Check for cancellation after network calls
             guard !Task.isCancelled else {
-                logger.log("⏹️ fetchTodaysCompletedWorkouts cancelled (superseded by new request)", level: .warning)
+                logger.log("fetchTodaysCompletedWorkouts cancelled (superseded by new request)", level: .diagnostic)
                 return
             }
 

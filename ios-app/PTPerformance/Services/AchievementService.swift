@@ -106,7 +106,10 @@ class AchievementService: ObservableObject {
 
             logger.log("AchievementService: Loaded \(achievements.count) unlocked achievements", level: .success)
         } catch {
-            logger.log("AchievementService: Error loading achievements: \(error)", level: .warning)
+            // Cancelled requests (tab switching) — silently fall back to cache
+            if !error.isCancellation {
+                logger.log("AchievementService: Error loading achievements: \(error)", level: .warning)
+            }
             // Load from local cache if server fails
             loadFromCache()
         }
@@ -366,7 +369,9 @@ class AchievementService: ObservableObject {
                 stats.longestStreak = combinedStreak.longestStreak
             }
         } catch {
-            logger.log("AchievementService: Failed to fetch streak data: \(error)", level: .warning)
+            if !error.isCancellation {
+                logger.log("AchievementService: Failed to fetch streak data: \(error)", level: .warning)
+            }
         }
 
         // Fetch workout count from scheduled sessions (completed_at is not null)
@@ -380,7 +385,9 @@ class AchievementService: ObservableObject {
 
             stats.completedWorkouts = response.count ?? 0
         } catch {
-            logger.log("AchievementService: Failed to fetch workout count: \(error)", level: .warning)
+            if !error.isCancellation {
+                logger.log("AchievementService: Failed to fetch workout count: \(error)", level: .warning)
+            }
         }
 
         // Also count manual sessions (completed_at is not null)
@@ -394,7 +401,9 @@ class AchievementService: ObservableObject {
 
             stats.completedWorkouts += response.count ?? 0
         } catch {
-            logger.log("AchievementService: Failed to fetch manual session count: \(error)", level: .warning)
+            if !error.isCancellation {
+                logger.log("AchievementService: Failed to fetch manual session count: \(error)", level: .warning)
+            }
         }
 
         // Fetch PR count from big lifts
@@ -402,7 +411,9 @@ class AchievementService: ObservableObject {
             let bigLifts = try await BigLiftsService.shared.fetchBigLiftsSummary(patientId: patientId)
             stats.prCount = bigLifts.reduce(0) { $0 + $1.prCount }
         } catch {
-            logger.log("AchievementService: Failed to fetch PR count: \(error)", level: .warning)
+            if !error.isCancellation {
+                logger.log("AchievementService: Failed to fetch PR count: \(error)", level: .warning)
+            }
         }
 
         // Fetch total volume (simplified - would need aggregate query in production)
@@ -410,7 +421,9 @@ class AchievementService: ObservableObject {
             let bigLifts = try await BigLiftsService.shared.fetchBigLiftsSummary(patientId: patientId)
             stats.totalVolume = Int(bigLifts.reduce(0.0) { $0 + $1.totalVolume })
         } catch {
-            logger.log("AchievementService: Failed to fetch volume: \(error)", level: .warning)
+            if !error.isCancellation {
+                logger.log("AchievementService: Failed to fetch volume: \(error)", level: .warning)
+            }
         }
 
         return stats

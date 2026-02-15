@@ -8,6 +8,25 @@
 import Foundation
 import os.log
 
+// MARK: - Error Cancellation Detection
+
+/// Extension to detect cancelled errors from any source (URLSession, Swift concurrency, etc.)
+/// Use this to avoid logging noise from normal task cancellations during navigation.
+extension Error {
+    /// Returns true if this error represents a cancelled request/task.
+    /// Covers NSURLErrorCancelled (-999), Swift CancellationError,
+    /// and string-based "cancelled" descriptions from Supabase/PostgREST.
+    var isCancellation: Bool {
+        if self is CancellationError { return true }
+        let nsError = self as NSError
+        if nsError.domain == NSURLErrorDomain && nsError.code == NSURLErrorCancelled { return true }
+        if nsError.code == -999 { return true }
+        let desc = localizedDescription.lowercased()
+        if desc == "cancelled" || desc == "canceled" { return true }
+        return false
+    }
+}
+
 /// Debug logger for development and diagnostic logging
 /// Separate from ErrorLogger to keep production error tracking clean
 class DebugLogger {
@@ -20,6 +39,12 @@ class DebugLogger {
 
     private let logger = Logger(subsystem: "com.getmodus.app", category: "Debug")
     private let isEnabled: Bool
+
+    /// Tracks messages that should only be logged once per session
+    private var loggedOnceKeys: Set<String> = []
+
+    /// Tracks last log time per key for cooldown-based deduplication
+    private var lastLogTimes: [String: Date] = [:]
 
     /// Minimum log level — messages below this threshold are silently dropped.
     /// Release builds only show warnings and errors to reduce noise.
@@ -221,5 +246,24 @@ class DebugLogger {
 
         let message = "📅 Date Conversion: \(original) → \(formatted) (using \(formatter))"
         logger.info("\(message)")
+    }
+
+    // MARK: - Deduplication Helpers
+
+    /// Log a message only once per app session. Subsequent calls with the same key are silently ignored.
+    func logOnce(key: String, _ message: String, level: LogLevel = .info, file: String = #file, function: String = #function, line: Int = #line) {
+        guard !loggedOnceKeys.contains(key) else { return }
+        loggedOnceKeys.insert(key)
+        log(message, level: level, file: file, function: function, line: line)
+    }
+
+    /// Log a message at most once per cooldown interval. Calls within the cooldown window are silently dropped.
+    func logWithCooldown(key: String, cooldown: TimeInterval, _ message: String, level: LogLevel = .info, file: String = #file, function: String = #function, line: Int = #line) {
+        let now = Date()
+        if let lastTime = lastLogTimes[key], now.timeIntervalSince(lastTime) < cooldown {
+            return
+        }
+        lastLogTimes[key] = now
+        log(message, level: level, file: file, function: function, line: line)
     }
 }

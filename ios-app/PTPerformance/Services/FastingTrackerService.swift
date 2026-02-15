@@ -168,21 +168,21 @@ final class FastingTrackerService: ObservableObject {
 
         let endTime = Date()
         let actualHours = endTime.timeIntervalSince(fast.startedAt) / 3600
-        let completed = actualHours >= Double(fast.plannedHours) * 0.9 // 90% is considered complete
 
         DebugLogger.shared.info("FastingTrackerService", "Ending fast: \(String(format: "%.1f", actualHours)) hours, target: \(fast.plannedHours) hours")
 
+        // Note: The DB table does not have a "completed" column — the column is
+        // derived/computed server-side. Sending "completed" caused a trigger
+        // error referencing the removed "was_broken_early" column.
         struct FastingUpdate: Encodable {
             let ended_at: String
             let actual_hours: Double
-            let completed: Bool
             let notes: String?
         }
 
         let update = FastingUpdate(
             ended_at: ISO8601DateFormatter().string(from: endTime),
             actual_hours: actualHours,
-            completed: completed,
             notes: notes
         )
 

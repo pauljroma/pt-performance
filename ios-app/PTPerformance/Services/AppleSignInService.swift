@@ -21,6 +21,12 @@ final class AppleSignInService: NSObject, ObservableObject {
     /// Using MainActor-isolated storage ensures thread-safe access from nonisolated delegate methods
     private var continuation: CheckedContinuation<Void, Error>?
 
+    /// Timestamp of the last sign-in attempt for debounce/cooldown
+    private var lastSignInAttempt: Date?
+
+    /// Minimum interval between sign-in attempts (prevents rapid retry spam)
+    private let signInCooldownSeconds: TimeInterval = 2.0
+
     private let logger = DebugLogger.shared
     private let secureStore = SecureStore.shared
 
@@ -138,6 +144,16 @@ final class AppleSignInService: NSObject, ObservableObject {
     /// Initiates Sign in with Apple flow
     /// - Throws: Error if sign-in fails or is cancelled
     func signIn() async throws {
+        // Enforce cooldown to prevent rapid retry spam
+        if let lastAttempt = lastSignInAttempt {
+            let elapsed = Date().timeIntervalSince(lastAttempt)
+            if elapsed < signInCooldownSeconds {
+                logger.diagnostic("AppleSignIn: Sign-in attempt throttled (cooldown \(String(format: "%.1f", signInCooldownSeconds - elapsed))s remaining)")
+                throw AppleSignInError.throttled
+            }
+        }
+        lastSignInAttempt = Date()
+
         logger.info("AppleSignIn", "Starting Sign in with Apple flow")
 
         // Generate nonce before entering continuation to properly propagate errors
@@ -328,31 +344,35 @@ extension AppleSignInService: ASAuthorizationControllerDelegate {
     ) {
         let logger = DebugLogger.shared
         if let authError = error as? ASAuthorizationError {
+            let codeValue = authError.code.rawValue
+            let desc = error.localizedDescription
             switch authError.code {
             case .canceled:
                 logger.info("AppleSignIn", "User cancelled sign in")
             case .failed:
-                logger.error("AppleSignIn", "Authorization failed: \(error.localizedDescription)")
+                logger.error("AppleSignIn", "Authorization failed (code \(codeValue)): \(desc)")
             case .invalidResponse:
-                logger.error("AppleSignIn", "Invalid response from Apple")
+                logger.error("AppleSignIn", "Invalid response from Apple (code \(codeValue)): \(desc)")
             case .notHandled:
-                logger.error("AppleSignIn", "Authorization not handled")
+                // User dismissed or system ignored the request — not a real error
+                logger.diagnostic("AppleSignIn: Authorization not handled (code \(codeValue), user/system dismissed): \(desc)")
             case .notInteractive:
-                logger.error("AppleSignIn", "Non-interactive authorization failed")
+                logger.error("AppleSignIn", "Non-interactive authorization failed (code \(codeValue)): \(desc)")
             case .unknown:
-                logger.error("AppleSignIn", "Unknown authorization error")
+                // Typically means the system dismissed the sheet — not a real error
+                logger.diagnostic("AppleSignIn: Authorization dismissed by system (code \(codeValue)): \(desc)")
             case .matchedExcludedCredential:
-                logger.error("AppleSignIn", "Matched excluded credential")
+                logger.error("AppleSignIn", "Matched excluded credential (code \(codeValue)): \(desc)")
             case .credentialImport:
-                logger.error("AppleSignIn", "Credential import error")
+                logger.error("AppleSignIn", "Credential import error (code \(codeValue)): \(desc)")
             case .credentialExport:
-                logger.error("AppleSignIn", "Credential export error")
+                logger.error("AppleSignIn", "Credential export error (code \(codeValue)): \(desc)")
             case .preferSignInWithApple:
                 logger.info("AppleSignIn", "Prefer Sign in with Apple")
             case .deviceNotConfiguredForPasskeyCreation:
-                logger.error("AppleSignIn", "Device not configured for passkey creation")
+                logger.error("AppleSignIn", "Device not configured for passkey creation (code \(codeValue)): \(desc)")
             @unknown default:
-                logger.error("AppleSignIn", "Unrecognized error code: \(authError.code)")
+                logger.error("AppleSignIn", "Unrecognized error code \(codeValue): \(desc)")
             }
         } else {
             logger.error("AppleSignIn", "Authorization error: \(error.localizedDescription)")
@@ -383,6 +403,7 @@ enum AppleSignInError: LocalizedError {
     case missingIdentityToken
     case missingNonce
     case nonceGenerationFailed(OSStatus)
+    case throttled
 
     var errorDescription: String? {
         switch self {
@@ -394,6 +415,8 @@ enum AppleSignInError: LocalizedError {
             return "Authentication nonce was not set. Please try again."
         case .nonceGenerationFailed(let status):
             return "Unable to generate secure nonce (OSStatus \(status))."
+        case .throttled:
+            return "Please wait a moment before trying again."
         }
     }
 
@@ -407,6 +430,8 @@ enum AppleSignInError: LocalizedError {
             return "Please close and reopen the app, then try signing in again."
         case .nonceGenerationFailed:
             return "There was a security error. Please restart the app and try again."
+        case .throttled:
+            return "Sign-in attempts are rate limited. Please wait a few seconds and try again."
         }
     }
 }
