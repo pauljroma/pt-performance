@@ -143,32 +143,46 @@ class DebugLogger {
     }
 
     /// Log a network request
+    ///
+    /// ACP-1055: All URLs are sanitized to strip sensitive query parameters, tokens, and PII.
+    /// Request bodies are redacted in release builds and sanitized in debug builds.
     func logRequest(url: URL, method: String = "GET", body: Data? = nil) {
         guard isEnabled, minimumLevel <= .info else { return }
 
-        var message = "🌐 HTTP \(method) \(url.absoluteString)"
+        let sanitizer = NetworkSanitizer.shared
+        let sanitizedURL = sanitizer.sanitizeURL(url)
+        var message = "🌐 HTTP \(method) \(sanitizedURL)"
 
-        if let body = body, let bodyString = String(data: body, encoding: .utf8) {
-            message += "\n   Body: \(bodyString)"
+        #if DEBUG
+        if let sanitizedBody = sanitizer.sanitizeBody(body) {
+            message += "\n   Body: \(sanitizedBody)"
         }
+        #endif
 
         logger.info("\(message)")
     }
 
     /// Log a network response
+    ///
+    /// ACP-1055: Response URLs are sanitized. Response bodies are never logged in release builds.
+    /// In debug builds, response previews are sanitized to redact PII and tokens.
     func logResponse(url: URL, statusCode: Int, data: Data? = nil) {
         guard isEnabled, minimumLevel <= .info else { return }
 
+        let sanitizer = NetworkSanitizer.shared
+        let sanitizedURL = sanitizer.sanitizeURL(url)
         let statusEmoji = statusCode < 300 ? "✅" : "❌"
-        var message = "\(statusEmoji) HTTP \(statusCode) \(url.absoluteString)"
+        var message = "\(statusEmoji) HTTP \(statusCode) \(sanitizedURL)"
 
-        if let data = data, let dataString = String(data: data, encoding: .utf8) {
-            let preview = String(dataString.prefix(200))
+        #if DEBUG
+        if let sanitizedBody = sanitizer.sanitizeBody(data) {
+            let preview = String(sanitizedBody.prefix(200))
             message += "\n   Response: \(preview)"
-            if dataString.count > 200 {
+            if sanitizedBody.count > 200 {
                 message += "... (truncated)"
             }
         }
+        #endif
 
         logger.info("\(message)")
     }

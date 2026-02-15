@@ -198,6 +198,83 @@ struct HealthKitSettingsView: View {
                 }
             }
 
+            // ACP-1052: Currently Shared Data summary
+            if healthKitService.isAuthorized {
+                Section {
+                    VStack(alignment: .leading, spacing: Spacing.sm) {
+                        HStack(spacing: Spacing.xs) {
+                            Image(systemName: "lock.shield.fill")
+                                .foregroundColor(.green)
+                                .accessibilityHidden(true)
+                            Text("Your data stays on-device unless you choose to sync.")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+
+                        SharedDataRow(
+                            icon: "waveform.path.ecg",
+                            iconColor: .purple,
+                            title: "Heart Rate Variability (HRV)",
+                            purpose: "Recovery & readiness assessment",
+                            isSharing: true
+                        )
+
+                        SharedDataRow(
+                            icon: "bed.double.fill",
+                            iconColor: .indigo,
+                            title: "Sleep Analysis",
+                            purpose: "Sleep quality for readiness check-in",
+                            isSharing: true
+                        )
+
+                        SharedDataRow(
+                            icon: "heart.fill",
+                            iconColor: .red,
+                            title: "Resting Heart Rate",
+                            purpose: "Cardiovascular health tracking",
+                            isSharing: true
+                        )
+
+                        SharedDataRow(
+                            icon: "flame.fill",
+                            iconColor: .orange,
+                            title: "Active Energy Burned",
+                            purpose: "Activity level monitoring",
+                            isSharing: true
+                        )
+
+                        SharedDataRow(
+                            icon: "figure.walk",
+                            iconColor: .green,
+                            title: "Steps & Exercise Time",
+                            purpose: "Daily activity tracking",
+                            isSharing: true
+                        )
+
+                        SharedDataRow(
+                            icon: "lungs.fill",
+                            iconColor: .cyan,
+                            title: "Oxygen Saturation",
+                            purpose: "Recovery monitoring",
+                            isSharing: true
+                        )
+
+                        SharedDataRow(
+                            icon: "figure.strengthtraining.traditional",
+                            iconColor: .modusCyan,
+                            title: "Workout Export (Write)",
+                            purpose: "Completed sessions sent to Apple Health",
+                            isSharing: true
+                        )
+                    }
+                    .padding(.vertical, Spacing.xs)
+                } header: {
+                    Text("Currently Shared Data")
+                } footer: {
+                    Text("To change what Modus can access, go to Settings > Privacy & Security > Health > Modus on your device.")
+                }
+            }
+
             // ACP-827: Updated data sync section for bidirectional
             Section {
                 // Import
@@ -316,6 +393,44 @@ private struct FeatureRow: View {
         }
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(title): \(description)")
+    }
+}
+
+// MARK: - Shared Data Row
+
+private struct SharedDataRow: View {
+    let icon: String
+    let iconColor: Color
+    let title: String
+    let purpose: String
+    let isSharing: Bool
+
+    var body: some View {
+        HStack(alignment: .top, spacing: Spacing.sm) {
+            Image(systemName: icon)
+                .foregroundColor(iconColor)
+                .frame(width: 24)
+                .accessibilityHidden(true)
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+                Text(purpose)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+
+            Spacer()
+
+            Image(systemName: isSharing ? "checkmark.circle.fill" : "xmark.circle")
+                .foregroundColor(isSharing ? DesignTokens.statusSuccess : DesignTokens.statusError)
+                .font(.body)
+                .accessibilityHidden(true)
+        }
+        .padding(.vertical, Spacing.xxs)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(title): \(isSharing ? "Shared" : "Not shared"). \(purpose)")
     }
 }
 

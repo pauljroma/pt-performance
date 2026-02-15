@@ -4,6 +4,7 @@ struct RootView: View {
     @EnvironmentObject var appState: AppState
     @StateObject private var onboardingCoordinator = OnboardingCoordinator.shared
     @StateObject private var modeService = ModeService.shared
+    @StateObject private var consentManager = ConsentManager.shared
     @AppStorage("hasAcceptedPrivacyNotice") private var hasAcceptedPrivacyNotice = false
     @AppStorage("hasCompletedQuickSetup") private var hasCompletedQuickSetup = false
     @State private var showPrivacyNotice = false
@@ -63,6 +64,10 @@ struct RootView: View {
         .fullScreenCover(isPresented: $showQuickSetup) {
             QuickSetupView()
         }
+        // ACP-1049: Re-consent prompt when consent version changes
+        .sheet(isPresented: $consentManager.showConsentUpdateSheet) {
+            ConsentUpdateSheet()
+        }
         .task {
             await restoreSession()
         }
@@ -70,6 +75,12 @@ struct RootView: View {
             // Check if we should show onboarding on first launch
             if onboardingCoordinator.isFirstLaunch && appState.isAuthenticated {
                 onboardingCoordinator.shouldShowOnboarding = true
+            }
+        }
+        .onChange(of: appState.isAuthenticated) { _, isAuthenticated in
+            // ACP-1049: Check for re-consent when user becomes authenticated
+            if isAuthenticated && hasAcceptedPrivacyNotice && consentManager.needsReConsent() {
+                consentManager.showConsentUpdateSheet = true
             }
         }
     }

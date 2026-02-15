@@ -457,9 +457,17 @@ class PTSupabaseClient: ObservableObject {
     ///
     /// - Throws: Supabase authentication errors if the update fails
     ///
-    /// - Note: User must be authenticated (via password reset link session) before calling
+    /// - Note: User must be authenticated (via password reset link session) before calling.
+    ///         ACP-1040: After password change, SessionManager forces re-authentication
+    ///         on all other sessions by invalidating the stored session fingerprint.
     func updatePassword(newPassword: String) async throws {
         try await client.auth.update(user: .init(password: newPassword))
+
+        // ACP-1040: Notify SessionManager that password changed
+        // This triggers force logout so user must re-authenticate with new password
+        await MainActor.run {
+            SessionManager.shared.handlePasswordChanged()
+        }
     }
 
     /// Sign out

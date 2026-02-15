@@ -56,6 +56,15 @@ class ExportService {
             throw ExportError.noData
         }
 
+        // ACP-1051: Log data export event
+        Task {
+            await AuditLogger.shared.logExport(
+                resource: "workout_history",
+                format: "pdf",
+                details: "Exporting \(sessions.count) sessions for last 30 days"
+            )
+        }
+
         // Create PDF document
         let pdfMetadata = [
             kCGPDFContextTitle: "Modus History",
@@ -146,6 +155,15 @@ class ExportService {
     func exportToCSV(sessions: [SessionWithLogs], startDate: Date, endDate: Date) async throws -> URL {
         guard !sessions.isEmpty else {
             throw ExportError.noData
+        }
+
+        // ACP-1051: Log CSV data export event
+        Task {
+            await AuditLogger.shared.logExport(
+                resource: "exercise_logs",
+                format: "csv",
+                details: "Exporting \(sessions.count) sessions as CSV"
+            )
         }
 
         var csvString = "Date,Exercise,Sets,Reps,Weight,Unit,RPE,Pain Score,Notes\n"

@@ -18,6 +18,8 @@ final class AccountDeletionViewModel: ObservableObject {
     @Published var isDeleting = false
     @Published var errorMessage: String?
     @Published var showSuccessAlert = false
+    @Published var showDownloadDataPrompt = false
+    @Published var deletionScheduledDate: Date?
 
     // MARK: - Constants
 
@@ -30,7 +32,27 @@ final class AccountDeletionViewModel: ObservableObject {
         !password.isEmpty && confirmationText == requiredConfirmationText
     }
 
+    /// Formatted date when the account will be permanently deleted
+    var permanentDeletionDateText: String {
+        guard let scheduledDate = deletionScheduledDate else { return "" }
+        let formatter = DateFormatter()
+        formatter.dateStyle = .long
+        formatter.timeStyle = .none
+        return formatter.string(from: scheduledDate)
+    }
+
+    /// Deletion confirmation reference ID for user records
+    var deletionReferenceId: String {
+        let timestamp = Int(Date().timeIntervalSince1970)
+        return "DEL-\(timestamp)"
+    }
+
     // MARK: - Methods
+
+    /// Prompt user to download their data before proceeding with deletion
+    func promptDownloadData() {
+        showDownloadDataPrompt = true
+    }
 
     func deleteAccount() async {
         guard isFormValid else {
@@ -42,17 +64,36 @@ final class AccountDeletionViewModel: ObservableObject {
         errorMessage = nil
 
         do {
+            // ACP-1039: Step 0 - Biometric confirmation for destructive action
+            if BiometricAuthService.shared.isBiometricLockEnabled {
+                let confirmed = await BiometricAuthService.shared.confirmAction("Delete your account")
+                if !confirmed {
+                    isDeleting = false
+                    errorMessage = "Biometric verification is required to delete your account."
+                    return
+                }
+            }
+
             // Step 1: Re-authenticate user with password
             try await reauthenticateUser(password: password)
 
             // Step 2: Mark account for deletion (30-day grace period)
             try await markAccountForDeletion()
 
-            // Step 3: Show success message
+            // ACP-1048: Log account deletion request
+            DebugLogger.shared.log(
+                "[AccountDeletion] Account scheduled for deletion with \(gracePeriodDays)-day grace period",
+                level: .warning
+            )
+
+            // Step 3: Calculate scheduled deletion date
+            deletionScheduledDate = Calendar.current.date(byAdding: .day, value: gracePeriodDays, to: Date())
+
+            // Step 4: Show success message
             isDeleting = false
             showSuccessAlert = true
 
-            // Step 4: Log out user after 3 seconds
+            // Step 5: Log out user after 3 seconds
             // Intentional delay: allows user to read success message before logout
             try? await Task.sleep(nanoseconds: 3_000_000_000)
             await signOut()

@@ -23,6 +23,7 @@ struct UnifiedSettingsView: View {
     @StateObject private var therapistLinkingVM = TherapistLinkingViewModel()
     @StateObject private var healthKitService = HealthKitService.shared
     @StateObject private var settingsViewModel = SettingsViewModel()
+    @StateObject private var consentManager = ConsentManager.shared
 
     // MARK: - State
 
@@ -424,8 +425,10 @@ struct UnifiedSettingsView: View {
     private var allSections: [SettingsSection] {
         [
             accountSection,
+            securitySection,
             preferencesSection,
             healthDataSection,
+            privacyDataSection,
             supportSection,
             debugSection
         ].compactMap { $0 }
@@ -460,6 +463,18 @@ struct UnifiedSettingsView: View {
             )
         ))
 
+        // ACP-1061: Data Sharing Management
+        items.append(SettingItem(
+            id: "datasharing",
+            icon: "person.badge.shield.checkmark.fill",
+            iconColor: .modusCyan,
+            title: "Data Sharing",
+            subtitle: "Manage who can access your data",
+            type: .navigation(
+                AnyView(DataSharingView())
+            )
+        ))
+
         // Sign Out
         items.append(SettingItem(
             id: "signout",
@@ -489,6 +504,43 @@ struct UnifiedSettingsView: View {
             id: "account",
             title: "Account",
             icon: "person.circle.fill",
+            items: items
+        )
+    }
+
+    // MARK: - Security Section (ACP-1039)
+
+    private var securitySection: SettingsSection {
+        let biometricService = BiometricAuthService.shared
+        var items: [SettingItem] = []
+
+        // Biometric Lock
+        let biometricSubtitle: String
+        if biometricService.isBiometryAvailable {
+            biometricSubtitle = biometricService.isBiometricLockEnabled
+                ? "\(biometricService.biometricType.rawValue) enabled"
+                : "\(biometricService.biometricType.rawValue) available"
+        } else {
+            biometricSubtitle = "Not available on this device"
+        }
+
+        items.append(SettingItem(
+            id: "biometric",
+            icon: biometricService.biometricType.iconName,
+            iconColor: biometricService.isBiometricLockEnabled ? .modusCyan : .secondary,
+            title: "Biometric Lock",
+            subtitle: biometricSubtitle,
+            badge: biometricService.isBiometricLockEnabled ? "ON" : nil,
+            badgeColor: .green,
+            type: .navigation(
+                AnyView(BiometricSettingsView())
+            )
+        ))
+
+        return SettingsSection(
+            id: "security",
+            title: "Security",
+            icon: "lock.shield.fill",
             items: items
         )
     }
@@ -597,21 +649,18 @@ struct UnifiedSettingsView: View {
             )
         ))
 
-        // Export My Data - Prominent button
+        // Export My Data - Navigate to full export view (ACP-1047: GDPR/CCPA Data Export)
         items.append(SettingItem(
             id: "export",
             icon: "square.and.arrow.up.fill",
             iconColor: .modusTealAccent,
             title: "Export My Data",
-            subtitle: "Download all your workout data",
+            subtitle: "Download all your data (GDPR/CCPA)",
             badge: "Export",
             badgeColor: .modusTealAccent,
-            type: .button({
-                HapticFeedback.medium()
-                Task {
-                    await settingsViewModel.exportUserData()
-                }
-            })
+            type: .navigation(
+                AnyView(DataExportView())
+            )
         ))
 
         // Calendar Sync
@@ -630,6 +679,45 @@ struct UnifiedSettingsView: View {
             id: "healthdata",
             title: "Health & Data",
             icon: "heart.text.square.fill",
+            items: items
+        )
+    }
+
+    // MARK: - Privacy & Data Section (ACP-1046/1049)
+
+    private var privacyDataSection: SettingsSection {
+        var items: [SettingItem] = []
+
+        // Privacy Settings
+        items.append(SettingItem(
+            id: "privacy_settings",
+            icon: "hand.raised.fill",
+            iconColor: .modusCyan,
+            title: "Privacy & Data",
+            subtitle: consentManager.statusSummary,
+            badge: consentManager.needsReConsent() ? "Review" : nil,
+            badgeColor: consentManager.needsReConsent() ? .orange : nil,
+            type: .navigation(
+                AnyView(PrivacySettingsView())
+            )
+        ))
+
+        // Data Access (existing DataConsentView)
+        items.append(SettingItem(
+            id: "data_access",
+            icon: "lock.shield.fill",
+            iconColor: .modusTealAccent,
+            title: "Data Access",
+            subtitle: "Manage external data source permissions",
+            type: .navigation(
+                AnyView(DataConsentView())
+            )
+        ))
+
+        return SettingsSection(
+            id: "privacydata",
+            title: "Privacy & Consent",
+            icon: "hand.raised.fill",
             items: items
         )
     }
@@ -766,6 +854,18 @@ struct UnifiedSettingsView: View {
             title: "Debug Logs",
             type: .navigation(
                 AnyView(DebugLogView())
+            )
+        ))
+
+        // ACP-1051 / ACP-1056: Security audit log and alerts
+        items.append(SettingItem(
+            id: "security_log",
+            icon: "shield.lefthalf.filled",
+            iconColor: .orange,
+            title: "Security Log",
+            subtitle: "Audit trail and security alerts",
+            type: .navigation(
+                AnyView(SecurityLogView())
             )
         ))
 
@@ -912,6 +1012,8 @@ class SettingsViewModel: ObservableObject {
     @Published var appVersion = "1.0"
 
     @Published var isExportingData = false
+    @Published var exportProgress: Double = 0
+    @Published var exportedFileURL: URL?
     @Published var exportError: String?
 
     init() {
@@ -952,14 +1054,21 @@ class SettingsViewModel: ObservableObject {
         HapticFeedback.toggle()
     }
 
+    /// ACP-1047: Export all user data using DataExportService
     func exportUserData() async {
         isExportingData = true
+        exportProgress = 0
         defer { isExportingData = false }
 
         do {
-            // Implement data export logic
-            // This would gather all user data and create a downloadable file
-            try await Task.sleep(nanoseconds: 2_000_000_000) // Simulate export
+            let url = try await DataExportService.shared.exportAllData(
+                format: .json
+            ) { [weak self] progress in
+                Task { @MainActor in
+                    self?.exportProgress = progress
+                }
+            }
+            exportedFileURL = url
             HapticFeedback.success()
         } catch {
             exportError = error.localizedDescription

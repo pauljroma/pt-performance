@@ -31,8 +31,34 @@
 	<string>487</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsArbitraryLoads</key>
+		<false/>
+		<key>NSPinnedDomains</key>
+		<dict>
+			<key>rpbxeaxlaoyoqkohytlw.supabase.co</key>
+			<dict>
+				<key>NSIncludesSubdomains</key>
+				<true/>
+				<key>NSPinnedCAIdentities</key>
+				<array>
+					<dict>
+						<key>SPKI-SHA256-BASE64</key>
+						<string>C5+lpZ7tcVwmwQIMcRtPbsQtWLABXhQzejna0wHFr8M=</string>
+					</dict>
+					<dict>
+						<key>SPKI-SHA256-BASE64</key>
+						<string>i7WTqTvh0OioIruIfFR4kMPnBqrS2rdiVPl/s2uC/CY=</string>
+					</dict>
+				</array>
+			</dict>
+		</dict>
+	</dict>
 	<key>NSCalendarsUsageDescription</key>
 	<string>Modus syncs your workouts to your calendar so you never miss a session and can import game schedules to automatically adjust your training.</string>
+	<key>NSFaceIDUsageDescription</key>
+	<string>Modus uses Face ID to protect your health data and provide quick, secure access to the app without typing your password.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>Modus needs camera access to record exercise form check videos that you can share with your physical therapist for technique feedback and guidance.</string>
 	<key>NSHealthShareUsageDescription</key>

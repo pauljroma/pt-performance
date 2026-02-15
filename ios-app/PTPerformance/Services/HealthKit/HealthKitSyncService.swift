@@ -249,6 +249,16 @@ class HealthKitSyncService: ObservableObject {
         // 5. Call sync-healthkit-data Edge Function
         let response = try await callSyncEdgeFunction(payload: payload)
 
+        // ACP-1051: Log health data sync to cloud
+        Task {
+            await AuditLogger.shared.logDataModification(
+                resource: "readiness_metrics",
+                action: "sync_to_edge_function",
+                details: "Synced health metrics for date \(metricDate) via sync-healthkit-data edge function"
+            )
+            SecurityMonitor.shared.recordDataAccess(resource: "readiness_metrics")
+        }
+
         // 6. Update state
         lastSyncDate = Date()
         UserDefaults.standard.set(Date(), forKey: Self.lastSyncDateKey)

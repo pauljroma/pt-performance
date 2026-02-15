@@ -188,6 +188,7 @@ struct PTPerformanceApp: App {
 
     @StateObject private var appState = AppState()
     @StateObject private var storeKit = StoreKitService.shared
+    @StateObject private var biometricService = BiometricAuthService.shared
     @Environment(\.scenePhase) private var scenePhase
 
     // ACP-932: Cold Start Optimization - Track launch time for <2 second target
@@ -228,6 +229,46 @@ struct PTPerformanceApp: App {
             // Initialize PushNotificationService for prescription alerts
             // Sets up notification categories and actions
             await PushNotificationService.shared.initialize()
+
+            // ACP-1044: Keychain security migration and audit
+            // Migrates keychain items from afterFirstUnlock to whenUnlocked access level
+            // Safe to run on every launch — skips if already migrated
+            SecureStore.shared.migrateIfNeeded()
+
+            #if DEBUG
+            // ACP-1044: Log keychain audit in debug builds for compliance verification
+            SecureStore.shared.auditKeychainItems()
+            #endif
+
+            // ACP-1043: Initialize data encryption key on first launch
+            // Generates and stores AES-256 key in Keychain if not already present
+            do {
+                try DataEncryptionService.shared.initializeKeyIfNeeded()
+            } catch {
+                DebugLogger.shared.error("PTPerformanceApp", "Failed to initialize encryption key: \(error.localizedDescription)")
+            }
+
+            // ACP-1045: Apply file protection to app directories
+            // Sets NSFileProtectionComplete on Documents, Caches, AppSupport, and Temp
+            SecureFileManager.shared.applyFileProtection()
+
+            // ACP-1045: Jailbreak detection — log warning but do not block
+            JailbreakDetector.shared.check()
+
+            // ACP-1043: Verify App Transport Security configuration
+            TransportSecurityService.shared.verifyConfiguration()
+
+            // ACP-1056: Start real-time security monitoring
+            await MainActor.run {
+                SecurityMonitor.shared.startMonitoring()
+            }
+
+            // ACP-1051: Log app launch in audit trail
+            await AuditLogger.shared.logAuthentication(
+                action: "app_launched",
+                success: true,
+                details: "cold_start"
+            )
 
             // ACP-932: Log app startup with deferred device info collection
             // UIDevice.current access can be slow, so defer it
@@ -284,6 +325,9 @@ struct PTPerformanceApp: App {
                 }
                 .onChange(of: scenePhase) { _, newPhase in
                     if newPhase == .active {
+                        // ACP-1039: Check biometric lock state when app comes to foreground
+                        biometricService.handleAppForegrounded()
+
                         // Refresh widget data when app becomes active
                         Task {
                             await refreshWidgetData()
@@ -301,10 +345,17 @@ struct PTPerformanceApp: App {
                             await PushNotificationService.shared.clearBadge()
                         }
                     } else if newPhase == .background {
+                        // ACP-1039: Record background timestamp for biometric lock timing
+                        biometricService.handleAppBackgrounded()
+
                         // ACP-827: Schedule background health sync when entering background
                         Task { @MainActor in
                             HealthSyncManager.shared.scheduleBackgroundSync()
                         }
+
+                        // ACP-1043/1045: Clear sensitive data from memory when backgrounding
+                        DataEncryptionService.shared.clearSensitiveMemory()
+                        SecureFileManager.shared.cleanupTempFiles()
                     }
                 }
                 .onReceive(NotificationCenter.default.publisher(for: .didReceiveNotificationDeepLink)) { notification in
@@ -323,6 +374,15 @@ struct PTPerformanceApp: App {
                 } message: {
                     Text(appState.authLinkError ?? "The link has expired or is invalid. Please request a new one.")
                 }
+                // ACP-1039: Biometric lock screen overlay
+                .overlay {
+                    if biometricService.isLocked && appState.isAuthenticated {
+                        BiometricLockScreen()
+                            .transition(.opacity)
+                            .zIndex(999)
+                    }
+                }
+                .animation(.easeInOut(duration: AnimationDuration.standard), value: biometricService.isLocked)
         }
     }
 

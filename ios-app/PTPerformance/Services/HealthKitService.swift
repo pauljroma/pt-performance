@@ -507,6 +507,15 @@ class HealthKitService: ObservableObject {
         error = nil
         defer { isLoading = false }
 
+        // ACP-1051: Log health data access (metadata only, never actual values)
+        Task {
+            await AuditLogger.shared.logDataAccess(
+                resource: "health_kit_data",
+                action: "sync_today",
+                details: "Syncing HRV, sleep, activity, and heart rate data for today"
+            )
+        }
+
         let startTime = Date()
         let today = Date()
 
@@ -635,6 +644,15 @@ class HealthKitService: ObservableObject {
             )
         }
 
+        // ACP-1051: Log readiness auto-fill data access
+        Task {
+            await AuditLogger.shared.logDataAccess(
+                resource: "health_kit_data",
+                action: "readiness_autofill",
+                details: "Fetching HRV, sleep, and baseline for readiness check-in"
+            )
+        }
+
         let today = Date()
 
         // Fetch HRV, sleep data, and baseline in parallel
@@ -730,6 +748,15 @@ class HealthKitService: ObservableObject {
               let patientId = UUID(uuidString: patientIdString) else {
             errorLogger.logError(HealthKitError.noAuthenticatedUser, context: "HealthKitService.uploadToSupabase")
             throw HealthKitError.noAuthenticatedUser
+        }
+
+        // ACP-1051: Log data upload to Supabase
+        Task {
+            await AuditLogger.shared.logDataModification(
+                resource: "health_kit_data",
+                action: "upload_to_supabase",
+                details: "Uploading health metrics for patient to cloud storage"
+            )
         }
 
         try await syncToSupabase(patientId: patientId, data: data)
