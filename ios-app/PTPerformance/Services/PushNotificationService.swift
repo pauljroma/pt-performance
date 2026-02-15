@@ -477,6 +477,261 @@ actor PushNotificationService: NSObject {
         guard let url = URL(string: UIApplication.openSettingsURLString) else { return }
         UIApplication.shared.open(url)
     }
+
+    // MARK: - ACP-1002: Permission Flow
+
+    /// Request notification permission with a soft pre-prompt check.
+    /// Returns true if the user granted permission, false otherwise.
+    /// Uses `.alert`, `.sound`, `.badge` options (no `.provisional` to get explicit consent).
+    func requestPermission() async -> Bool {
+        debugLogger.info("PushNotificationService", "Requesting notification permission")
+
+        let currentStatus = await getAuthorizationStatus()
+
+        // If already determined, return current status
+        if currentStatus == .authorized {
+            debugLogger.success("PushNotificationService", "Notifications already authorized")
+            return true
+        }
+
+        if currentStatus == .denied {
+            debugLogger.log("Notification permission previously denied -- user must enable in Settings", level: .warning)
+            return false
+        }
+
+        // Request authorization (only shows system prompt for .notDetermined)
+        do {
+            let granted = try await notificationCenter.requestAuthorization(
+                options: [.alert, .sound, .badge]
+            )
+
+            if granted {
+                debugLogger.success("PushNotificationService", "Notification permission granted by user")
+
+                // Register for remote notifications on main thread
+                await MainActor.run {
+                    UIApplication.shared.registerForRemoteNotifications()
+                }
+            } else {
+                debugLogger.log("User declined notification permission", level: .warning)
+            }
+
+            // Track the permission decision for analytics
+            errorLogger.logUserAction(
+                action: "notification_permission_response",
+                properties: ["granted": String(granted)]
+            )
+
+            return granted
+        } catch {
+            errorLogger.logError(error, context: "PushNotificationService.requestPermission")
+            debugLogger.log("Failed to request notification permission: \(error.localizedDescription)", level: .error)
+            return false
+        }
+    }
+
+    // MARK: - ACP-1002: Local Notification Scheduling
+
+    /// Schedule a local notification from a `ScheduledNotification` model.
+    ///
+    /// - Parameter notification: The notification to schedule.
+    func scheduleLocalNotification(_ notification: ScheduledNotification) async {
+        debugLogger.info("PushNotificationService", "Scheduling local notification: \(notification.type.rawValue) id=\(notification.id)")
+
+        let content = UNMutableNotificationContent()
+        content.title = notification.title
+        content.body = notification.body
+        content.sound = .default
+        content.categoryIdentifier = notification.type.categoryIdentifier
+
+        // Attach custom data for deep linking and identification
+        var userInfo: [String: Any] = [
+            "notification_type": notification.type.rawValue,
+            "scheduled_notification_id": notification.id
+        ]
+        if let data = notification.data {
+            for (key, value) in data {
+                userInfo[key] = value
+            }
+        }
+        content.userInfo = userInfo
+
+        // Build trigger
+        let trigger: UNNotificationTrigger
+        if notification.repeats {
+            // For repeating notifications, use calendar-based trigger
+            let components = Calendar.current.dateComponents(
+                [.hour, .minute, .weekday],
+                from: notification.scheduledDate
+            )
+            trigger = UNCalendarNotificationTrigger(dateMatching: components, repeats: true)
+        } else {
+            let interval = max(1, notification.scheduledDate.timeIntervalSinceNow)
+            trigger = UNTimeIntervalNotificationTrigger(timeInterval: interval, repeats: false)
+        }
+
+        let request = UNNotificationRequest(
+            identifier: notification.id,
+            content: content,
+            trigger: trigger
+        )
+
+        do {
+            try await notificationCenter.add(request)
+            debugLogger.success("PushNotificationService", "Scheduled notification \(notification.id) for \(notification.scheduledDate)")
+        } catch {
+            errorLogger.logError(error, context: "PushNotificationService.scheduleLocalNotification")
+            debugLogger.log("Failed to schedule notification \(notification.id): \(error.localizedDescription)", level: .error)
+        }
+    }
+
+    /// Cancel a scheduled or delivered notification by its identifier.
+    ///
+    /// - Parameter id: The notification identifier to cancel.
+    func cancelNotification(id: String) {
+        notificationCenter.removePendingNotificationRequests(withIdentifiers: [id])
+        notificationCenter.removeDeliveredNotifications(withIdentifiers: [id])
+        debugLogger.info("PushNotificationService", "Cancelled notification: \(id)")
+    }
+
+    /// Cancel all pending and delivered notifications.
+    func cancelAllNotifications() {
+        notificationCenter.removeAllPendingNotificationRequests()
+        notificationCenter.removeAllDeliveredNotifications()
+        debugLogger.info("PushNotificationService", "Cancelled all notifications")
+    }
+
+    /// Get count of all pending notification requests.
+    func pendingNotificationCount() async -> Int {
+        let pending = await notificationCenter.pendingNotificationRequests()
+        return pending.count
+    }
+
+    /// Cancel all notifications of a specific type.
+    ///
+    /// - Parameter type: The `ScheduledNotificationType` to cancel.
+    func cancelNotifications(ofType type: ScheduledNotificationType) async {
+        let pending = await notificationCenter.pendingNotificationRequests()
+        let idsToCancel = pending
+            .filter { request in
+                guard let notifType = request.content.userInfo["notification_type"] as? String else { return false }
+                return notifType == type.rawValue
+            }
+            .map { $0.identifier }
+
+        if !idsToCancel.isEmpty {
+            notificationCenter.removePendingNotificationRequests(withIdentifiers: idsToCancel)
+            debugLogger.info("PushNotificationService", "Cancelled \(idsToCancel.count) notifications of type \(type.rawValue)")
+        }
+    }
+}
+
+// MARK: - ACP-1002: Scheduled Notification Types
+
+/// Comprehensive notification types for the app notification strategy.
+enum ScheduledNotificationType: String, Codable, CaseIterable {
+    case workoutReminder = "workout_reminder"
+    case streakAtRisk = "streak_at_risk"
+    case streakAchieved = "streak_achieved"
+    case weeklyProgress = "weekly_progress"
+    case trialExpiring = "trial_expiring"
+    case reEngagement = "re_engagement"
+    case socialActivity = "social_activity"
+    case achievementUnlocked = "achievement_unlocked"
+
+    /// User-facing display name for notification settings.
+    var displayName: String {
+        switch self {
+        case .workoutReminder: return "Workout Reminders"
+        case .streakAtRisk: return "Streak Alerts"
+        case .streakAchieved: return "Streak Milestones"
+        case .weeklyProgress: return "Weekly Progress"
+        case .trialExpiring: return "Trial Reminders"
+        case .reEngagement: return "Come Back Reminders"
+        case .socialActivity: return "Social Updates"
+        case .achievementUnlocked: return "Achievement Alerts"
+        }
+    }
+
+    /// SF Symbol icon name for the notification type.
+    var iconName: String {
+        switch self {
+        case .workoutReminder: return "figure.strengthtraining.traditional"
+        case .streakAtRisk: return "flame.fill"
+        case .streakAchieved: return "trophy.fill"
+        case .weeklyProgress: return "chart.bar.fill"
+        case .trialExpiring: return "clock.badge.exclamationmark"
+        case .reEngagement: return "hand.wave.fill"
+        case .socialActivity: return "person.2.fill"
+        case .achievementUnlocked: return "medal.fill"
+        }
+    }
+
+    /// The UNNotificationCategory identifier associated with this type.
+    var categoryIdentifier: String {
+        switch self {
+        case .workoutReminder: return "WORKOUT_REMINDER"
+        case .streakAtRisk: return "STREAK_ALERT"
+        case .streakAchieved: return "STREAK_MILESTONE"
+        case .weeklyProgress: return "WEEKLY_SUMMARY"
+        case .trialExpiring: return "TRIAL_EXPIRING"
+        case .reEngagement: return "RE_ENGAGEMENT"
+        case .socialActivity: return "SOCIAL_ACTIVITY"
+        case .achievementUnlocked: return "ACHIEVEMENT_UNLOCKED"
+        }
+    }
+
+    /// Deep link destination for tapping the notification.
+    var defaultDeepLink: DeepLinkDestination {
+        switch self {
+        case .workoutReminder: return .startWorkout
+        case .streakAtRisk: return .streak
+        case .streakAchieved: return .streak
+        case .weeklyProgress: return .progress
+        case .trialExpiring: return .today
+        case .reEngagement: return .today
+        case .socialActivity: return .today
+        case .achievementUnlocked: return .streak
+        }
+    }
+}
+
+// MARK: - ACP-1002: Scheduled Notification Model
+
+/// Model representing a local notification to be scheduled.
+struct ScheduledNotification: Identifiable, Codable {
+    /// Unique identifier for the notification (used as UNNotificationRequest identifier).
+    let id: String
+    /// The notification type category.
+    let type: ScheduledNotificationType
+    /// Title displayed in the notification banner.
+    let title: String
+    /// Body text displayed in the notification banner.
+    let body: String
+    /// When this notification should fire.
+    let scheduledDate: Date
+    /// Whether the notification should repeat (daily at the same time).
+    let repeats: Bool
+    /// Optional key-value data attached to the notification for deep linking.
+    let data: [String: String]?
+
+    init(
+        id: String = UUID().uuidString,
+        type: ScheduledNotificationType,
+        title: String,
+        body: String,
+        scheduledDate: Date,
+        repeats: Bool = false,
+        data: [String: String]? = nil
+    ) {
+        self.id = id
+        self.type = type
+        self.title = title
+        self.body = body
+        self.scheduledDate = scheduledDate
+        self.repeats = repeats
+        self.data = data
+    }
 }
 
 // MARK: - Push Notification Errors

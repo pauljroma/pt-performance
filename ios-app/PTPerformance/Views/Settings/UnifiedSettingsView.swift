@@ -16,6 +16,7 @@ struct UnifiedSettingsView: View {
     // MARK: - Environment
 
     @EnvironmentObject var storeKit: StoreKitService
+    @EnvironmentObject var subscriptionManager: SubscriptionManager
     @EnvironmentObject var appState: AppState
     @StateObject private var supabase = PTSupabaseClient.shared
     @StateObject private var onboardingCoordinator = OnboardingCoordinator.shared
@@ -440,14 +441,21 @@ struct UnifiedSettingsView: View {
         var items: [SettingItem] = []
 
         // Profile & Subscription
+        // ACP-986: Navigate to SubscriptionSettingsView for tier management
         items.append(SettingItem(
             id: "subscription",
-            icon: "star.fill",
-            iconColor: .yellow,
+            icon: subscriptionManager.currentTier.icon,
+            iconColor: subscriptionManager.isSubscribed ? .yellow : .gray,
             title: "Subscription",
             subtitle: subscriptionPlanText,
+            badge: subscriptionManager.isSubscribed ? subscriptionManager.currentTier.displayName.uppercased() : nil,
+            badgeColor: subscriptionManager.isSubscribed ? .modusCyan : nil,
             type: .navigation(
-                AnyView(SubscriptionView().environmentObject(storeKit))
+                AnyView(
+                    SubscriptionSettingsView()
+                        .environmentObject(storeKit)
+                        .environmentObject(subscriptionManager)
+                )
             )
         ))
 
@@ -882,14 +890,15 @@ struct UnifiedSettingsView: View {
 
     // MARK: - Helper Properties
 
+    // ACP-986: Updated to use SubscriptionManager tier display
     private var subscriptionPlanText: String {
-        if storeKit.isPremium {
-            if storeKit.purchasedProductIDs.contains("com.getmodus.app.annual") {
-                return "Annual Premium"
-            } else if storeKit.purchasedProductIDs.contains("com.getmodus.app.monthly") {
-                return "Monthly Premium"
+        if subscriptionManager.isSubscribed {
+            if storeKit.purchasedProductIDs.contains(Config.Subscription.annualProductID) {
+                return "Annual \(subscriptionManager.currentTier.displayName)"
+            } else if storeKit.purchasedProductIDs.contains(Config.Subscription.monthlyProductID) {
+                return "Monthly \(subscriptionManager.currentTier.displayName)"
             } else {
-                return "Premium Active"
+                return "\(subscriptionManager.currentTier.displayName) Active"
             }
         } else {
             return "Free Plan"
@@ -1155,5 +1164,6 @@ struct AboutView: View {
 #Preview {
     UnifiedSettingsView()
         .environmentObject(StoreKitService.shared)
+        .environmentObject(SubscriptionManager.shared)
         .environmentObject(AppState())
 }

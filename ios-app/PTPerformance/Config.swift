@@ -22,18 +22,25 @@ enum Config {
     /// Centralized product IDs for security - prevents hardcoding throughout the app
     /// These must match the product IDs configured in App Store Connect
     enum Subscription {
-        /// Monthly subscription product ID
+        /// Monthly subscription product ID (Pro tier)
         static let monthlyProductID = "com.getmodus.app.monthly"
-        /// Annual subscription product ID
+        /// Annual subscription product ID (Pro tier)
         static let annualProductID = "com.getmodus.app.annual"
         /// Baseball Pack one-time purchase product ID
         static let baseballPackProductID = "com.getmodus.app.baseballpack"
         /// Subscription group identifier
         static let groupID = "Modus Premium"
 
+        // ACP-986: Elite tier product IDs
+        /// Monthly subscription product ID (Elite tier)
+        static let eliteMonthlyProductID = "com.getmodus.app.elite.monthly"
+        /// Annual subscription product ID (Elite tier)
+        static let eliteAnnualProductID = "com.getmodus.app.elite.annual"
+
         /// All valid subscription/purchase product IDs
         static var allProductIDs: Set<String> {
-            [monthlyProductID, annualProductID, baseballPackProductID]
+            [monthlyProductID, annualProductID, baseballPackProductID,
+             eliteMonthlyProductID, eliteAnnualProductID]
         }
 
         /// Validates if a product ID is known and valid

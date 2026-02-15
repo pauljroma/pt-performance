@@ -50,12 +50,16 @@ class StoreKitService: ObservableObject {
     // MARK: - Product IDs (Centralized in Config for security)
 
     /// All product IDs - fetched from Config to ensure consistency and prevent tampering
+    /// ACP-986: Includes Elite tier product IDs alongside existing Pro/Baseball Pack
     nonisolated static var productIDs: Set<String> {
-        Set([
+        var ids = Set([
             Config.Subscription.monthlyProductID,
             Config.Subscription.annualProductID,
             Config.Subscription.baseballPackProductID
         ])
+        // ACP-986: Add Elite tier product IDs
+        ids.formUnion(SubscriptionTier.allPaidProductIds)
+        return ids
     }
 
     // MARK: - Individual Product IDs (from Config)
@@ -78,6 +82,18 @@ class StoreKitService: ObservableObject {
 
     // Changed isPremium from computed to @Published for reliable SwiftUI updates
     @Published private(set) var isPremium: Bool = false
+
+    // MARK: - ACP-986: Subscription Tier
+
+    /// The current subscription tier derived from purchased product IDs.
+    /// Updated automatically when subscription status changes.
+    @Published private(set) var currentTier: SubscriptionTier = .free
+
+    /// The expiration date of the current subscription, if available
+    @Published private(set) var subscriptionExpirationDate: Date?
+
+    /// Whether the user is currently in a free trial period
+    @Published private(set) var isInTrialPeriod: Bool = false
 
     // MARK: - Baseball Pack Ownership
 
@@ -124,15 +140,27 @@ class StoreKitService: ObservableObject {
 
     // MARK: - Premium Status Update
 
-    /// Update isPremium whenever override or subscription status changes
+    /// Update isPremium and currentTier whenever override or subscription status changes
     private func updateIsPremium() {
         let oldValue = isPremium
+        let oldTier = currentTier
+
         if let override = debugPremiumOverride {
             isPremium = override
+            // ACP-986: Debug override sets tier to Pro by default
+            currentTier = override ? .pro : .free
             logger.info("StoreKit", "Premium override: \(override) (was: \(oldValue))")
         } else {
             isPremium = subscriptionStatus == .active || subscriptionStatus == .gracePeriod
+            // ACP-986: Derive tier from purchased product IDs
+            currentTier = SubscriptionTier.from(purchasedProductIDs: purchasedProductIDs)
             logger.info("StoreKit", "Premium from subscription: \(isPremium) (status: \(subscriptionStatus), was: \(oldValue))")
+        }
+
+        if oldTier != currentTier {
+            logger.info("StoreKit", "Tier changed: \(oldTier.displayName) -> \(currentTier.displayName)")
+            // ACP-986: Persist tier to UserDefaults as fallback cache
+            UserDefaults.standard.set(currentTier.rawValue, forKey: "cached_subscription_tier")
         }
     }
 
@@ -346,6 +374,8 @@ class StoreKitService: ObservableObject {
         logger.diagnostic("StoreKit: Checking current entitlements")
         var activePurchases: Set<String> = []
         var currentStatus: SubscriptionStatus = .none
+        var latestExpiration: Date?
+        var foundTrial = false
 
         for await result in Transaction.currentEntitlements {
             guard let transaction = try? checkVerified(result) else {
@@ -362,8 +392,19 @@ class StoreKitService: ObservableObject {
             if StoreKitService.productIDs.contains(transaction.productID) {
                 activePurchases.insert(transaction.productID)
 
+                // ACP-987: Detect trial period via offer type
+                if transaction.offerType == .introductory {
+                    foundTrial = true
+                    logger.info("StoreKit", "User is in introductory offer/trial for \(transaction.productID)")
+                }
+
                 // Check for grace period via expiration and renewal info
                 if let expirationDate = transaction.expirationDate {
+                    // ACP-986: Track the latest expiration date
+                    if latestExpiration == nil || expirationDate > (latestExpiration ?? .distantPast) {
+                        latestExpiration = expirationDate
+                    }
+
                     if expirationDate > Date() {
                         currentStatus = .active
                         logger.diagnostic("StoreKit: Active subscription \(transaction.productID) expires \(expirationDate)")
@@ -380,6 +421,8 @@ class StoreKitService: ObservableObject {
         }
 
         purchasedProductIDs = activePurchases
+        subscriptionExpirationDate = latestExpiration
+        isInTrialPeriod = foundTrial
 
         if activePurchases.isEmpty {
             subscriptionStatus = .none
@@ -454,11 +497,14 @@ class StoreKitService: ObservableObject {
     // MARK: - Subscription Sync Request Model
 
     /// Request body for syncing subscription status to backend
+    /// ACP-986: Includes subscription_tier for tier-based feature gating on the backend
     private struct SubscriptionSyncRequest: Encodable {
         let is_premium: Bool
+        let subscription_tier: String
         let subscription_status: String
         let purchased_products: [String]
         let owns_baseball_pack: Bool
+        let is_in_trial: Bool
         let synced_at: String
         let expires_at: String?
     }
@@ -485,11 +531,14 @@ class StoreKitService: ObservableObject {
             let expirationDate = await getActiveSubscriptionExpiration()
 
             // Build subscription info using Codable struct
+            // ACP-986: Include tier for server-side feature gating
             let subscriptionInfo = SubscriptionSyncRequest(
                 is_premium: isPremium,
+                subscription_tier: currentTier.rawValue,
                 subscription_status: subscriptionStatusString,
                 purchased_products: Array(purchasedProductIDs),
                 owns_baseball_pack: ownsBaseballPack,
+                is_in_trial: isInTrialPeriod,
                 synced_at: ISO8601DateFormatter().string(from: Date()),
                 expires_at: expirationDate.map { ISO8601DateFormatter().string(from: $0) }
             )

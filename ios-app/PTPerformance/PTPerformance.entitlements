@@ -6,5 +6,10 @@
 	<array>
 		<string>Default</string>
 	</array>
+	<key>com.apple.developer.associated-domains</key>
+	<array>
+		<string>applinks:app.moduspt.com</string>
+		<string>applinks:www.app.moduspt.com</string>
+	</array>
 </dict>
 </plist>

@@ -225,7 +225,7 @@ struct HelpView: View {
                             NavigationLink {
                                 HelpArticleView(article: article)
                             } label: {
-                                ArticleRowView(article: article)
+                                HelpArticleRowView(article: article)
                             }
                         }
                     } header: {
@@ -364,7 +364,7 @@ struct HelpView: View {
 
 // MARK: - Article Row View
 
-struct ArticleRowView: View {
+struct HelpArticleRowView: View {
     let article: HelpArticle
 
     var body: some View {

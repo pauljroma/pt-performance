@@ -37,7 +37,7 @@ enum LeaderboardTimeFilter: String, CaseIterable, Identifiable {
 
 // MARK: - Leaderboard Entry Model
 
-struct LeaderboardEntry: Identifiable, Equatable {
+struct AchievementLeaderboardEntry: Identifiable, Equatable {
     let id: UUID
     let rank: Int
     let displayName: String
@@ -71,8 +71,8 @@ private struct LeaderboardAchievementRecord: Decodable {
 
 @MainActor
 class LeaderboardViewModel: ObservableObject {
-    @Published var entries: [LeaderboardEntry] = []
-    @Published var currentUserEntry: LeaderboardEntry?
+    @Published var entries: [AchievementLeaderboardEntry] = []
+    @Published var currentUserEntry: AchievementLeaderboardEntry?
     @Published var selectedFilter: LeaderboardTimeFilter = .weekly
     @Published var isLoading = false
     @Published var error: Error?
@@ -123,10 +123,10 @@ class LeaderboardViewModel: ObservableObject {
             // Sort and rank
             let sorted = patientStats.sorted { $0.value.points > $1.value.points }
 
-            var entries: [LeaderboardEntry] = []
+            var entries: [AchievementLeaderboardEntry] = []
             for (index, item) in sorted.prefix(50).enumerated() {
                 let isCurrentUser = item.key == patientId.uuidString
-                let entry = LeaderboardEntry(
+                let entry = AchievementLeaderboardEntry(
                     id: UUID(uuidString: item.key) ?? UUID(),
                     rank: index + 1,
                     displayName: isCurrentUser ? "You" : "Patient",
@@ -147,7 +147,7 @@ class LeaderboardViewModel: ObservableObject {
             if currentUserEntry == nil {
                 if let userStats = patientStats[patientId.uuidString] {
                     let userRank = sorted.firstIndex { $0.key == patientId.uuidString }.map { $0 + 1 } ?? (sorted.count + 1)
-                    currentUserEntry = LeaderboardEntry(
+                    currentUserEntry = AchievementLeaderboardEntry(
                         id: patientId,
                         rank: userRank,
                         displayName: "You",
@@ -159,7 +159,7 @@ class LeaderboardViewModel: ObservableObject {
                     )
                 } else {
                     // User has no achievements yet
-                    currentUserEntry = LeaderboardEntry(
+                    currentUserEntry = AchievementLeaderboardEntry(
                         id: patientId,
                         rank: sorted.count + 1,
                         displayName: "You",
@@ -194,7 +194,7 @@ class LeaderboardViewModel: ObservableObject {
 
     #if DEBUG
     private func loadSampleData(patientId: UUID) {
-        entries = LeaderboardEntry.sampleEntries
+        entries = AchievementLeaderboardEntry.sampleEntries
         currentUserEntry = entries.first { $0.isCurrentUser }
     }
     #endif
@@ -302,7 +302,7 @@ struct AchievementLeaderboardView: View {
         .accessibilityLabel("Top 3 performers")
     }
 
-    private func podiumSpot(entry: LeaderboardEntry, height: CGFloat, medalColor: Color) -> some View {
+    private func podiumSpot(entry: AchievementLeaderboardEntry, height: CGFloat, medalColor: Color) -> some View {
         VStack(spacing: Spacing.xs) {
             // Avatar with medal
             ZStack {
@@ -365,7 +365,7 @@ struct AchievementLeaderboardView: View {
 
     // MARK: - Current User Rank Card
 
-    private func currentUserRankCard(entry: LeaderboardEntry) -> some View {
+    private func currentUserRankCard(entry: AchievementLeaderboardEntry) -> some View {
         HStack(spacing: Spacing.md) {
             // Rank
             Text("#\(entry.rank)")
@@ -441,7 +441,7 @@ struct AchievementLeaderboardView: View {
         }
     }
 
-    private func leaderboardRow(entry: LeaderboardEntry) -> some View {
+    private func leaderboardRow(entry: AchievementLeaderboardEntry) -> some View {
         HStack(spacing: Spacing.md) {
             // Rank
             Text("#\(entry.rank)")
@@ -733,9 +733,9 @@ struct LeaderboardSkeletonView: View {
 // MARK: - Preview Support
 
 #if DEBUG
-extension LeaderboardEntry {
-    static let sampleEntries: [LeaderboardEntry] = [
-        LeaderboardEntry(
+extension AchievementLeaderboardEntry {
+    static let sampleEntries: [AchievementLeaderboardEntry] = [
+        AchievementLeaderboardEntry(
             id: UUID(),
             rank: 1,
             displayName: "Champion",
@@ -745,7 +745,7 @@ extension LeaderboardEntry {
             isCurrentUser: false,
             isOptedIn: true
         ),
-        LeaderboardEntry(
+        AchievementLeaderboardEntry(
             id: UUID(),
             rank: 2,
             displayName: "Runner Up",
@@ -755,7 +755,7 @@ extension LeaderboardEntry {
             isCurrentUser: false,
             isOptedIn: true
         ),
-        LeaderboardEntry(
+        AchievementLeaderboardEntry(
             id: UUID(),
             rank: 3,
             displayName: "Bronze Star",
@@ -765,7 +765,7 @@ extension LeaderboardEntry {
             isCurrentUser: false,
             isOptedIn: true
         ),
-        LeaderboardEntry(
+        AchievementLeaderboardEntry(
             id: UUID(),
             rank: 4,
             displayName: "You",
@@ -775,7 +775,7 @@ extension LeaderboardEntry {
             isCurrentUser: true,
             isOptedIn: true
         ),
-        LeaderboardEntry(
+        AchievementLeaderboardEntry(
             id: UUID(),
             rank: 5,
             displayName: "Competitor",
@@ -785,7 +785,7 @@ extension LeaderboardEntry {
             isCurrentUser: false,
             isOptedIn: false
         ),
-        LeaderboardEntry(
+        AchievementLeaderboardEntry(
             id: UUID(),
             rank: 6,
             displayName: "Athlete",
@@ -795,7 +795,7 @@ extension LeaderboardEntry {
             isCurrentUser: false,
             isOptedIn: false
         ),
-        LeaderboardEntry(
+        AchievementLeaderboardEntry(
             id: UUID(),
             rank: 7,
             displayName: "Performer",
@@ -805,7 +805,7 @@ extension LeaderboardEntry {
             isCurrentUser: false,
             isOptedIn: false
         ),
-        LeaderboardEntry(
+        AchievementLeaderboardEntry(
             id: UUID(),
             rank: 8,
             displayName: "Trainee",

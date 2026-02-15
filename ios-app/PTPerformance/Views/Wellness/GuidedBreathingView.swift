@@ -674,20 +674,20 @@ struct GuidedBreathingView: View {
 
                 // Session stats
                 VStack(spacing: Spacing.md) {
-                    StatRow(
+                    BreathingStatRow(
                         icon: "clock.fill",
                         label: "Duration",
                         value: formatTime(breathingManager.elapsedSeconds)
                     )
 
-                    StatRow(
+                    BreathingStatRow(
                         icon: "wind",
                         label: "Total Breaths",
                         value: "\(breathingManager.completedBreaths)"
                     )
 
                     if let sound = breathingManager.session.ambientSound {
-                        StatRow(
+                        BreathingStatRow(
                             icon: sound.icon,
                             label: "Ambient Sound",
                             value: sound.displayName
@@ -774,7 +774,7 @@ struct GuidedBreathingView: View {
 
 // MARK: - Stat Row Component
 
-private struct StatRow: View {
+private struct BreathingStatRow: View {
     let icon: String
     let label: String
     let value: String
@@ -826,7 +826,8 @@ final class BreathingManager: ObservableObject {
     private var isActive: Bool = false
 
     deinit {
-        stop()
+        timer?.invalidate()
+        audioPlayer?.stop()
     }
 
     func configure(session: BreathingSession) {

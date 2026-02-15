@@ -89,6 +89,60 @@
           "referenceName" : "Annual Premium",
           "subscriptionGroupID" : "21586498",
           "type" : "RecurringSubscription"
+        },
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "24.99",
+          "familyShareable" : false,
+          "groupNumber" : 2,
+          "internalID" : "6740147060",
+          "introductoryOffer" : null,
+          "localizations" : [
+            {
+              "description" : "Everything in Pro plus telehealth, custom programs, and priority support",
+              "displayName" : "Monthly Elite",
+              "locale" : "en_US"
+            }
+          ],
+          "productID" : "com.getmodus.app.elite.monthly",
+          "recurringSubscriptionPeriod" : "P1M",
+          "referenceName" : "Monthly Elite",
+          "subscriptionGroupID" : "21586498",
+          "type" : "RecurringSubscription"
+        },
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "199.99",
+          "familyShareable" : false,
+          "groupNumber" : 2,
+          "internalID" : "6740147061",
+          "introductoryOffer" : {
+            "internalID" : "6740147062",
+            "paymentMode" : "free",
+            "subscriptionPeriod" : "P1W"
+          },
+          "localizations" : [
+            {
+              "description" : "Everything in Pro plus telehealth, custom programs, and priority support — save 33%",
+              "displayName" : "Annual Elite",
+              "locale" : "en_US"
+            }
+          ],
+          "productID" : "com.getmodus.app.elite.annual",
+          "recurringSubscriptionPeriod" : "P1Y",
+          "referenceName" : "Annual Elite",
+          "subscriptionGroupID" : "21586498",
+          "type" : "RecurringSubscription"
         }
       ]
     }

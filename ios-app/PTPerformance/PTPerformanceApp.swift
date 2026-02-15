@@ -122,6 +122,8 @@ enum DeepLinkDestination: Equatable {
     // Prescription notifications
     case prescription(prescriptionId: String)
     case patient(patientId: String)
+    // ACP-999: Deep Link Attribution — settings/profile deep links
+    case settings
 
     /// Parse URL into destination
     static func from(url: URL) -> DeepLinkDestination? {
@@ -188,7 +190,12 @@ struct PTPerformanceApp: App {
 
     @StateObject private var appState = AppState()
     @StateObject private var storeKit = StoreKitService.shared
+    @StateObject private var subscriptionManager = SubscriptionManager.shared
     @StateObject private var biometricService = BiometricAuthService.shared
+    // ACP-999: Deep Link Attribution service
+    @StateObject private var deepLinkService = DeepLinkService.shared
+    // ACP-998: App Store Optimization service
+    @StateObject private var asoService = ASOService.shared
     @Environment(\.scenePhase) private var scenePhase
 
     // ACP-932: Cold Start Optimization - Track launch time for <2 second target
@@ -298,6 +305,11 @@ struct PTPerformanceApp: App {
                 .tint(.modusCyan)
                 .environmentObject(appState)
                 .environmentObject(storeKit)
+                .environmentObject(subscriptionManager)
+                // ACP-999: Inject DeepLinkService for navigation observation
+                .environmentObject(deepLinkService)
+                // ACP-998: Inject ASOService for review prompt access
+                .environmentObject(asoService)
                 .onAppear {
                     PerformanceMonitor.shared.finishAppLaunch()
                 }
@@ -319,14 +331,36 @@ struct PTPerformanceApp: App {
 
                     // Background tasks can complete whenever
                     _ = await (offlineSync, healthSync, workoutPreload)
+
+                    // ACP-999: Check for deferred deep links on first launch after install
+                    // Runs after main tasks so it doesn't delay the critical path
+                    await deepLinkService.checkDeferredDeepLink()
+
+                    // ACP-1004: Sync streak state on launch
+                    await StreakService.shared.checkStreak()
+
+                    // ACP-1005: Check inactivity for re-engagement campaigns
+                    await ReEngagementService.shared.checkInactivity()
                 }
                 .onOpenURL { url in
                     handleDeepLink(url)
+                }
+                // ACP-999: Handle NSUserActivity for universal links
+                .onContinueUserActivity(NSUserActivityTypeBrowsingWeb) { userActivity in
+                    _ = deepLinkService.handleUserActivity(userActivity)
                 }
                 .onChange(of: scenePhase) { _, newPhase in
                     if newPhase == .active {
                         // ACP-1039: Check biometric lock state when app comes to foreground
                         biometricService.handleAppForegrounded()
+
+                        // ACP-998: Track app session for ASO review prompt timing
+                        asoService.trackSessionStart()
+
+                        // ACP-999: Process any deep links queued before authentication
+                        if appState.isAuthenticated {
+                            deepLinkService.processQueuedDeepLink()
+                        }
 
                         // Refresh widget data when app becomes active
                         Task {
@@ -388,9 +422,27 @@ struct PTPerformanceApp: App {
 
     // MARK: - Deep Link Handling
 
-    /// Handle incoming deep links for both auth and widget navigation
+    /// Handle incoming deep links for auth, widget navigation, and attribution (ACP-999)
     private func handleDeepLink(_ url: URL) {
-        // First, check if this is a widget navigation deep link
+        // ACP-999: Route through DeepLinkService for attribution tracking + universal link parsing
+        // This extracts UTM params and handles universal links (https://app.moduspt.com/...)
+        // before falling through to legacy routing
+        if deepLinkService.handleURL(url) {
+            // DeepLinkService resolved the URL — sync destination to appState
+            if let destination = deepLinkService.pendingDestination {
+                if appState.isAuthenticated {
+                    appState.pendingDeepLink = destination
+                    deepLinkService.clearPendingDestination()
+                } else {
+                    // Not authenticated yet — queue for post-auth processing
+                    deepLinkService.queueDeepLinkForPostAuth(url)
+                    DebugLogger.shared.info("PTPerformanceApp", "Deep link queued for post-auth: \(url.absoluteString)")
+                }
+            }
+            return
+        }
+
+        // First, check if this is a widget navigation deep link (legacy path)
         if let destination = DeepLinkDestination.from(url: url) {
             appState.pendingDeepLink = destination
 

@@ -2,15 +2,23 @@ import SwiftUI
 
 struct RootView: View {
     @EnvironmentObject var appState: AppState
+    // ACP-999: Deep Link Attribution — observe pending destinations
+    @EnvironmentObject var deepLinkService: DeepLinkService
+    // ACP-998: ASO — observe review prompt state
+    @EnvironmentObject var asoService: ASOService
     @StateObject private var onboardingCoordinator = OnboardingCoordinator.shared
     @StateObject private var modeService = ModeService.shared
     @StateObject private var consentManager = ConsentManager.shared
     @StateObject private var sessionManager = SessionManager.shared
+    // ACP-1005: Re-engagement campaign service
+    @StateObject private var reEngagementService = ReEngagementService.shared
     @AppStorage("hasAcceptedPrivacyNotice") private var hasAcceptedPrivacyNotice = false
     @AppStorage("hasCompletedQuickSetup") private var hasCompletedQuickSetup = false
     @State private var showPrivacyNotice = false
     @State private var showQuickSetup = false
     @State private var isCheckingSession = true
+    // ACP-998: State for inline review prompt sheet
+    @State private var showReviewPrompt = false
 
     var body: some View {
         Group {
@@ -76,6 +84,15 @@ struct RootView: View {
         .sheet(isPresented: $consentManager.showConsentUpdateSheet) {
             ConsentUpdateSheet()
         }
+        // ACP-1005: Re-engagement welcome-back screen for returning inactive users
+        .fullScreenCover(isPresented: $reEngagementService.showWelcomeBack) {
+            WelcomeBackView(
+                onStartWorkout: {
+                    appState.pendingDeepLink = .startWorkout
+                },
+                onDismiss: nil
+            )
+        }
         .task {
             await restoreSession()
         }
@@ -90,6 +107,41 @@ struct RootView: View {
             if isAuthenticated && hasAcceptedPrivacyNotice && consentManager.needsReConsent() {
                 consentManager.showConsentUpdateSheet = true
             }
+
+            // ACP-999: Process queued deep links after authentication completes
+            if isAuthenticated {
+                deepLinkService.processQueuedDeepLink()
+
+                // Sync DeepLinkService pending destination to appState
+                if let destination = deepLinkService.pendingDestination {
+                    appState.pendingDeepLink = destination
+                    deepLinkService.clearPendingDestination()
+                }
+            }
+        }
+        // ACP-999: Observe DeepLinkService destinations and route to appState
+        .onChange(of: deepLinkService.pendingDestination) { _, newDestination in
+            guard let destination = newDestination else { return }
+
+            if appState.isAuthenticated {
+                appState.pendingDeepLink = destination
+                deepLinkService.clearPendingDestination()
+                DebugLogger.shared.info("[RootView] Routed deep link to: \(String(describing: destination))")
+            } else {
+                // User is not authenticated — destination stays queued in DeepLinkService
+                DebugLogger.shared.info("[RootView] Deep link pending auth: \(String(describing: destination))")
+            }
+        }
+        // ACP-998: Show inline review prompt when ASO service triggers it
+        .onChange(of: asoService.shouldShowReviewPrompt) { _, shouldShow in
+            if shouldShow && appState.isAuthenticated {
+                showReviewPrompt = true
+            }
+        }
+        .sheet(isPresented: $showReviewPrompt) {
+            AppStoreReviewPromptView()
+                .presentationDetents([.medium])
+                .presentationDragIndicator(.visible)
         }
         .onChange(of: sessionManager.shouldLogout) { _, shouldLogout in
             guard shouldLogout else { return }
