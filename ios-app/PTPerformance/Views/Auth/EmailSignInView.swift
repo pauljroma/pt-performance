@@ -28,7 +28,7 @@ struct EmailSignInView: View {
         Form {
             // MARK: - Credentials
             Section {
-                VStack(alignment: .leading, spacing: 4) {
+                VStack(alignment: .leading, spacing: Spacing.xxs) {
                     TextField("Email", text: $email)
                         .textContentType(.emailAddress)
                         .keyboardType(.emailAddress)
@@ -50,7 +50,7 @@ struct EmailSignInView: View {
                     }
                 }
 
-                VStack(alignment: .leading, spacing: 4) {
+                VStack(alignment: .leading, spacing: Spacing.xxs) {
                     SecureField("Password", text: $password)
                         .textContentType(.password)
                         .accessibilityIdentifier("passwordSecureField")
@@ -114,12 +114,12 @@ struct EmailSignInView: View {
             // MARK: - Error Display
             if let errorMessage = errorMessage {
                 Section {
-                    HStack(spacing: 6) {
+                    HStack(spacing: Spacing.xxs + 2) {
                         Image(systemName: "exclamationmark.triangle.fill")
-                            .foregroundColor(.red)
+                            .foregroundColor(DesignTokens.statusError)
                         Text(errorMessage)
                             .font(.caption)
-                            .foregroundColor(.red)
+                            .foregroundColor(DesignTokens.statusError)
                             .multilineTextAlignment(.leading)
                     }
                     .accessibilityElement(children: .combine)
@@ -146,13 +146,13 @@ struct EmailSignInView: View {
     }
 
     private func validationErrorLabel(_ message: String) -> some View {
-        HStack(spacing: 4) {
+        HStack(spacing: Spacing.xxs) {
             Image(systemName: "exclamationmark.circle.fill")
                 .font(.caption)
             Text(message)
                 .font(.caption)
         }
-        .foregroundColor(.red)
+        .foregroundColor(DesignTokens.statusError)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("Error: \(message)")
     }
@@ -188,9 +188,7 @@ struct EmailSignInView: View {
             let supabase = PTSupabaseClient.shared
             await MainActor.run {
                 HapticFeedback.formSubmission(success: true)
-                if let userRole = supabase.userRole {
-                    appState.userRole = userRole
-                }
+                appState.userRole = supabase.userRole ?? .patient
                 appState.userId = supabase.userId
                 appState.isAuthenticated = true
                 isLoading = false
@@ -212,7 +210,7 @@ struct EmailSignInView: View {
                 let remaining = SecurityMonitor.shared.getRemainingAttempts(email: trimmedEmail)
                 await MainActor.run {
                     HapticFeedback.formSubmission(success: false)
-                    errorMessage = "Sign in failed: \(error.localizedDescription)\n\(remaining) attempts remaining."
+                    errorMessage = "Incorrect email or password. Please try again. \(remaining) attempts remaining."
                     isLoading = false
                 }
             }

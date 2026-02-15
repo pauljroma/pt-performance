@@ -29,7 +29,7 @@ struct RegistrationView: View {
         Form {
             // MARK: - Your Information
             Section("Your Information") {
-                VStack(alignment: .leading, spacing: 4) {
+                VStack(alignment: .leading, spacing: Spacing.xxs) {
                     TextField("Full Name", text: $fullName)
                         .textContentType(.name)
                         .autocorrectionDisabled()
@@ -48,7 +48,7 @@ struct RegistrationView: View {
                     }
                 }
 
-                VStack(alignment: .leading, spacing: 4) {
+                VStack(alignment: .leading, spacing: Spacing.xxs) {
                     TextField("Email", text: $email)
                         .textContentType(.emailAddress)
                         .keyboardType(.emailAddress)
@@ -72,7 +72,7 @@ struct RegistrationView: View {
 
             // MARK: - Security
             Section("Security") {
-                VStack(alignment: .leading, spacing: 4) {
+                VStack(alignment: .leading, spacing: Spacing.xxs) {
                     SecureField("Password", text: $password)
                         .textContentType(.newPassword)
                         .accessibilityIdentifier("registrationPasswordSecureField")
@@ -95,7 +95,7 @@ struct RegistrationView: View {
                     }
                 }
 
-                VStack(alignment: .leading, spacing: 4) {
+                VStack(alignment: .leading, spacing: Spacing.xxs) {
                     SecureField("Confirm Password", text: $confirmPassword)
                         .textContentType(.newPassword)
                         .accessibilityIdentifier("confirmPasswordSecureField")
@@ -118,6 +118,7 @@ struct RegistrationView: View {
             // MARK: - Create Account Button
             Section {
                 Button(action: {
+                    HapticFeedback.medium()
                     Task {
                         await createAccount()
                     }
@@ -144,12 +145,12 @@ struct RegistrationView: View {
             // MARK: - Error Display
             if let errorMessage = errorMessage {
                 Section {
-                    HStack(spacing: 6) {
+                    HStack(spacing: Spacing.xxs + 2) {
                         Image(systemName: "exclamationmark.triangle.fill")
-                            .foregroundColor(.red)
+                            .foregroundColor(DesignTokens.statusError)
                         Text(errorMessage)
                             .font(.caption)
-                            .foregroundColor(.red)
+                            .foregroundColor(DesignTokens.statusError)
                     }
                     .accessibilityElement(children: .combine)
                     .accessibilityLabel("Error: \(errorMessage)")
@@ -178,13 +179,13 @@ struct RegistrationView: View {
     }
 
     private func validationErrorLabel(_ message: String) -> some View {
-        HStack(spacing: 4) {
+        HStack(spacing: Spacing.xxs) {
             Image(systemName: "exclamationmark.circle.fill")
                 .font(.caption)
             Text(message)
                 .font(.caption)
         }
-        .foregroundColor(.red)
+        .foregroundColor(DesignTokens.statusError)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("Error: \(message)")
     }
@@ -212,6 +213,7 @@ struct RegistrationView: View {
 
                 // Update app state after successful registration
                 await MainActor.run {
+                    HapticFeedback.formSubmission(success: true)
                     appState.userRole = supabase.userRole ?? .patient
                     appState.userId = supabase.userId
                     appState.isAuthenticated = true
@@ -220,6 +222,7 @@ struct RegistrationView: View {
             } else {
                 // Email confirmation required - show message and return to login
                 await MainActor.run {
+                    HapticFeedback.success()
                     errorMessage = "Account created! Please check your email to verify your account, then sign in."
                     isLoading = false
                     // Clear form
@@ -231,7 +234,15 @@ struct RegistrationView: View {
             }
         } catch {
             await MainActor.run {
-                errorMessage = "Registration failed: \(error.localizedDescription)"
+                HapticFeedback.formSubmission(success: false)
+                let errorString = String(describing: error)
+                if errorString.contains("already registered") || errorString.contains("already exists") {
+                    errorMessage = "An account with this email already exists. Please sign in instead."
+                } else if errorString.contains("network") || errorString.contains("connection") {
+                    errorMessage = "Unable to create account. Please check your internet connection and try again."
+                } else {
+                    errorMessage = "Registration failed. Please try again."
+                }
                 isLoading = false
             }
         }

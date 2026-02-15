@@ -152,6 +152,14 @@ final class AppleSignInService: NSObject, ObservableObject {
                 throw AppleSignInError.throttled
             }
         }
+
+        // Prevent concurrent sign-in: if a continuation is already pending,
+        // a previous sign-in flow is in progress. Cancel it before starting a new one.
+        if let existingContinuation = self.continuation {
+            self.continuation = nil
+            existingContinuation.resume(throwing: CancellationError())
+        }
+
         lastSignInAttempt = Date()
 
         logger.info("AppleSignIn", "Starting Sign in with Apple flow")
@@ -318,12 +326,17 @@ extension AppleSignInService: ASAuthorizationControllerDelegate {
                     let name = displayName.isEmpty
                         ? (userEmail.components(separatedBy: "@").first ?? "Patient")
                         : displayName
-                    try? await supabase.registerPatient(
-                        userId: userId,
-                        email: userEmail,
-                        fullName: name,
-                        authProvider: "apple"
-                    )
+                    do {
+                        try await supabase.registerPatient(
+                            userId: userId,
+                            email: userEmail,
+                            fullName: name,
+                            authProvider: "apple"
+                        )
+                    } catch {
+                        logger.error("AppleSignIn", "Patient registration failed: \(error.localizedDescription)")
+                        // Continue — fetchUserRole below will determine if user can proceed
+                    }
                     await supabase.fetchUserRole(userId: userId)
                 }
 

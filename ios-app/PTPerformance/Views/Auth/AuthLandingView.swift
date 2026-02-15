@@ -19,11 +19,11 @@ struct AuthLandingView: View {
 
     var body: some View {
         NavigationStack {
-            VStack(spacing: 32) {
+            VStack(spacing: Spacing.xl) {
                 Spacer()
 
                 // MARK: - App Logo & Branding
-                VStack(spacing: 16) {
+                VStack(spacing: Spacing.md) {
                     ZStack {
                         Circle()
                             .fill(
@@ -53,7 +53,7 @@ struct AuthLandingView: View {
                 Spacer()
 
                 // MARK: - Authentication Buttons
-                VStack(spacing: 16) {
+                VStack(spacing: Spacing.md) {
                     // Sign in with Apple
                     Button(action: {
                         HapticFeedback.light()
@@ -61,7 +61,7 @@ struct AuthLandingView: View {
                             await signInWithApple()
                         }
                     }) {
-                        HStack(spacing: 8) {
+                        HStack(spacing: Spacing.xs) {
                             Image(systemName: "apple.logo")
                                 .font(.title3)
                             Text("Sign in with Apple")
@@ -83,7 +83,7 @@ struct AuthLandingView: View {
                         HapticFeedback.light()
                         showEmailSignIn = true
                     }) {
-                        HStack(spacing: 8) {
+                        HStack(spacing: Spacing.xs) {
                             Image(systemName: "envelope.fill")
                                 .font(.title3)
                             Text("Continue with Email")
@@ -105,7 +105,7 @@ struct AuthLandingView: View {
                         HapticFeedback.light()
                         showRegistration = true
                     }) {
-                        HStack(spacing: 8) {
+                        HStack(spacing: Spacing.xs) {
                             Image(systemName: "person.badge.plus")
                                 .font(.title3)
                             Text("Create Account")
@@ -117,7 +117,7 @@ struct AuthLandingView: View {
                         .foregroundColor(.primary)
                         .cornerRadius(CornerRadius.md)
                         .overlay(
-                            RoundedRectangle(cornerRadius: 12)
+                            RoundedRectangle(cornerRadius: CornerRadius.md)
                                 .stroke(Color(.separator), lineWidth: 1)
                         )
                     }
@@ -136,12 +136,12 @@ struct AuthLandingView: View {
 
                 // MARK: - Error Display
                 if let errorMessage = errorMessage {
-                    HStack(spacing: 6) {
+                    HStack(spacing: Spacing.xxs + 2) {
                         Image(systemName: "exclamationmark.triangle.fill")
-                            .foregroundColor(.red)
+                            .foregroundColor(DesignTokens.statusError)
                         Text(errorMessage)
                             .font(.caption)
-                            .foregroundColor(.red)
+                            .foregroundColor(DesignTokens.statusError)
                             .multilineTextAlignment(.center)
                     }
                     .padding(.horizontal)
@@ -152,7 +152,7 @@ struct AuthLandingView: View {
                 Spacer()
 
                 // MARK: - Demo Login (For Testing)
-                VStack(spacing: 12) {
+                VStack(spacing: Spacing.sm) {
                     Divider()
                         .padding(.vertical, Spacing.xs)
 
@@ -160,13 +160,13 @@ struct AuthLandingView: View {
                         .font(.caption)
                         .foregroundColor(.secondary)
 
-                    HStack(spacing: 12) {
+                    HStack(spacing: Spacing.sm) {
                         // Demo Patient
                         Button(action: {
                             HapticFeedback.light()
                             loginAsDemoPatient()
                         }) {
-                            HStack(spacing: 6) {
+                            HStack(spacing: Spacing.xxs + 2) {
                                 Image(systemName: "person.fill")
                                     .font(.caption)
                                 Text("Demo Patient")
@@ -174,8 +174,8 @@ struct AuthLandingView: View {
                             }
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, Spacing.sm)
-                            .background(Color.green.opacity(0.15))
-                            .foregroundColor(.green)
+                            .background(DesignTokens.statusSuccess.opacity(0.15))
+                            .foregroundColor(DesignTokens.statusSuccess)
                             .cornerRadius(CornerRadius.sm)
                         }
                         .accessibilityLabel("Demo Patient")
@@ -186,7 +186,7 @@ struct AuthLandingView: View {
                             HapticFeedback.light()
                             loginAsDemoTherapist()
                         }) {
-                            HStack(spacing: 6) {
+                            HStack(spacing: Spacing.xxs + 2) {
                                 Image(systemName: "stethoscope")
                                     .font(.caption)
                                 Text("Demo Therapist")
@@ -194,8 +194,8 @@ struct AuthLandingView: View {
                             }
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, Spacing.sm)
-                            .background(Color.purple.opacity(0.15))
-                            .foregroundColor(.purple)
+                            .background(Color.modusCyan.opacity(0.15))
+                            .foregroundColor(.modusCyan)
                             .cornerRadius(CornerRadius.sm)
                         }
                         .accessibilityLabel("Demo Therapist")
@@ -238,6 +238,7 @@ struct AuthLandingView: View {
             // Update app state after successful login
             // Apple Sign In through the app is always a patient (therapists use separate portal)
             await MainActor.run {
+                HapticFeedback.formSubmission(success: true)
                 appState.userRole = supabase.userRole ?? .patient
                 appState.userId = supabase.userId
                 appState.isAuthenticated = true
@@ -245,7 +246,16 @@ struct AuthLandingView: View {
             }
         } catch {
             await MainActor.run {
-                errorMessage = "Apple Sign In failed: \(error.localizedDescription)"
+                HapticFeedback.formSubmission(success: false)
+                let errorString = String(describing: error)
+                if errorString.contains("canceled") || errorString.contains("cancelled") {
+                    // User cancelled — no error message needed
+                    errorMessage = nil
+                } else if errorString.contains("network") || errorString.contains("connection") {
+                    errorMessage = "Unable to sign in. Please check your internet connection and try again."
+                } else {
+                    errorMessage = "Apple Sign In failed. Please try again."
+                }
                 isLoading = false
             }
         }

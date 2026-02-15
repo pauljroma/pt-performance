@@ -36,7 +36,7 @@ struct PasswordResetView: View {
 
             // MARK: - Email Input
             Section {
-                VStack(alignment: .leading, spacing: 4) {
+                VStack(alignment: .leading, spacing: Spacing.xxs) {
                     TextField("Email", text: $email)
                         .textContentType(.emailAddress)
                         .keyboardType(.emailAddress)
@@ -53,13 +53,13 @@ struct PasswordResetView: View {
                         }
 
                     if let error = emailValidation?.errorMessage, !email.isEmpty {
-                        HStack(spacing: 4) {
+                        HStack(spacing: Spacing.xxs) {
                             Image(systemName: "exclamationmark.circle.fill")
                                 .font(.caption)
                             Text(error)
                                 .font(.caption)
                         }
-                        .foregroundColor(.red)
+                        .foregroundColor(DesignTokens.statusError)
                         .accessibilityElement(children: .combine)
                         .accessibilityLabel("Error: \(error)")
                     }
@@ -71,6 +71,7 @@ struct PasswordResetView: View {
                 // MARK: - Send Magic Link Button (Primary)
                 Section {
                     Button(action: {
+                        HapticFeedback.medium()
                         Task {
                             await sendMagicLink()
                         }
@@ -83,7 +84,7 @@ struct PasswordResetView: View {
                                     .padding(.trailing, Spacing.xs)
                                     .accessibilityHidden(true)
                             }
-                            VStack(spacing: 2) {
+                            VStack(spacing: Spacing.xxs / 2) {
                                 Text("Send Sign-In Link")
                                     .font(.body.weight(.semibold))
                                 Text("(Recommended)")
@@ -103,6 +104,7 @@ struct PasswordResetView: View {
                 // MARK: - Reset Password Button (Secondary)
                 Section {
                     Button(action: {
+                        HapticFeedback.medium()
                         Task {
                             await sendPasswordReset()
                         }
@@ -132,10 +134,10 @@ struct PasswordResetView: View {
             // MARK: - Confirmation
             if showConfirmation {
                 Section {
-                    VStack(spacing: 12) {
+                    VStack(spacing: Spacing.sm) {
                         Image(systemName: "paperplane.circle.fill")
                             .font(.title)
-                            .foregroundColor(.green)
+                            .foregroundColor(DesignTokens.statusSuccess)
                             .accessibilityHidden(true)
 
                         Text(confirmationType == .magicLink ? "Sign-in link sent!" : "Password reset link sent!")
@@ -163,12 +165,12 @@ struct PasswordResetView: View {
             // MARK: - Error Display
             if let errorMessage = errorMessage {
                 Section {
-                    HStack(spacing: 6) {
+                    HStack(spacing: Spacing.xxs + 2) {
                         Image(systemName: "exclamationmark.triangle.fill")
-                            .foregroundColor(.red)
+                            .foregroundColor(DesignTokens.statusError)
                         Text(errorMessage)
                             .font(.caption)
-                            .foregroundColor(.red)
+                            .foregroundColor(DesignTokens.statusError)
                     }
                     .accessibilityElement(children: .combine)
                     .accessibilityLabel("Error: \(errorMessage)")
@@ -208,11 +210,13 @@ struct PasswordResetView: View {
             )
 
             await MainActor.run {
+                HapticFeedback.success()
                 showConfirmation = true
                 isLoading = false
             }
         } catch {
             await MainActor.run {
+                HapticFeedback.error()
                 // Provide user-friendly error message
                 let errorString = String(describing: error)
                 if errorString.contains("rate") || errorString.contains("limit") {
@@ -240,11 +244,13 @@ struct PasswordResetView: View {
             )
 
             await MainActor.run {
+                HapticFeedback.success()
                 showConfirmation = true
                 isLoading = false
             }
         } catch {
             await MainActor.run {
+                HapticFeedback.error()
                 // Provide user-friendly error message
                 let errorString = String(describing: error)
                 if errorString.contains("rate") || errorString.contains("limit") {

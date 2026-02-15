@@ -157,10 +157,9 @@ class PTSupabaseClient: ObservableObject {
             #endif
         }
 
-        // Check for existing session on init (already properly deferred)
-        Task {
-            await checkSession()
-        }
+        // Note: Session restore is handled by RootView.restoreSession() which also
+        // updates AppState. We intentionally do NOT call checkSession() here to avoid
+        // a race condition where both paths concurrently read/write auth state.
     }
 
     /// Checks for an existing persisted authentication session
@@ -242,11 +241,8 @@ class PTSupabaseClient: ObservableObject {
     /// - Note: Updates `userRole` and `userId` published properties on success.
     ///         Fails silently on error, logging in debug builds.
     func fetchUserRole(userId: String) async {
-        // Get user email from auth session
-        guard let userEmail = currentUser?.email else {
-            DebugLogger.shared.log("[SupabaseClient] No user email available", level: .warning)
-            return
-        }
+        // Get user email from auth session (may be nil for Apple Sign-In with hidden email)
+        let userEmail = currentUser?.email
 
         do {
             // First: look up patient by user_id (exact match to Supabase auth user)
@@ -284,6 +280,12 @@ class PTSupabaseClient: ObservableObject {
             }
 
             // Fallback: look up by email for legacy records without user_id
+            // Skip email-based lookup if email is not available (e.g., Apple Sign-In with hidden email)
+            guard let userEmail = userEmail else {
+                DebugLogger.shared.log("[SupabaseClient] No user email available for fallback lookup, userId: \(userId)", level: .warning)
+                return
+            }
+
             let patientByEmail: [AuthPatient] = try await client
                 .from("patients")
                 .select()
@@ -471,9 +473,19 @@ class PTSupabaseClient: ObservableObject {
     }
 
     /// Sign out
-    /// Clears Supabase session and all securely stored credentials
+    /// Clears Supabase session and all securely stored credentials.
+    /// Local state is always cleared even if the server-side sign-out fails,
+    /// to prevent the app from being stuck in a "logged in" state with an
+    /// invalid session.
     func signOut() async throws {
-        try await client.auth.signOut()
+        // Attempt server-side sign out, but capture the error to clear local state regardless
+        var signOutError: Error?
+        do {
+            try await client.auth.signOut()
+        } catch {
+            signOutError = error
+            DebugLogger.shared.error("SupabaseClient", "Server-side sign out failed: \(error.localizedDescription)")
+        }
 
         // Clear securely stored tokens and credentials
         await MainActor.run {
@@ -488,6 +500,7 @@ class PTSupabaseClient: ObservableObject {
             // Silent fail - tokens may not exist
         }
 
+        // Always clear local state to prevent inconsistent auth state
         await MainActor.run {
             self.currentSession = nil
             self.currentUser = nil
@@ -495,6 +508,11 @@ class PTSupabaseClient: ObservableObject {
             self.userId = nil
             // Clear hasActiveSession flag for Siri intent compatibility
             UserDefaults.standard.set(false, forKey: "hasActiveSession")
+        }
+
+        // Re-throw the error after cleanup so callers know sign-out had issues
+        if let signOutError {
+            throw signOutError
         }
     }
 

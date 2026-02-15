@@ -28,7 +28,7 @@ struct SetNewPasswordView: View {
             Group {
                 if isEstablishingSession {
                     // Show loading while extracting session from URL
-                    VStack(spacing: 16) {
+                    VStack(spacing: Spacing.md) {
                         ProgressView()
                             .scaleEffect(1.2)
                         Text("Verifying reset link...")
@@ -69,7 +69,7 @@ struct SetNewPasswordView: View {
         Form {
             // MARK: - Instructions
             Section {
-                VStack(alignment: .leading, spacing: 8) {
+                VStack(alignment: .leading, spacing: Spacing.xs) {
                     Image(systemName: "lock.rotation")
                         .font(.largeTitle)
                         .foregroundColor(.modusCyan)
@@ -86,7 +86,7 @@ struct SetNewPasswordView: View {
 
             // MARK: - Password Fields
             Section {
-                VStack(alignment: .leading, spacing: 4) {
+                VStack(alignment: .leading, spacing: Spacing.xxs) {
                     SecureField("New Password", text: $newPassword)
                         .textContentType(.newPassword)
                         .accessibilityLabel("New Password")
@@ -108,7 +108,7 @@ struct SetNewPasswordView: View {
                     }
                 }
 
-                VStack(alignment: .leading, spacing: 4) {
+                VStack(alignment: .leading, spacing: Spacing.xxs) {
                     SecureField("Confirm Password", text: $confirmPassword)
                         .textContentType(.newPassword)
                         .accessibilityLabel("Confirm Password")
@@ -130,6 +130,7 @@ struct SetNewPasswordView: View {
             // MARK: - Update Password Button
             Section {
                 Button(action: {
+                    HapticFeedback.medium()
                     Task {
                         await updatePassword()
                     }
@@ -155,12 +156,12 @@ struct SetNewPasswordView: View {
             // MARK: - Error Display
             if let errorMessage = errorMessage {
                 Section {
-                    HStack(spacing: 6) {
+                    HStack(spacing: Spacing.xxs + 2) {
                         Image(systemName: "exclamationmark.triangle.fill")
-                            .foregroundColor(.red)
+                            .foregroundColor(DesignTokens.statusError)
                         Text(errorMessage)
                             .font(.caption)
-                            .foregroundColor(.red)
+                            .foregroundColor(DesignTokens.statusError)
                             .multilineTextAlignment(.leading)
                     }
                     .accessibilityElement(children: .combine)
@@ -185,6 +186,9 @@ struct SetNewPasswordView: View {
             let session = try await PTSupabaseClient.shared.client.auth.session(from: url)
 
             await MainActor.run {
+                // Set session on PTSupabaseClient so updatePassword() has a valid auth context
+                PTSupabaseClient.shared.currentSession = session
+                PTSupabaseClient.shared.currentUser = session.user
                 appState.userId = session.user.id.uuidString
                 appState.pendingPasswordResetURL = nil // Clear the URL after use
                 isEstablishingSession = false
@@ -223,13 +227,13 @@ struct SetNewPasswordView: View {
     }
 
     private func validationErrorLabel(_ message: String) -> some View {
-        HStack(spacing: 4) {
+        HStack(spacing: Spacing.xxs) {
             Image(systemName: "exclamationmark.circle.fill")
                 .font(.caption)
             Text(message)
                 .font(.caption)
         }
-        .foregroundColor(.red)
+        .foregroundColor(DesignTokens.statusError)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("Error: \(message)")
     }
@@ -244,6 +248,7 @@ struct SetNewPasswordView: View {
             try await PTSupabaseClient.shared.updatePassword(newPassword: newPassword)
 
             await MainActor.run {
+                HapticFeedback.formSubmission(success: true)
                 isLoading = false
                 showSuccess = true
             }
@@ -251,7 +256,8 @@ struct SetNewPasswordView: View {
             DebugLogger.shared.success("SetNewPasswordView", "Password updated successfully")
         } catch {
             await MainActor.run {
-                errorMessage = "Failed to update password: \(error.localizedDescription)"
+                HapticFeedback.formSubmission(success: false)
+                errorMessage = "Failed to update password. Please try again or request a new reset link."
                 isLoading = false
             }
 

@@ -24,8 +24,11 @@ struct RootView: View {
                 // Keep this view lightweight to reduce initial render time
                 ProgressView()
                     .scaleEffect(1.2)
+                    .accessibilityLabel("Restoring session, please wait")
+                    .transition(.opacity)
             } else if !appState.isAuthenticated {
                 AuthLandingView()
+                    .transition(.opacity.animation(.easeInOut(duration: AnimationDuration.standard)))
             } else {
                 // Show privacy notice if not accepted (HIPAA requirement)
                 if !hasAcceptedPrivacyNotice {
@@ -56,9 +59,13 @@ struct RootView: View {
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
                     }
+                    .accessibilityElement(children: .combine)
+                    .accessibilityLabel("Setting up your account, please wait")
                 }
             }
         }
+        .animation(.easeInOut(duration: AnimationDuration.standard), value: isCheckingSession)
+        .animation(.easeInOut(duration: AnimationDuration.standard), value: appState.isAuthenticated)
         .fullScreenCover(isPresented: $onboardingCoordinator.shouldShowOnboarding) {
             OnboardingView()
         }
@@ -87,11 +94,14 @@ struct RootView: View {
         .onChange(of: sessionManager.shouldLogout) { _, shouldLogout in
             guard shouldLogout else { return }
             // Session expired or was force-terminated — navigate to login
+            // Clear both appState AND supabase client to keep them in sync
             appState.isAuthenticated = false
             appState.userId = nil
             appState.userRole = nil
             PTSupabaseClient.shared.currentSession = nil
             PTSupabaseClient.shared.currentUser = nil
+            PTSupabaseClient.shared.userRole = nil
+            PTSupabaseClient.shared.userId = nil
             sessionManager.resetSession()
         }
     }

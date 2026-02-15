@@ -279,8 +279,8 @@ final class SessionManager: ObservableObject {
         // Check token freshness every 2 minutes
         tokenRefreshTimer = Timer.scheduledTimer(withTimeInterval: 120.0, repeats: true) { [weak self] _ in
             guard let self = self else { return }
-            Task {
-                await self.refreshTokenIfNeeded()
+            Task { [weak self] in
+                await self?.refreshTokenIfNeeded()
             }
         }
     }
@@ -314,8 +314,8 @@ final class SessionManager: ObservableObject {
         checkSessionTimeout()
 
         // Run async security check (fingerprint + token refresh)
-        Task {
-            await performSecurityCheck()
+        Task { [weak self] in
+            await self?.performSecurityCheck()
         }
     }
 
