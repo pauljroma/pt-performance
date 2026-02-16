@@ -137,6 +137,7 @@ class MealLogViewModel: ObservableObject {
                 isSearching = false
             } catch {
                 if !Task.isCancelled {
+                    DebugLogger.shared.log("Food search failed: \(error.localizedDescription)", level: .warning)
                     isSearching = false
                 }
             }
