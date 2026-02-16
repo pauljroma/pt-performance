@@ -198,8 +198,11 @@ final class CoachingDashboardViewModel: ObservableObject {
             let adherence = patient.adherencePercentage ?? 100
             let daysSince = patient.daysSinceLastSession
 
+            // Derive a deterministic timestamp from patient data
+            // Use lastSessionDate if available, otherwise fall back to current date
+            let patientTimestamp = patient.lastSessionDate ?? Date()
+
             // Check for pain-related exceptions
-            // In production, this would query actual pain logs
             if patient.hasHighSeverityFlags {
                 exceptions.append(PatientException(
                     id: UUID(),
@@ -208,11 +211,11 @@ final class CoachingDashboardViewModel: ObservableObject {
                     severity: .critical,
                     message: "Patient reported severe pain during last session",
                     daysSinceLastSession: daysSince,
-                    painTrend: .improving,
+                    painTrend: nil,
                     adherenceTrend: nil,
-                    currentPain: 8.0,
+                    currentPain: nil,
                     currentAdherence: adherence,
-                    createdAt: Date().addingTimeInterval(-Double.random(in: 3600...86400))
+                    createdAt: patientTimestamp
                 ))
             }
 
@@ -229,7 +232,7 @@ final class CoachingDashboardViewModel: ObservableObject {
                     adherenceTrend: .declining,
                     currentPain: nil,
                     currentAdherence: adherence,
-                    createdAt: Date().addingTimeInterval(-Double.random(in: 3600...172800))
+                    createdAt: patientTimestamp
                 ))
             } else if adherence < 50 {
                 exceptions.append(PatientException(
@@ -243,7 +246,7 @@ final class CoachingDashboardViewModel: ObservableObject {
                     adherenceTrend: .declining,
                     currentPain: nil,
                     currentAdherence: adherence,
-                    createdAt: Date().addingTimeInterval(-Double.random(in: 3600...172800))
+                    createdAt: patientTimestamp
                 ))
             }
 
@@ -260,7 +263,7 @@ final class CoachingDashboardViewModel: ObservableObject {
                     adherenceTrend: nil,
                     currentPain: nil,
                     currentAdherence: adherence,
-                    createdAt: Date().addingTimeInterval(-Double.random(in: 3600...172800))
+                    createdAt: patientTimestamp
                 ))
             } else if daysSince > 7 {
                 exceptions.append(PatientException(
@@ -274,7 +277,7 @@ final class CoachingDashboardViewModel: ObservableObject {
                     adherenceTrend: nil,
                     currentPain: nil,
                     currentAdherence: adherence,
-                    createdAt: Date().addingTimeInterval(-Double.random(in: 3600...172800))
+                    createdAt: patientTimestamp
                 ))
             }
         }

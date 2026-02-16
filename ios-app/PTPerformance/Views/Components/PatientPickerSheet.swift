@@ -25,6 +25,8 @@ struct PatientPickerSheet: View {
                 Group {
                     if viewModel.isLoading {
                         loadingView
+                    } else if let errorMessage = viewModel.errorMessage {
+                        errorStateView(message: errorMessage)
                     } else if viewModel.patients.isEmpty {
                         emptyStateView
                     } else {
@@ -106,6 +108,40 @@ struct PatientPickerSheet: View {
         .accessibilityLabel("No patients found. Add patients to your caseload to get started.")
     }
 
+    // MARK: - Error State View
+
+    private func errorStateView(message: String) -> some View {
+        VStack(spacing: Spacing.md) {
+            Image(systemName: "exclamationmark.triangle")
+                .font(.system(size: 48))
+                .foregroundColor(.orange)
+
+            Text("Something Went Wrong")
+                .font(.headline)
+
+            Text(message)
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, Spacing.xl + Spacing.xs)
+
+            Button {
+                Task {
+                    viewModel.errorMessage = nil
+                    await viewModel.loadPatients()
+                }
+            } label: {
+                Text("Try Again")
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+            }
+            .buttonStyle(.bordered)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Error: \(message)")
+    }
+
     // MARK: - Filtered Patients
 
     private var filteredPatients: [Patient] {
@@ -181,13 +217,14 @@ class PatientPickerViewModel: ObservableObject {
 
     func loadPatients() async {
         isLoading = true
+        errorMessage = nil
         defer { isLoading = false }
 
         do {
             // Try to get therapist ID from app state
             guard let therapistId = await getTherapistId() else {
-                // Use mock data for development
-                patients = Patient.mockPatients
+                patients = []
+                errorMessage = "Unable to load patients. Please sign in."
                 return
             }
 
@@ -205,8 +242,8 @@ class PatientPickerViewModel: ObservableObject {
 
         } catch {
             ErrorLogger.shared.logError(error, context: "PatientPickerViewModel.loadPatients")
-            // Use mock data for development if API fails
-            patients = Patient.mockPatients
+            patients = []
+            errorMessage = "Unable to load patients. Please try again."
         }
     }
 

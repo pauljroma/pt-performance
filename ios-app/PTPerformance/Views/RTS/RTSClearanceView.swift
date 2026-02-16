@@ -661,8 +661,12 @@ class RTSClearanceViewModel: ObservableObject {
         errorMessage = nil
 
         do {
-            // Get current user ID (would come from auth)
-            let signerId = UUID() // Placeholder
+            // Get current user ID from auth
+            guard let signerId = UUID(uuidString: PTSupabaseClient.shared.userId ?? "") else {
+                errorMessage = "Unable to determine current user"
+                isSaving = false
+                return
+            }
 
             let updated = try await rtsService.signClearance(id: id, signedBy: signerId)
             status = updated.status

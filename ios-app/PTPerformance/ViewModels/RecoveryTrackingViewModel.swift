@@ -337,13 +337,30 @@ final class RecoveryTrackingViewModel: ObservableObject {
 
             let dayName = Self.dayFormatter.string(from: date)
 
-            // Calculate score for this day (simplified - in production would use actual data)
-            let baseScore = 65 + Int.random(in: -15...20)
-            let score = min(100, max(0, baseScore))
+            // Find sessions logged on this specific day
+            let daySessions = recentSessions.filter {
+                calendar.isDate($0.loggedAt, inSameDayAs: date)
+            }
+
+            let hasSessionData = !daySessions.isEmpty
+
+            // Calculate score from actual session data for this day
+            let score: Int
+            if hasSessionData {
+                // Score based on number and duration of recovery sessions that day
+                let totalMinutes = daySessions.reduce(0) { $0 + $1.durationMinutes }
+                let sessionCount = daySessions.count
+                // Base score from session activity: more sessions and longer durations = higher score
+                let minuteScore = min(40, totalMinutes * 2) // Up to 40 points for duration
+                let countScore = min(30, sessionCount * 15)  // Up to 30 points for multiple sessions
+                score = min(100, max(0, 30 + minuteScore + countScore)) // Base 30 + activity bonuses
+            } else {
+                // No session data for this day - score is 0 to indicate no data
+                score = 0
+            }
 
             let status = RecoveryStatus.from(score: score)
             let workoutIntensity = TrainingIntensity.recommended(for: score)
-            let completed = dayOffset > 0 // Past days marked as completed for demo
 
             trends.append(DailyRecoveryTrend(
                 date: date,
@@ -351,7 +368,7 @@ final class RecoveryTrackingViewModel: ObservableObject {
                 score: score,
                 status: status,
                 recommendedIntensity: workoutIntensity,
-                workoutCompleted: completed
+                workoutCompleted: hasSessionData
             ))
         }
 

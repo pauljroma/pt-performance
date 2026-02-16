@@ -299,7 +299,7 @@ class ProtocolBuilderViewModel: ObservableObject {
         let kpiData = AssignmentKPI(
             athleteId: athleteId,
             templateId: templateId,
-            assignedBy: UUID(), // Would be current user ID
+            assignedBy: UUID(uuidString: PTSupabaseClient.shared.userId ?? "") ?? UUID(),
             durationSeconds: duration,
             metTarget: duration < 60,
             taskCount: customization.includedTaskCount,

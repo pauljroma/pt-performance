@@ -492,7 +492,7 @@ struct ProgressAssessmentView: View {
                             PAGoalProgressCard(
                                 goalNumber: index + 1,
                                 goalText: goal,
-                                progressPercentage: Double.random(in: 40...100) // Would be calculated from actual data
+                                progressPercentage: 0 // No tracked progress data available yet
                             )
                         }
                     } else {

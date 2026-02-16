@@ -340,8 +340,10 @@ struct RTSTestRecordingView: View {
         HapticFeedback.medium()
 
         Task {
-            // Get current user ID (would come from auth in real app)
-            let recordedBy = UUID() // Placeholder
+            // Get current user ID from auth
+            guard let recordedBy = UUID(uuidString: PTSupabaseClient.shared.userId ?? "") else {
+                return
+            }
 
             let success = await viewModel.recordTest(
                 criterionId: criterion.id,

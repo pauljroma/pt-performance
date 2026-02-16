@@ -143,11 +143,18 @@ class ProgramBuilderViewModel: ObservableObject {
         isLoadingProtocols = true
         createError = nil
 
-        // For MVP, use sample protocols
-        // In production, fetch from Supabase:
-        // let response = try await supabase.from("protocol_templates").select().execute()
+        do {
+            let protocols: [TherapyProtocol] = try await supabase.client
+                .from("therapy_protocols")
+                .select()
+                .execute()
+                .value
+            availableProtocols = protocols
+        } catch {
+            DebugLogger.shared.log("Failed to fetch protocols from Supabase: \(error.localizedDescription), using sample protocols", level: .warning)
+            availableProtocols = TherapyProtocol.sampleProtocols
+        }
 
-        availableProtocols = TherapyProtocol.sampleProtocols
         isLoadingProtocols = false
     }
 

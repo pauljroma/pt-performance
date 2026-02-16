@@ -182,9 +182,9 @@ final class TherapistIntelligenceViewModel: ObservableObject {
     }
 
     var programsInUse: Int {
-        // Count unique programs - in production this would query actual program assignments
-        // For now, estimate based on patient count
-        min(patients.count, 10)
+        // Count unique injury types as a proxy for distinct programs,
+        // since the Patient model does not carry a programId field
+        Set(patients.compactMap { $0.injuryType }).count
     }
 
     var adherenceTrend: PracticeKPI.Trend? {
@@ -359,25 +359,29 @@ final class TherapistIntelligenceViewModel: ObservableObject {
             }
 
             // Add drop-off events for at-risk patients
+            // Use lastSessionDate as the timestamp (the point at which they became inactive)
             if (patient.adherencePercentage ?? 100) < 50 {
+                let dropOffTimestamp = patient.lastSessionDate ?? patient.createdAt
                 events.append(RecentActivityEvent(
                     id: UUID(),
                     patientId: patient.id,
                     patientName: patient.fullName,
                     eventType: .dropOff,
-                    timestamp: calendar.date(byAdding: .hour, value: -Int.random(in: 1...48), to: Date()) ?? Date(),
+                    timestamp: dropOffTimestamp,
                     details: "Adherence dropped below 50%"
                 ))
             }
 
             // Add flag events for flagged patients
+            // Use lastSessionDate as a proxy for when the flag was raised (during last session)
             if patient.hasHighSeverityFlags {
+                let flagTimestamp = patient.lastSessionDate ?? patient.createdAt
                 events.append(RecentActivityEvent(
                     id: UUID(),
                     patientId: patient.id,
                     patientName: patient.fullName,
                     eventType: .flagRaised,
-                    timestamp: calendar.date(byAdding: .hour, value: -Int.random(in: 1...24), to: Date()) ?? Date(),
+                    timestamp: flagTimestamp,
                     details: "High severity flag requires attention"
                 ))
             }

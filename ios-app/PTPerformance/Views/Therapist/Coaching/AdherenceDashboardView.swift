@@ -455,15 +455,8 @@ final class AdherenceDashboardViewModel: ObservableObject {
     }
 
     var adherenceTrend: (icon: String, text: String, color: Color)? {
-        // Simulated trend - in production would compare with previous period
-        let change = Double.random(in: -5...5)
-        if abs(change) < 1 {
-            return ("arrow.right", "Stable", .gray)
-        } else if change > 0 {
-            return ("arrow.up.right", "+\(String(format: "%.1f", change))%", .green)
-        } else {
-            return ("arrow.down.right", "\(String(format: "%.1f", change))%", .red)
-        }
+        // No previous period data available to calculate a real trend
+        return nil
     }
 
     var highAdherenceCount: Int {
@@ -533,12 +526,10 @@ final class AdherenceDashboardViewModel: ObservableObject {
     }
 
     var weeklyTrendData: [TrendPoint] {
-        // Simulated weekly data - in production would fetch actual historical data
+        // Only show the current week's real average; no historical data available
+        guard averageAdherence > 0 else { return [] }
         return [
-            TrendPoint(label: "W1", value: Double.random(in: 65...85)),
-            TrendPoint(label: "W2", value: Double.random(in: 65...85)),
-            TrendPoint(label: "W3", value: Double.random(in: 65...85)),
-            TrendPoint(label: "W4", value: averageAdherence)
+            TrendPoint(label: "This Week", value: averageAdherence)
         ]
     }
 

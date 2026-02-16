@@ -349,7 +349,7 @@ struct GoalProgressMiniChart: View {
 
     init(goal: PatientGoal, dataPoints: [GoalProgressDataPoint] = [], height: CGFloat = 120) {
         self.goal = goal
-        self.dataPoints = dataPoints.isEmpty ? Self.generateSampleData(for: goal) : dataPoints
+        self.dataPoints = dataPoints
         self.height = height
     }
 
@@ -371,69 +371,83 @@ struct GoalProgressMiniChart: View {
                 }
             }
 
-            // Swift Charts visualization
-            Chart {
-                // Target line
-                if let target = goal.targetValue {
-                    RuleMark(y: .value("Target", target))
-                        .foregroundStyle(Color.green.opacity(0.5))
-                        .lineStyle(StrokeStyle(lineWidth: 1, dash: [5, 3]))
-                        .annotation(position: .trailing, alignment: .leading) {
-                            Text("Goal")
-                                .font(.caption2)
-                                .foregroundColor(.green)
-                        }
+            if dataPoints.isEmpty {
+                // Empty state when no data points are available
+                VStack(spacing: Spacing.xs) {
+                    Image(systemName: "chart.line.flattrend.xyaxis")
+                        .font(.title3)
+                        .foregroundColor(.secondary)
+                    Text("No progress data yet")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
                 }
+                .frame(height: height)
+                .frame(maxWidth: .infinity)
+            } else {
+                // Swift Charts visualization
+                Chart {
+                    // Target line
+                    if let target = goal.targetValue {
+                        RuleMark(y: .value("Target", target))
+                            .foregroundStyle(Color.green.opacity(0.5))
+                            .lineStyle(StrokeStyle(lineWidth: 1, dash: [5, 3]))
+                            .annotation(position: .trailing, alignment: .leading) {
+                                Text("Goal")
+                                    .font(.caption2)
+                                    .foregroundColor(.green)
+                            }
+                    }
 
-                // Progress line
-                ForEach(dataPoints) { point in
-                    LineMark(
-                        x: .value("Date", point.date),
-                        y: .value("Value", point.value)
-                    )
-                    .foregroundStyle(goal.category.color.gradient)
-                    .lineStyle(StrokeStyle(lineWidth: 2))
-
-                    // Area fill
-                    AreaMark(
-                        x: .value("Date", point.date),
-                        y: .value("Value", point.value)
-                    )
-                    .foregroundStyle(
-                        LinearGradient(
-                            colors: [goal.category.color.opacity(0.3), goal.category.color.opacity(0.05)],
-                            startPoint: .top,
-                            endPoint: .bottom
-                        )
-                    )
-
-                    // Milestone points
-                    if let milestone = point.milestone {
-                        PointMark(
+                    // Progress line
+                    ForEach(dataPoints) { point in
+                        LineMark(
                             x: .value("Date", point.date),
                             y: .value("Value", point.value)
                         )
-                        .foregroundStyle(milestone.color)
-                        .symbolSize(40)
+                        .foregroundStyle(goal.category.color.gradient)
+                        .lineStyle(StrokeStyle(lineWidth: 2))
+
+                        // Area fill
+                        AreaMark(
+                            x: .value("Date", point.date),
+                            y: .value("Value", point.value)
+                        )
+                        .foregroundStyle(
+                            LinearGradient(
+                                colors: [goal.category.color.opacity(0.3), goal.category.color.opacity(0.05)],
+                                startPoint: .top,
+                                endPoint: .bottom
+                            )
+                        )
+
+                        // Milestone points
+                        if let milestone = point.milestone {
+                            PointMark(
+                                x: .value("Date", point.date),
+                                y: .value("Value", point.value)
+                            )
+                            .foregroundStyle(milestone.color)
+                            .symbolSize(40)
+                        }
                     }
                 }
-            }
-            .frame(height: height)
-            .chartXAxis {
-                AxisMarks(values: .stride(by: .day, count: 7)) { _ in
-                    AxisGridLine()
-                    AxisTick()
-                    AxisValueLabel(format: .dateTime.month(.abbreviated).day())
+                .frame(height: height)
+                .chartXAxis {
+                    AxisMarks(values: .stride(by: .day, count: 7)) { _ in
+                        AxisGridLine()
+                        AxisTick()
+                        AxisValueLabel(format: .dateTime.month(.abbreviated).day())
+                    }
                 }
-            }
-            .chartYAxis {
-                AxisMarks { value in
-                    AxisGridLine()
-                    AxisTick()
-                    AxisValueLabel {
-                        if let doubleValue = value.as(Double.self) {
-                            Text("\(Int(doubleValue))")
-                                .font(.caption2)
+                .chartYAxis {
+                    AxisMarks { value in
+                        AxisGridLine()
+                        AxisTick()
+                        AxisValueLabel {
+                            if let doubleValue = value.as(Double.self) {
+                                Text("\(Int(doubleValue))")
+                                    .font(.caption2)
+                            }
                         }
                     }
                 }
@@ -446,30 +460,6 @@ struct GoalProgressMiniChart: View {
         )
     }
 
-    /// Generate sample progress data for preview/demo purposes
-    static func generateSampleData(for goal: PatientGoal) -> [GoalProgressDataPoint] {
-        guard let target = goal.targetValue else { return [] }
-        let current = goal.currentValue ?? 0
-        let calendar = Calendar.current
-        let today = Date()
-
-        // Generate 30 days of progress data
-        var points: [GoalProgressDataPoint] = []
-        let startValue = max(0, current - (current * 0.5)) // Start at 50% of current
-        let dailyProgress = (current - startValue) / 30.0
-
-        for day in 0..<30 {
-            guard let date = calendar.date(byAdding: .day, value: -29 + day, to: today) else { continue }
-            let value = min(startValue + (dailyProgress * Double(day)), target)
-            let progressFraction = value / target
-            let milestone = GoalMilestone.allCases.first {
-                abs(progressFraction - $0.fraction) < 0.02
-            }
-            points.append(GoalProgressDataPoint(date: date, value: value, milestone: milestone))
-        }
-
-        return points
-    }
 }
 
 // MARK: - Milestone Progress View
