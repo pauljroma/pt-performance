@@ -61,7 +61,8 @@ actor FeatureUsageTracker {
 
     /// File URL for persisting feature usage records across sessions.
     private let persistenceURL: URL = {
-        let directory = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
+        let directory = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
+            ?? FileManager.default.temporaryDirectory
         let appDirectory = directory.appendingPathComponent("PTPerformance", isDirectory: true)
         try? FileManager.default.createDirectory(at: appDirectory, withIntermediateDirectories: true)
         return appDirectory.appendingPathComponent("feature_usage_records.json")

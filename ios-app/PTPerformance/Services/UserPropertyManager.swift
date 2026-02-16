@@ -93,7 +93,8 @@ actor UserPropertyManager {
     // MARK: - Initialisation
 
     private init() {
-        let cachesDir = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!
+        let cachesDir = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first
+            ?? FileManager.default.temporaryDirectory
         self.fileURL = cachesDir.appendingPathComponent(Self.fileName)
         loadFromDisk()
         logger.info("UserPropertyManager", "Initialized (userId=\(traits.userId ?? "nil"), segment=\(traits.engagementSegment.rawValue))")
