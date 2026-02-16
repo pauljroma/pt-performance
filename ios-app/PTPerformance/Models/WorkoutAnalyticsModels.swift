@@ -66,6 +66,7 @@ enum WorkoutType: String, CaseIterable, Codable, Sendable {
         case .push, .pull, .hinge, .lungeSquat: return .strength
         case .functional:            return .hybrid
         case .recovery:              return .recovery
+        case .unknown:               return .hybrid
         }
     }
 }

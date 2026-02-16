@@ -15,6 +15,14 @@ enum BodyCompGoalStatus: String, Codable, CaseIterable, Identifiable {
     case achieved
     case paused
     case cancelled
+    case unknown = "unknown"
+
+    /// Custom decoder that falls back to `.unknown` for unrecognized values
+    init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        let rawValue = try container.decode(String.self)
+        self = Self(rawValue: rawValue) ?? .unknown
+    }
 
     var id: String { rawValue }
 
@@ -24,6 +32,7 @@ enum BodyCompGoalStatus: String, Codable, CaseIterable, Identifiable {
         case .achieved: return "Achieved"
         case .paused: return "Paused"
         case .cancelled: return "Cancelled"
+        case .unknown: return "Unknown"
         }
     }
 
@@ -33,6 +42,7 @@ enum BodyCompGoalStatus: String, Codable, CaseIterable, Identifiable {
         case .achieved: return "checkmark.seal.fill"
         case .paused: return "pause.circle.fill"
         case .cancelled: return "xmark.circle.fill"
+        case .unknown: return "questionmark.circle"
         }
     }
 
@@ -42,6 +52,7 @@ enum BodyCompGoalStatus: String, Codable, CaseIterable, Identifiable {
         case .achieved: return .green
         case .paused: return .orange
         case .cancelled: return .gray
+        case .unknown: return .gray
         }
     }
 }

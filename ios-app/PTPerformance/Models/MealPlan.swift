@@ -98,6 +98,25 @@ struct MealPlanItem: Codable, Identifiable, Hashable, Equatable {
         case sequence
         case createdAt = "created_at"
     }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(UUID.self, forKey: .id)
+        mealPlanId = try container.decode(UUID.self, forKey: .mealPlanId)
+        dayOfWeek = try container.decodeIfPresent(DayOfWeek.self, forKey: .dayOfWeek)
+        mealType = try container.decode(MealType.self, forKey: .mealType)
+        mealTime = try container.decodeIfPresent(String.self, forKey: .mealTime)
+        foodItems = try container.decodeIfPresent([LoggedFoodItem].self, forKey: .foodItems) ?? []
+        recipeName = try container.decodeIfPresent(String.self, forKey: .recipeName)
+        recipeInstructions = try container.decodeIfPresent(String.self, forKey: .recipeInstructions)
+        estimatedCalories = try container.decodeIfPresent(Int.self, forKey: .estimatedCalories)
+        estimatedProteinG = try container.decodeIfPresent(Double.self, forKey: .estimatedProteinG)
+        estimatedCarbsG = try container.decodeIfPresent(Double.self, forKey: .estimatedCarbsG)
+        estimatedFatG = try container.decodeIfPresent(Double.self, forKey: .estimatedFatG)
+        notes = try container.decodeIfPresent(String.self, forKey: .notes)
+        sequence = try container.decode(Int.self, forKey: .sequence)
+        createdAt = try container.decodeIfPresent(Date.self, forKey: .createdAt)
+    }
 }
 
 /// Day of the week for weekly meal plans

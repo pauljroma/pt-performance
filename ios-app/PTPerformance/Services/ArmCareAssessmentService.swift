@@ -319,6 +319,8 @@ class ArmCareAssessmentService: ObservableObject {
             return (canThrow: true, volumeMultiplier: 0.5)
         case .red:
             return (canThrow: false, volumeMultiplier: 0.0)
+        case .unknown:
+            return (canThrow: false, volumeMultiplier: 0.0)
         }
     }
 

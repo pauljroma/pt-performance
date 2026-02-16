@@ -332,6 +332,7 @@ extension MealType {
         case .dinner: return 4
         case .preWorkout: return 3
         case .postWorkout: return 5
+        case .unknown: return 99
         }
     }
 }

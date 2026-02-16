@@ -154,6 +154,7 @@ struct ProteinTimingChart: View {
         case .snack: return "Snack"
         case .preWorkout: return "Pre"
         case .postWorkout: return "Post"
+        case .unknown: return "Unknown"
         }
     }
 }

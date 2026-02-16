@@ -533,6 +533,8 @@ struct ArmCareAssessmentView: View {
             return "Reduce throwing volume 50%"
         case .red:
             return "No throwing today"
+        case .unknown:
+            return "Status unknown - complete assessment"
         }
     }
 

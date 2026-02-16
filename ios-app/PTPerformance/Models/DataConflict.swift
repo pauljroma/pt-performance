@@ -225,6 +225,8 @@ struct ConflictingSource: Codable, Identifiable, Hashable {
                 return String(format: "%.0f kcal", doubleVal)
             case .workout:
                 return String(format: "%.0f min", doubleVal)
+            case .unknown:
+                return String(format: "%.1f", doubleVal)
             }
         }
 
@@ -249,6 +251,14 @@ enum ConflictMetricType: String, Codable, CaseIterable, Identifiable, Hashable {
     case steps = "steps"
     case calories = "calories"
     case workout = "workout"
+    case unknown = "unknown"
+
+    /// Custom decoder that falls back to `.unknown` for unrecognized values
+    init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        let rawValue = try container.decode(String.self)
+        self = Self(rawValue: rawValue) ?? .unknown
+    }
 
     var id: String { rawValue }
 
@@ -263,6 +273,7 @@ enum ConflictMetricType: String, Codable, CaseIterable, Identifiable, Hashable {
         case .steps: return "Steps"
         case .calories: return "Calories"
         case .workout: return "Workout"
+        case .unknown: return "Unknown"
         }
     }
 
@@ -277,6 +288,7 @@ enum ConflictMetricType: String, Codable, CaseIterable, Identifiable, Hashable {
         case .steps: return "Steps"
         case .calories: return "Cal"
         case .workout: return "Workout"
+        case .unknown: return "Unknown"
         }
     }
 
@@ -291,6 +303,7 @@ enum ConflictMetricType: String, Codable, CaseIterable, Identifiable, Hashable {
         case .steps: return "steps"
         case .calories: return "kcal"
         case .workout: return "min"
+        case .unknown: return ""
         }
     }
 
@@ -305,6 +318,7 @@ enum ConflictMetricType: String, Codable, CaseIterable, Identifiable, Hashable {
         case .steps: return "figure.walk"
         case .calories: return "flame.fill"
         case .workout: return "figure.run"
+        case .unknown: return "questionmark.circle"
         }
     }
 
@@ -318,6 +332,7 @@ enum ConflictMetricType: String, Codable, CaseIterable, Identifiable, Hashable {
         case .steps: return .orange
         case .calories: return .yellow
         case .workout: return .blue
+        case .unknown: return .gray
         }
     }
 }
@@ -330,6 +345,14 @@ enum ConflictStatus: String, Codable, CaseIterable, Identifiable, Hashable {
     case autoResolved = "auto_resolved"
     case userResolved = "user_resolved"
     case dismissed = "dismissed"
+    case unknown = "unknown"
+
+    /// Custom decoder that falls back to `.unknown` for unrecognized values
+    init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        let rawValue = try container.decode(String.self)
+        self = Self(rawValue: rawValue) ?? .unknown
+    }
 
     var id: String { rawValue }
 
@@ -340,6 +363,7 @@ enum ConflictStatus: String, Codable, CaseIterable, Identifiable, Hashable {
         case .autoResolved: return "Auto-Resolved"
         case .userResolved: return "Resolved"
         case .dismissed: return "Dismissed"
+        case .unknown: return "Unknown"
         }
     }
 
@@ -350,6 +374,7 @@ enum ConflictStatus: String, Codable, CaseIterable, Identifiable, Hashable {
         case .autoResolved: return "checkmark.circle.fill"
         case .userResolved: return "checkmark.seal.fill"
         case .dismissed: return "xmark.circle.fill"
+        case .unknown: return "questionmark.circle"
         }
     }
 
@@ -360,6 +385,7 @@ enum ConflictStatus: String, Codable, CaseIterable, Identifiable, Hashable {
         case .autoResolved: return .blue
         case .userResolved: return .green
         case .dismissed: return .gray
+        case .unknown: return .gray
         }
     }
 }

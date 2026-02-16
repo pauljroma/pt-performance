@@ -9,6 +9,14 @@ enum ArmCareTrafficLight: String, Codable, CaseIterable {
     case green = "green"   // Full workout OK (score 8-10)
     case yellow = "yellow" // Reduce throwing volume 50%, extra arm care (score 5-7)
     case red = "red"       // No throwing, recovery protocol only (score 0-4)
+    case unknown = "unknown"
+
+    /// Custom decoder that falls back to `.unknown` for unrecognized values
+    init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        let rawValue = try container.decode(String.self)
+        self = Self(rawValue: rawValue) ?? .unknown
+    }
 
     /// Display name for UI
     var displayName: String {
@@ -16,6 +24,7 @@ enum ArmCareTrafficLight: String, Codable, CaseIterable {
         case .green: return "Good to Go"
         case .yellow: return "Proceed with Caution"
         case .red: return "Recovery Mode"
+        case .unknown: return "Unknown"
         }
     }
 
@@ -28,6 +37,8 @@ enum ArmCareTrafficLight: String, Codable, CaseIterable {
             return "Some concerns detected. Reduce throwing volume by 50% and add extra arm care exercises."
         case .red:
             return "Rest your arm today. Focus on recovery protocols only - no throwing."
+        case .unknown:
+            return "Status could not be determined. Please complete an assessment."
         }
     }
 
@@ -37,6 +48,7 @@ enum ArmCareTrafficLight: String, Codable, CaseIterable {
         case .green: return .green
         case .yellow: return .yellow
         case .red: return .red
+        case .unknown: return .gray
         }
     }
 
@@ -46,6 +58,7 @@ enum ArmCareTrafficLight: String, Codable, CaseIterable {
         case .green: return "checkmark.circle.fill"
         case .yellow: return "exclamationmark.triangle.fill"
         case .red: return "xmark.octagon.fill"
+        case .unknown: return "questionmark.circle"
         }
     }
 
@@ -55,6 +68,7 @@ enum ArmCareTrafficLight: String, Codable, CaseIterable {
         case .green: return 1.0
         case .yellow: return 0.5
         case .red: return 0.0
+        case .unknown: return 0.0
         }
     }
 
@@ -64,6 +78,7 @@ enum ArmCareTrafficLight: String, Codable, CaseIterable {
         case .green: return false
         case .yellow: return true
         case .red: return true
+        case .unknown: return true
         }
     }
 
@@ -424,6 +439,16 @@ struct ArmCareWorkoutModification: Codable {
             if elbowScore <= 4 {
                 warnings.append("Elbow discomfort detected - no valgus stress")
             }
+
+        case .unknown:
+            recommendations = [
+                "Status could not be determined",
+                "Complete an arm care assessment before throwing",
+                "Proceed with caution until status is confirmed"
+            ]
+            warnings = [
+                "Arm care status is unknown - avoid high-intensity throwing"
+            ]
         }
 
         return ArmCareWorkoutModification(

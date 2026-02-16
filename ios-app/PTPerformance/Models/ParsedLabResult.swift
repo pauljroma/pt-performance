@@ -64,7 +64,7 @@ struct ParsedLabResult: Codable, Equatable {
 
         patientName = try container.decodeIfPresent(String.self, forKey: .patientName)
         orderingPhysician = try container.decodeIfPresent(String.self, forKey: .orderingPhysician)
-        biomarkers = try container.decode([ParsedBiomarker].self, forKey: .biomarkers)
+        biomarkers = try container.decodeIfPresent([ParsedBiomarker].self, forKey: .biomarkers) ?? []
 
         // Decode confidence - handle string
         if let confidenceString = try? container.decode(String.self, forKey: .confidence) {
@@ -278,6 +278,19 @@ struct ParseLabPDFResponse: Codable {
         case confidence
         case parsingNotes = "parsing_notes"
         case error
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        success = try container.decode(Bool.self, forKey: .success)
+        provider = try container.decodeIfPresent(String.self, forKey: .provider)
+        testDate = try container.decodeIfPresent(String.self, forKey: .testDate)
+        patientName = try container.decodeIfPresent(String.self, forKey: .patientName)
+        orderingPhysician = try container.decodeIfPresent(String.self, forKey: .orderingPhysician)
+        biomarkers = try container.decodeIfPresent([ParsedBiomarker].self, forKey: .biomarkers) ?? []
+        confidence = try container.decodeIfPresent(String.self, forKey: .confidence) ?? "medium"
+        parsingNotes = try container.decodeIfPresent([String].self, forKey: .parsingNotes)
+        error = try container.decodeIfPresent(String.self, forKey: .error)
     }
 
     /// Convert to ParsedLabResult

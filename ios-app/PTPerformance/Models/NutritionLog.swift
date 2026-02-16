@@ -123,6 +123,14 @@ enum MealType: String, Codable, CaseIterable, Hashable {
     case snack
     case preWorkout = "pre_workout"
     case postWorkout = "post_workout"
+    case unknown = "unknown"
+
+    /// Custom decoder that falls back to `.unknown` for unrecognized values
+    init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        let rawValue = try container.decode(String.self)
+        self = Self(rawValue: rawValue) ?? .unknown
+    }
 
     var displayName: String {
         switch self {
@@ -132,6 +140,7 @@ enum MealType: String, Codable, CaseIterable, Hashable {
         case .snack: return "Snack"
         case .preWorkout: return "Pre-Workout"
         case .postWorkout: return "Post-Workout"
+        case .unknown: return "Unknown"
         }
     }
 
@@ -143,6 +152,7 @@ enum MealType: String, Codable, CaseIterable, Hashable {
         case .snack: return "carrot.fill"
         case .preWorkout: return "figure.run"
         case .postWorkout: return "figure.cooldown"
+        case .unknown: return "questionmark.circle"
         }
     }
 }

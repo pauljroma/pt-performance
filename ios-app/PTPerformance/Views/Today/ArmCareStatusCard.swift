@@ -140,6 +140,8 @@ struct ArmCareStatusCard: View {
             return "Reduce throwing 50%, add arm care"
         case .red:
             return "No throwing - recovery only"
+        case .unknown:
+            return "Status unknown - complete assessment"
         }
     }
 }

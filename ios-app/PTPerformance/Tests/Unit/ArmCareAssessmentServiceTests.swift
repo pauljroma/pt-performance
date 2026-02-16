@@ -665,7 +665,7 @@ final class ArmCareSummaryTests: XCTestCase {
                 elbowTightnessScore: 6,
                 valgusStressScore: 6
             )
-        case .red:
+        case .red, .unknown:
             assessment = ArmCareAssessment(
                 patientId: UUID(),
                 shoulderPainScore: 3,

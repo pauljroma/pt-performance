@@ -149,6 +149,7 @@ struct EnhancedMealCard: View {
         case .snack: return .blue
         case .preWorkout: return .red
         case .postWorkout: return .teal
+        case .unknown: return .gray
         }
     }
 
@@ -180,6 +181,7 @@ struct EnhancedPlannedMealCard: View {
         case .snack: return .blue
         case .preWorkout: return .red
         case .postWorkout: return .teal
+        case .unknown: return .gray
         }
     }
 
@@ -355,6 +357,7 @@ struct EnhancedQuickLogButton: View {
         case .snack: return .blue
         case .preWorkout: return .red
         case .postWorkout: return .teal
+        case .unknown: return .gray
         }
     }
 

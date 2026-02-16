@@ -20,6 +20,14 @@ enum WorkoutBlockType: String, Codable, CaseIterable, Hashable, Sendable {
     case lungeSquat = "lunge_squat"
     case functional = "functional"
     case recovery = "recovery"
+    case unknown = "unknown"
+
+    /// Custom decoder that falls back to `.unknown` for unrecognized values
+    init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        let rawValue = try container.decode(String.self)
+        self = Self(rawValue: rawValue) ?? .unknown
+    }
 
     var displayName: String {
         switch self {
@@ -41,6 +49,8 @@ enum WorkoutBlockType: String, Codable, CaseIterable, Hashable, Sendable {
             return "Functional"
         case .recovery:
             return "Recovery"
+        case .unknown:
+            return "Unknown"
         }
     }
 
@@ -64,6 +74,8 @@ enum WorkoutBlockType: String, Codable, CaseIterable, Hashable, Sendable {
             return "figure.mixed.cardio"
         case .recovery:
             return "leaf.circle.fill"
+        case .unknown:
+            return "questionmark.circle"
         }
     }
 
@@ -87,6 +99,8 @@ enum WorkoutBlockType: String, Codable, CaseIterable, Hashable, Sendable {
             return .indigo
         case .recovery:
             return .mint
+        case .unknown:
+            return .gray
         }
     }
 
@@ -110,6 +124,8 @@ enum WorkoutBlockType: String, Codable, CaseIterable, Hashable, Sendable {
             return "Functional and multi-joint movements"
         case .recovery:
             return "Cool down and recovery exercises"
+        case .unknown:
+            return "Unknown exercise type"
         }
     }
 
@@ -133,6 +149,8 @@ enum WorkoutBlockType: String, Codable, CaseIterable, Hashable, Sendable {
             return 7
         case .recovery:
             return 8
+        case .unknown:
+            return 99
         }
     }
 
@@ -158,6 +176,8 @@ enum WorkoutBlockType: String, Codable, CaseIterable, Hashable, Sendable {
             return ["functional", "core", "plyometric", "power"]
         case .recovery:
             return ["recovery", "stretch", "foam roll", "cool-down", "mobility"]
+        case .unknown:
+            return []
         }
     }
 
@@ -182,6 +202,8 @@ enum WorkoutBlockType: String, Codable, CaseIterable, Hashable, Sendable {
             return ["core", "full body"]
         case .recovery:
             return ["full body", "hip", "shoulder", "back", "leg"]
+        case .unknown:
+            return []
         }
     }
 

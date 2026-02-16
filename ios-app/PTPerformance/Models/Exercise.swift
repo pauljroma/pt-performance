@@ -349,4 +349,19 @@ struct TodaySessionResponse: Codable, Sendable {
     let exercises: [Exercise]
     let patient_name: String
     let message: String?
+
+    enum CodingKeys: String, CodingKey {
+        case session
+        case exercises
+        case patient_name
+        case message
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        session = try container.decodeIfPresent(Session.self, forKey: .session)
+        exercises = try container.decodeIfPresent([Exercise].self, forKey: .exercises) ?? []
+        patient_name = try container.decodeIfPresent(String.self, forKey: .patient_name) ?? ""
+        message = try container.decodeIfPresent(String.self, forKey: .message)
+    }
 }

@@ -144,6 +144,9 @@ struct MealTimelineView: View {
         case .postWorkout:
             components.hour = 19
             components.minute = 0
+        case .unknown:
+            components.hour = 12
+            components.minute = 0
         }
 
         return calendar.date(from: components) ?? now
