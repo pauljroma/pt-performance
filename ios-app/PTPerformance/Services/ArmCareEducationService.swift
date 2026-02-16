@@ -54,6 +54,7 @@ class ArmCareEducationService: ObservableObject {
                 .select()
                 .eq("is_published", value: true)
                 .order("sort_order", ascending: true)
+                .limit(200)
                 .execute()
                 .value
 

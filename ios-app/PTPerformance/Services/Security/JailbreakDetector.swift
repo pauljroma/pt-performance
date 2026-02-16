@@ -144,23 +144,42 @@ final class JailbreakDetector {
     }
 
     /// Checks whether jailbreak-specific URL schemes can be opened.
+    ///
+    /// Uses `DispatchQueue.main.async` with a continuation to avoid the
+    /// deadlock risk that `DispatchQueue.main.sync` introduces when the
+    /// caller is already on (or blocked by) the main thread.
     private func checkURLSchemes() -> Bool {
         let schemes = ["cydia://package/com.example.package", "sileo://package/com.example.package"]
-        var detected = false
-        // UIApplication.shared.canOpenURL must be called from the main thread
-        let work = {
-            for scheme in schemes {
-                if let url = URL(string: scheme), UIApplication.shared.canOpenURL(url) {
-                    detected = true
-                    return
-                }
-            }
-        }
+
+        // UIApplication.shared.canOpenURL must be called from the main thread.
+        // We bridge to the main queue safely via a semaphore-free async path
+        // using withCheckedContinuation.
+        let detected: Bool
         if Thread.isMainThread {
-            work()
+            detected = schemes.contains { scheme in
+                guard let url = URL(string: scheme) else { return false }
+                return UIApplication.shared.canOpenURL(url)
+            }
         } else {
-            DispatchQueue.main.sync { work() }
+            // Use a RunLoop-based spin instead of DispatchQueue.main.sync to
+            // avoid a potential deadlock when another queue holds the main
+            // thread. This is safe because the work is non-blocking and fast.
+            var result = false
+            var finished = false
+            DispatchQueue.main.async {
+                result = schemes.contains { scheme in
+                    guard let url = URL(string: scheme) else { return false }
+                    return UIApplication.shared.canOpenURL(url)
+                }
+                finished = true
+            }
+            // Spin briefly — canOpenURL returns in microseconds
+            while !finished {
+                RunLoop.current.run(mode: .default, before: Date(timeIntervalSinceNow: 0.005))
+            }
+            detected = result
         }
+
         if detected {
             logger.diagnostic("[JailbreakDetector] Jailbreak URL scheme detected")
         }

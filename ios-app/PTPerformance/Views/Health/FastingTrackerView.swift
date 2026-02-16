@@ -67,6 +67,7 @@ struct FastingTrackerView: View {
                         Image(systemName: "ellipsis.circle")
                             .foregroundColor(.modusCyan)
                     }
+                    .accessibilityLabel("More options")
                 }
             }
             .sheet(isPresented: $showingProtocolPicker) {

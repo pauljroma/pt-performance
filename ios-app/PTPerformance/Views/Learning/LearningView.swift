@@ -68,6 +68,7 @@ struct LearningView: View {
                     } label: {
                         Image(systemName: "square.grid.2x2")
                     }
+                    .accessibilityLabel("Browse categories")
                 }
             }
             .sheet(isPresented: $showCategoryBrowser) {

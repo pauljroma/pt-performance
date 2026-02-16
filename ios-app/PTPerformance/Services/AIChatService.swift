@@ -224,7 +224,9 @@ class AIChatService: ObservableObject {
         )
         self.messages.append(userMessage)
 
-        let athleteId = PTSupabaseClient.shared.userId ?? ""
+        guard let athleteId = PTSupabaseClient.shared.userId, !athleteId.isEmpty else {
+            throw AIChatError.notAuthenticated
+        }
 
         // ACP-1023: Build request with user context for personalized responses
         var requestBody: [String: Any] = [
@@ -234,7 +236,7 @@ class AIChatService: ObservableObject {
         ]
 
         // ACP-1023: Gather lightweight user context
-        let userContext = await gatherUserContext()
+        let userContext = await gatherUserContext(athleteId: athleteId)
         if !userContext.isEmpty {
             requestBody["user_context"] = userContext
         }
@@ -293,7 +295,10 @@ class AIChatService: ObservableObject {
     /// - Note: This method fails silently on error, logging the failure in debug builds
     func loadHistory() async {
         do {
-            let athleteId = PTSupabaseClient.shared.userId.flatMap { UUID(uuidString: $0) } ?? UUID()
+            guard let userIdString = PTSupabaseClient.shared.userId,
+                  let athleteId = UUID(uuidString: userIdString) else {
+                return // Silently return if not authenticated - loadHistory is non-throwing
+            }
 
             // Get latest session
             let sessionResponse = try await supabase.client
@@ -336,7 +341,7 @@ class AIChatService: ObservableObject {
     /// Gathers lightweight user context to send with chat requests
     /// This enables the edge function to provide more personalized responses
     /// Fix 7: Uses async let for parallel database queries instead of sequential
-    private func gatherUserContext() async -> [String: Any] {
+    private func gatherUserContext(athleteId: String) async -> [String: Any] {
         var context: [String: Any] = [:]
 
         // Model types declared outside of do block for clarity
@@ -358,6 +363,7 @@ class AIChatService: ObservableObject {
             async let workouts: [WorkoutRow] = supabase.client
                 .from("manual_sessions")
                 .select("name")
+                .eq("patient_id", value: athleteId)
                 .eq("completed", value: true)
                 .order("completed_at", ascending: false)
                 .limit(3)
@@ -367,6 +373,7 @@ class AIChatService: ObservableObject {
             async let readiness: [ReadinessRow] = supabase.client
                 .from("daily_readiness")
                 .select("readiness_score")
+                .eq("patient_id", value: athleteId)
                 .order("date", ascending: false)
                 .limit(1)
                 .execute()
@@ -375,6 +382,7 @@ class AIChatService: ObservableObject {
             async let goals: [GoalRow] = supabase.client
                 .from("patient_goals")
                 .select("title")
+                .eq("patient_id", value: athleteId)
                 .eq("status", value: "active")
                 .limit(3)
                 .execute()
@@ -416,5 +424,19 @@ class AIChatService: ObservableObject {
         latestQuickActions = []
         followUpSuggestions = []
         searchQuery = ""
+    }
+}
+
+enum AIChatError: LocalizedError {
+    case notAuthenticated
+    case invalidResponse
+
+    var errorDescription: String? {
+        switch self {
+        case .notAuthenticated:
+            return "Unable to identify user. Please ensure you are logged in."
+        case .invalidResponse:
+            return "Received an invalid response from the AI assistant."
+        }
     }
 }

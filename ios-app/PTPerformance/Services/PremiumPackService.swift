@@ -49,6 +49,7 @@ class PremiumPackService: ObservableObject {
                 .from("premium_packs")
                 .select()
                 .order("sort_order", ascending: true)
+                .limit(200)
                 .execute()
 
             let decoder = PTSupabaseClient.flexibleDecoder

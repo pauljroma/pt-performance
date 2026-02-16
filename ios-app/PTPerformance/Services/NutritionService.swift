@@ -331,6 +331,7 @@ class NutritionService {
                 .select()
                 .eq("patient_id", value: patientId)
                 .order("created_at", ascending: false)
+                .limit(200)
                 .execute()
                 .value
 

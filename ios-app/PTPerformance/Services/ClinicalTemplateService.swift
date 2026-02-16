@@ -129,6 +129,7 @@ class ClinicalTemplateService: ObservableObject {
                 .eq("is_active", value: true)
                 .order("use_count", ascending: false)
                 .order("name", ascending: true)
+                .limit(200)
                 .execute()
                 .value
 
@@ -154,6 +155,7 @@ class ClinicalTemplateService: ObservableObject {
                 .eq("is_system_template", value: false)
                 .order("use_count", ascending: false)
                 .order("updated_at", ascending: false)
+                .limit(200)
                 .execute()
                 .value
 
