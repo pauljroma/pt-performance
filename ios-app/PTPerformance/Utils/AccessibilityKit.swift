@@ -18,20 +18,16 @@ import Foundation
 /// consistent way for VoiceOver users.
 enum AccessibilityKit {}
 
-// MARK: - Trend Direction
+// MARK: - TrendDirection Accessibility Extension
 
-/// Describes the direction of a metric trend for VoiceOver announcements.
-enum TrendDirection: String {
-    case up
-    case down
-    case stable
-
+extension TrendDirection {
     /// Human-readable description used in accessibility labels.
-    var displayString: String {
+    var accessibilityDisplayString: String {
         switch self {
-        case .up: return "trending up"
-        case .down: return "trending down"
+        case .improving: return "trending up"
+        case .declining: return "trending down"
         case .stable: return "stable"
+        case .fluctuating: return "fluctuating"
         }
     }
 }
@@ -111,7 +107,7 @@ extension AccessibilityKit {
 
         /// Returns a trend label, e.g. "Heart rate variability trending up".
         static func trend(_ direction: TrendDirection, metric: String) -> String {
-            "\(metric) \(direction.displayString)"
+            "\(metric) \(direction.accessibilityDisplayString)"
         }
 
         // MARK: - Pluralization Helper
@@ -177,7 +173,7 @@ extension AccessibilityKit {
             latest: String
         ) -> String {
             let pointsLabel = dataPoints == 1 ? "1 data point" : "\(dataPoints) data points"
-            return "\(title) chart. \(pointsLabel). \(trend.displayString.capitalized). Range: \(min) to \(max). Latest: \(latest)."
+            return "\(title) chart. \(pointsLabel). \(trend.accessibilityDisplayString.capitalized). Range: \(min) to \(max). Latest: \(latest)."
         }
 
         /// Returns a single data point label for VoiceOver navigation within a chart.

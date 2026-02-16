@@ -62,10 +62,10 @@ final class CrashPreventionService {
         }
 
         // Install signal handlers for common fatal signals
-        signal(SIGSEGV, CrashPreventionService.handleSignal)
-        signal(SIGABRT, CrashPreventionService.handleSignal)
-        signal(SIGBUS, CrashPreventionService.handleSignal)
-        signal(SIGFPE, CrashPreventionService.handleSignal)
+        signal(SIGSEGV) { sig in CrashPreventionService.handleSignal(sig) }
+        signal(SIGABRT) { sig in CrashPreventionService.handleSignal(sig) }
+        signal(SIGBUS) { sig in CrashPreventionService.handleSignal(sig) }
+        signal(SIGFPE) { sig in CrashPreventionService.handleSignal(sig) }
 
         logger.info("CrashPreventionService installed: exception and signal handlers active")
     }

@@ -65,7 +65,7 @@ struct PrefetchingList<Data: RandomAccessCollection, ID: Hashable, Content: View
     var body: some View {
         LazyVStack(spacing: spacing ?? 0) {
             let dataArray = Array(data)
-            ForEach(dataArray.indices, id: { dataArray[$0][keyPath: idKeyPath] }) { index in
+            ForEach(dataArray.indices, id: \.self) { index in
                 content(dataArray[index])
                     .onAppear {
                         handleItemAppeared(at: index, in: dataArray)
