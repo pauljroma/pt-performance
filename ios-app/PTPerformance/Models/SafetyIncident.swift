@@ -89,6 +89,13 @@ struct SafetyIncident: Codable, Identifiable, Sendable, Hashable {
         case contradictoryData = "contradictory_data"
         case aiUncertainty = "ai_uncertainty"
         case missedEscalation = "missed_escalation"
+        case unknown = "unknown"
+
+        init(from decoder: Decoder) throws {
+            let container = try decoder.singleValueContainer()
+            let rawValue = try container.decode(String.self)
+            self = Self(rawValue: rawValue) ?? .unknown
+        }
 
         var displayName: String {
             switch self {
@@ -97,6 +104,7 @@ struct SafetyIncident: Codable, Identifiable, Sendable, Hashable {
             case .contradictoryData: return "Contradictory Data"
             case .aiUncertainty: return "AI Uncertainty"
             case .missedEscalation: return "Missed Escalation"
+            case .unknown: return "Unknown"
             }
         }
 
@@ -107,6 +115,7 @@ struct SafetyIncident: Codable, Identifiable, Sendable, Hashable {
             case .contradictoryData: return "exclamationmark.2"
             case .aiUncertainty: return "questionmark.circle.fill"
             case .missedEscalation: return "arrow.up.circle.fill"
+            case .unknown: return "questionmark.diamond"
             }
         }
 
@@ -122,6 +131,8 @@ struct SafetyIncident: Codable, Identifiable, Sendable, Hashable {
                 return "AI model confidence is too low for reliable claims"
             case .missedEscalation:
                 return "A required escalation was not triggered in time"
+            case .unknown:
+                return "Unknown incident type"
             }
         }
     }
@@ -134,6 +145,13 @@ struct SafetyIncident: Codable, Identifiable, Sendable, Hashable {
         case medium
         case high
         case critical
+        case unknown = "unknown"
+
+        init(from decoder: Decoder) throws {
+            let container = try decoder.singleValueContainer()
+            let rawValue = try container.decode(String.self)
+            self = Self(rawValue: rawValue) ?? .unknown
+        }
 
         var displayName: String {
             switch self {
@@ -141,6 +159,7 @@ struct SafetyIncident: Codable, Identifiable, Sendable, Hashable {
             case .medium: return "Medium"
             case .high: return "High"
             case .critical: return "Critical"
+            case .unknown: return "Unknown"
             }
         }
 
@@ -150,6 +169,7 @@ struct SafetyIncident: Codable, Identifiable, Sendable, Hashable {
             case .medium: return "yellow"
             case .high: return "orange"
             case .critical: return "red"
+            case .unknown: return "gray"
             }
         }
 
@@ -159,6 +179,7 @@ struct SafetyIncident: Codable, Identifiable, Sendable, Hashable {
             case .medium: return "exclamationmark.triangle"
             case .high: return "exclamationmark.triangle.fill"
             case .critical: return "exclamationmark.octagon.fill"
+            case .unknown: return "questionmark.circle"
             }
         }
 
@@ -169,6 +190,7 @@ struct SafetyIncident: Codable, Identifiable, Sendable, Hashable {
             case .high: return 1
             case .medium: return 2
             case .low: return 3
+            case .unknown: return 4
             }
         }
     }
@@ -181,6 +203,13 @@ struct SafetyIncident: Codable, Identifiable, Sendable, Hashable {
         case investigating
         case resolved
         case dismissed
+        case unknown = "unknown"
+
+        init(from decoder: Decoder) throws {
+            let container = try decoder.singleValueContainer()
+            let rawValue = try container.decode(String.self)
+            self = Self(rawValue: rawValue) ?? .unknown
+        }
 
         var displayName: String {
             switch self {
@@ -188,6 +217,7 @@ struct SafetyIncident: Codable, Identifiable, Sendable, Hashable {
             case .investigating: return "Investigating"
             case .resolved: return "Resolved"
             case .dismissed: return "Dismissed"
+            case .unknown: return "Unknown"
             }
         }
 
@@ -197,6 +227,7 @@ struct SafetyIncident: Codable, Identifiable, Sendable, Hashable {
             case .investigating: return "magnifyingglass.circle"
             case .resolved: return "checkmark.circle.fill"
             case .dismissed: return "xmark.circle"
+            case .unknown: return "questionmark.circle"
             }
         }
 
@@ -206,6 +237,7 @@ struct SafetyIncident: Codable, Identifiable, Sendable, Hashable {
             case .investigating: return "yellow"
             case .resolved: return "green"
             case .dismissed: return "gray"
+            case .unknown: return "gray"
             }
         }
 

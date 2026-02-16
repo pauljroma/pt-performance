@@ -271,6 +271,7 @@ class OptimisticWorkoutViewModel: ObservableObject {
     /// Complete a set with immediate UI update
     /// Returns in < 10ms, sync happens in background
     func completeSet(setNumber: Int) {
+        guard setNumber > 0 else { return }
         let token = ResponseTimeMonitor.shared.startInteraction(.setCompletion)
 
         guard let exercise = currentExercise,

@@ -431,6 +431,8 @@ actor PushNotificationService: NSObject {
             return .streak
         case .weeklySummary:
             return .progress
+        case .unknown:
+            return nil
         case .none:
             return nil
         }

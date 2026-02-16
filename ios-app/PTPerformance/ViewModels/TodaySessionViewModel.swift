@@ -240,6 +240,7 @@ class TodaySessionViewModel: ObservableObject {
         }
 
         let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
         return try decoder.decode(TodaySessionResponse.self, from: data)
     }
 
@@ -249,7 +250,10 @@ class TodaySessionViewModel: ObservableObject {
         logger.log("📱 Fetching session from Supabase for patient: \(patientId)")
 
         // First check scheduled_sessions for today
-        let today = ISO8601DateFormatter().string(from: Date()).prefix(10) // YYYY-MM-DD
+        let today: String = {
+            let components = Calendar.current.dateComponents([.year, .month, .day], from: Date())
+            return String(format: "%04d-%02d-%02d", components.year!, components.month!, components.day!)
+        }()
         logger.log("📱 Checking scheduled_sessions for today: \(today)")
 
         // Try to find a scheduled session for today first
@@ -461,6 +465,7 @@ class TodaySessionViewModel: ObservableObject {
         }
 
         let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
         let rows = try decoder.decode([EnrolledSessionRow].self, from: response.data)
 
         guard let row = rows.first else {

@@ -951,6 +951,7 @@ final class PTBriefViewModel: ObservableObject {
         case .medium: return .moderate
         case .high: return .high
         case .critical: return .critical
+        case .unknown: return .low
         }
     }
 

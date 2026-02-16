@@ -79,7 +79,7 @@ final class HealthHubViewModel: ObservableObject {
     /// Uses hasLoadedInitialData flag to prevent redundant fetching on tab switches
     func loadData() async {
         // Skip if we've already loaded and this isn't a forced refresh
-        guard !hasLoadedInitialData || isLoading == false else {
+        guard !hasLoadedInitialData else {
             return
         }
 

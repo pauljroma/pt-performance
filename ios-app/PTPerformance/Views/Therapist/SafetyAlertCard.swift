@@ -151,6 +151,8 @@ struct SafetyAlertCard: View {
             return "exclamationmark.circle.fill"
         case .low:
             return "info.circle.fill"
+        case .unknown:
+            return "questionmark.circle"
         }
     }
 

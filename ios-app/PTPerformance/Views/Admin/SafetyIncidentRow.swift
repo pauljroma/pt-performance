@@ -171,6 +171,7 @@ struct SafetyIncidentRow: View {
         case .medium: return .yellow
         case .high: return .orange
         case .critical: return .red
+        case .unknown: return .gray
         }
     }
 
@@ -184,6 +185,7 @@ struct SafetyIncidentRow: View {
         case .investigating: return .yellow
         case .resolved: return .green
         case .dismissed: return .gray
+        case .unknown: return .gray
         }
     }
 
@@ -274,6 +276,7 @@ struct CompactSafetyIncidentRow: View {
         case .medium: return .yellow
         case .high: return .orange
         case .critical: return .red
+        case .unknown: return .gray
         }
     }
 }
@@ -382,6 +385,7 @@ struct SafetyIncidentCard: View {
         case .medium: return .yellow
         case .high: return .orange
         case .critical: return .red
+        case .unknown: return .gray
         }
     }
 
@@ -406,6 +410,7 @@ struct SafetyIncidentCard: View {
         case .investigating: return .yellow
         case .resolved: return .green
         case .dismissed: return .gray
+        case .unknown: return .gray
         }
     }
 }

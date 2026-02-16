@@ -417,6 +417,7 @@ struct SafetyIncidentDetailSheet: View {
         case .medium: return .yellow
         case .high: return .orange
         case .critical: return .red
+        case .unknown: return .gray
         }
     }
 
@@ -426,6 +427,7 @@ struct SafetyIncidentDetailSheet: View {
         case .investigating: return .yellow
         case .resolved: return .green
         case .dismissed: return .gray
+        case .unknown: return .gray
         }
     }
 

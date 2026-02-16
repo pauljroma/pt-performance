@@ -29,6 +29,13 @@ struct ExerciseVideo: Identifiable, Codable, Hashable {
         case side
         case back
         case detail
+        case unknown = "unknown"
+
+        init(from decoder: Decoder) throws {
+            let container = try decoder.singleValueContainer()
+            let rawValue = try container.decode(String.self)
+            self = Self(rawValue: rawValue) ?? .unknown
+        }
 
         var displayName: String {
             switch self {
@@ -36,6 +43,7 @@ struct ExerciseVideo: Identifiable, Codable, Hashable {
             case .side: return "Side View"
             case .back: return "Back View"
             case .detail: return "Detail View"
+            case .unknown: return "Unknown"
             }
         }
 
@@ -45,6 +53,7 @@ struct ExerciseVideo: Identifiable, Codable, Hashable {
             case .side: return "person.fill.turn.right"
             case .back: return "person.fill.turn.left"
             case .detail: return "magnifyingglass"
+            case .unknown: return "questionmark.circle"
             }
         }
 
@@ -54,6 +63,7 @@ struct ExerciseVideo: Identifiable, Codable, Hashable {
             case .side: return 2
             case .back: return 3
             case .detail: return 4
+            case .unknown: return 99
             }
         }
     }
@@ -64,12 +74,20 @@ struct ExerciseVideo: Identifiable, Codable, Hashable {
         case hd720p = "720p"
         case hd1080p = "1080p"
         case uhd4k = "4k"
+        case unknown = "unknown"
+
+        init(from decoder: Decoder) throws {
+            let container = try decoder.singleValueContainer()
+            let rawValue = try container.decode(String.self)
+            self = Self(rawValue: rawValue) ?? .unknown
+        }
 
         var displayName: String {
             switch self {
             case .hd720p: return "720p HD"
             case .hd1080p: return "1080p Full HD"
             case .uhd4k: return "4K UHD"
+            case .unknown: return "Unknown"
             }
         }
 
@@ -78,6 +96,7 @@ struct ExerciseVideo: Identifiable, Codable, Hashable {
             case .hd720p: return 3_000_000   // 3 Mbps
             case .hd1080p: return 6_000_000  // 6 Mbps
             case .uhd4k: return 15_000_000   // 15 Mbps
+            case .unknown: return 6_000_000  // Default to 6 Mbps
             }
         }
     }

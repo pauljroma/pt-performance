@@ -93,6 +93,13 @@ enum EscalationType: String, Codable, CaseIterable, Sendable {
     case workloadSpike = "workload_spike"       // Acute:chronic workload ratio spike
     case sleepDeficit = "sleep_deficit"         // Chronic sleep deprivation
     case stressElevation = "stress_elevation"   // Sustained high stress levels
+    case unknown = "unknown"
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        let rawValue = try container.decode(String.self)
+        self = Self(rawValue: rawValue) ?? .unknown
+    }
 
     /// Human-readable display name
     var displayName: String {
@@ -115,6 +122,8 @@ enum EscalationType: String, Codable, CaseIterable, Sendable {
             return "Sleep Deficit"
         case .stressElevation:
             return "Stress Elevation"
+        case .unknown:
+            return "Unknown"
         }
     }
 
@@ -139,6 +148,8 @@ enum EscalationType: String, Codable, CaseIterable, Sendable {
             return "moon.zzz"
         case .stressElevation:
             return "brain.head.profile"
+        case .unknown:
+            return "questionmark.diamond"
         }
     }
 
@@ -163,6 +174,8 @@ enum EscalationType: String, Codable, CaseIterable, Sendable {
             return .indigo
         case .stressElevation:
             return .pink
+        case .unknown:
+            return .gray
         }
     }
 
@@ -187,6 +200,8 @@ enum EscalationType: String, Codable, CaseIterable, Sendable {
             return "Average sleep below 5 hours for 3+ nights"
         case .stressElevation:
             return "Stress level at 8+ for 3+ consecutive days"
+        case .unknown:
+            return "Unknown escalation type"
         }
     }
 }
@@ -199,6 +214,13 @@ enum EscalationSeverity: String, Codable, CaseIterable, Comparable, Sendable {
     case high = "high"          // Same day response needed
     case medium = "medium"      // Within 48 hours
     case low = "low"            // FYI - informational
+    case unknown = "unknown"
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        let rawValue = try container.decode(String.self)
+        self = Self(rawValue: rawValue) ?? .unknown
+    }
 
     /// Human-readable display name
     var displayName: String {
@@ -211,6 +233,8 @@ enum EscalationSeverity: String, Codable, CaseIterable, Comparable, Sendable {
             return "Medium"
         case .low:
             return "Low"
+        case .unknown:
+            return "Unknown"
         }
     }
 
@@ -225,6 +249,8 @@ enum EscalationSeverity: String, Codable, CaseIterable, Comparable, Sendable {
             return .yellow
         case .low:
             return .blue
+        case .unknown:
+            return .gray
         }
     }
 
@@ -239,6 +265,8 @@ enum EscalationSeverity: String, Codable, CaseIterable, Comparable, Sendable {
             return Color.yellow.opacity(0.15)
         case .low:
             return Color.blue.opacity(0.1)
+        case .unknown:
+            return Color.gray.opacity(0.1)
         }
     }
 
@@ -253,6 +281,8 @@ enum EscalationSeverity: String, Codable, CaseIterable, Comparable, Sendable {
             return "Within 48h"
         case .low:
             return "When available"
+        case .unknown:
+            return "Unknown"
         }
     }
 
@@ -267,6 +297,8 @@ enum EscalationSeverity: String, Codable, CaseIterable, Comparable, Sendable {
             return 2
         case .low:
             return 1
+        case .unknown:
+            return 0
         }
     }
 
@@ -283,6 +315,13 @@ enum EscalationStatus: String, Codable, CaseIterable, Sendable {
     case acknowledged = "acknowledged"  // Therapist has seen it
     case resolved = "resolved"          // Issue has been addressed
     case dismissed = "dismissed"        // Marked as false positive
+    case unknown = "unknown"
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        let rawValue = try container.decode(String.self)
+        self = Self(rawValue: rawValue) ?? .unknown
+    }
 
     /// Human-readable display name
     var displayName: String {
@@ -295,6 +334,8 @@ enum EscalationStatus: String, Codable, CaseIterable, Sendable {
             return "Resolved"
         case .dismissed:
             return "Dismissed"
+        case .unknown:
+            return "Unknown"
         }
     }
 
@@ -308,6 +349,8 @@ enum EscalationStatus: String, Codable, CaseIterable, Sendable {
         case .resolved:
             return .green
         case .dismissed:
+            return .gray
+        case .unknown:
             return .gray
         }
     }
@@ -323,6 +366,8 @@ enum EscalationStatus: String, Codable, CaseIterable, Sendable {
             return "checkmark.circle.fill"
         case .dismissed:
             return "xmark.circle.fill"
+        case .unknown:
+            return "questionmark.circle"
         }
     }
 }

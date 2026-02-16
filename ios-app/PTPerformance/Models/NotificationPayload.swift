@@ -23,6 +23,13 @@ enum PushNotificationType: String, Codable, CaseIterable {
     case prescriptionDeadline1h = "prescription_deadline_1h"
     case prescriptionOverdue = "prescription_overdue"
     case therapistFollowUp = "therapist_follow_up"
+    case unknown = "unknown"
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        let rawValue = try container.decode(String.self)
+        self = Self(rawValue: rawValue) ?? .unknown
+    }
 
     /// User-friendly display name
     var displayName: String {
@@ -36,6 +43,7 @@ enum PushNotificationType: String, Codable, CaseIterable {
         case .prescriptionDeadline1h: return "Deadline (1 hour)"
         case .prescriptionOverdue: return "Overdue Alert"
         case .therapistFollowUp: return "Therapist Follow-up"
+        case .unknown: return "Unknown"
         }
     }
 
@@ -47,6 +55,8 @@ enum PushNotificationType: String, Codable, CaseIterable {
         case .prescriptionAssigned, .prescriptionDeadline24h, .prescriptionDeadline6h,
              .prescriptionDeadline1h, .prescriptionOverdue, .therapistFollowUp:
             return .prescription
+        case .unknown:
+            return .workout
         }
     }
 
@@ -64,6 +74,8 @@ enum PushNotificationType: String, Codable, CaseIterable {
             return "STREAK_ALERT"
         case .weeklySummary:
             return "WEEKLY_SUMMARY"
+        case .unknown:
+            return "UNKNOWN"
         }
     }
 }
