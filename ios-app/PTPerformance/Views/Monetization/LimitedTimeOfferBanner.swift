@@ -31,7 +31,7 @@ import SwiftUI
 /// ```
 struct LimitedTimeOfferBanner: View {
 
-    @ObservedObject private var service = LimitedTimeOfferService.shared
+    @StateObject private var service = LimitedTimeOfferService.shared
 
     /// Callback when the user taps "Claim Offer", receiving the product ID
     var onClaimOffer: ((String) -> Void)?
@@ -189,7 +189,7 @@ struct LimitedTimeOfferBanner: View {
 /// A more compact version of the LTO banner for embedding in settings or lists.
 struct LimitedTimeOfferCompactBanner: View {
 
-    @ObservedObject private var service = LimitedTimeOfferService.shared
+    @StateObject private var service = LimitedTimeOfferService.shared
 
     var onClaimOffer: ((String) -> Void)?
 

@@ -95,8 +95,8 @@ struct StreakRecord: Codable, Identifiable, Hashable, Equatable {
         lastActivityDate = try Self.decodeDateField(container: container, forKey: .lastActivityDate)
         streakStartDate = try Self.decodeDateField(container: container, forKey: .streakStartDate)
 
-        createdAt = try container.decode(Date.self, forKey: .createdAt)
-        updatedAt = try container.decode(Date.self, forKey: .updatedAt)
+        createdAt = try container.decodeIfPresent(Date.self, forKey: .createdAt) ?? Date()
+        updatedAt = try container.decodeIfPresent(Date.self, forKey: .updatedAt) ?? Date()
     }
 
     private static func decodeDateField(container: KeyedDecodingContainer<CodingKeys>, forKey key: CodingKeys) throws -> Date? {
@@ -178,7 +178,7 @@ struct StreakHistory: Codable, Identifiable, Hashable, Equatable {
         sessionId = try container.decodeIfPresent(UUID.self, forKey: .sessionId)
         manualSessionId = try container.decodeIfPresent(UUID.self, forKey: .manualSessionId)
         notes = try container.decodeIfPresent(String.self, forKey: .notes)
-        createdAt = try container.decode(Date.self, forKey: .createdAt)
+        createdAt = try container.decodeIfPresent(Date.self, forKey: .createdAt) ?? Date()
     }
 
     /// Check if any activity was completed
@@ -214,12 +214,12 @@ struct StreakStatistics: Codable, Hashable, Equatable {
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
 
-        streakType = try container.decode(String.self, forKey: .streakType)
-        currentStreak = try container.decode(Int.self, forKey: .currentStreak)
-        longestStreak = try container.decode(Int.self, forKey: .longestStreak)
-        totalActivityDays = try container.decode(Int.self, forKey: .totalActivityDays)
-        thisWeekDays = try container.decode(Int.self, forKey: .thisWeekDays)
-        thisMonthDays = try container.decode(Int.self, forKey: .thisMonthDays)
+        streakType = try container.decodeIfPresent(String.self, forKey: .streakType) ?? "combined"
+        currentStreak = try container.decodeIfPresent(Int.self, forKey: .currentStreak) ?? 0
+        longestStreak = try container.decodeIfPresent(Int.self, forKey: .longestStreak) ?? 0
+        totalActivityDays = try container.decodeIfPresent(Int.self, forKey: .totalActivityDays) ?? 0
+        thisWeekDays = try container.decodeIfPresent(Int.self, forKey: .thisWeekDays) ?? 0
+        thisMonthDays = try container.decodeIfPresent(Int.self, forKey: .thisMonthDays) ?? 0
 
         // Handle DATE format for optional dates
         if let dateString = try? container.decode(String.self, forKey: .lastActivityDate) {

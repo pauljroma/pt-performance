@@ -12,7 +12,7 @@ import SwiftUI
 // MARK: - Upsell Banner View
 
 struct UpsellBannerView: View {
-    @ObservedObject var upsellService = UpsellService.shared
+    @StateObject var upsellService = UpsellService.shared
     @EnvironmentObject var storeKit: StoreKitService
 
     let prompt: UpsellPrompt
@@ -204,6 +204,8 @@ struct UpsellBannerView: View {
 
 /// View modifier to conveniently overlay an upsell banner at the top of any view.
 struct UpsellBannerModifier: ViewModifier {
+    // Note: ViewModifier structs cannot use @StateObject; @ObservedObject is acceptable
+    // here because this observes a long-lived singleton (UpsellService.shared).
     @ObservedObject var upsellService = UpsellService.shared
     @EnvironmentObject var storeKit: StoreKitService
     var onUpgradeTapped: (() -> Void)?

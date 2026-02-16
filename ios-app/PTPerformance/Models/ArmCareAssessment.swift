@@ -268,37 +268,37 @@ struct ArmCareAssessment: Codable, Identifiable {
             date = try container.decode(Date.self, forKey: .date)
         }
 
-        shoulderPainScore = try container.decode(Int.self, forKey: .shoulderPainScore)
-        shoulderStiffnessScore = try container.decode(Int.self, forKey: .shoulderStiffnessScore)
-        shoulderStrengthScore = try container.decode(Int.self, forKey: .shoulderStrengthScore)
-        elbowPainScore = try container.decode(Int.self, forKey: .elbowPainScore)
-        elbowTightnessScore = try container.decode(Int.self, forKey: .elbowTightnessScore)
-        valgusStressScore = try container.decode(Int.self, forKey: .valgusStressScore)
+        shoulderPainScore = try container.decodeIfPresent(Int.self, forKey: .shoulderPainScore) ?? 0
+        shoulderStiffnessScore = try container.decodeIfPresent(Int.self, forKey: .shoulderStiffnessScore) ?? 0
+        shoulderStrengthScore = try container.decodeIfPresent(Int.self, forKey: .shoulderStrengthScore) ?? 0
+        elbowPainScore = try container.decodeIfPresent(Int.self, forKey: .elbowPainScore) ?? 0
+        elbowTightnessScore = try container.decodeIfPresent(Int.self, forKey: .elbowTightnessScore) ?? 0
+        valgusStressScore = try container.decodeIfPresent(Int.self, forKey: .valgusStressScore) ?? 0
 
-        // Handle numeric fields that might come as strings
+        // Handle numeric fields that might come as strings or null
         if let scoreString = try? container.decode(String.self, forKey: .shoulderScore) {
             shoulderScore = Double(scoreString) ?? 0.0
         } else {
-            shoulderScore = try container.decode(Double.self, forKey: .shoulderScore)
+            shoulderScore = try container.decodeIfPresent(Double.self, forKey: .shoulderScore) ?? 0.0
         }
 
         if let scoreString = try? container.decode(String.self, forKey: .elbowScore) {
             elbowScore = Double(scoreString) ?? 0.0
         } else {
-            elbowScore = try container.decode(Double.self, forKey: .elbowScore)
+            elbowScore = try container.decodeIfPresent(Double.self, forKey: .elbowScore) ?? 0.0
         }
 
         if let scoreString = try? container.decode(String.self, forKey: .overallScore) {
             overallScore = Double(scoreString) ?? 0.0
         } else {
-            overallScore = try container.decode(Double.self, forKey: .overallScore)
+            overallScore = try container.decodeIfPresent(Double.self, forKey: .overallScore) ?? 0.0
         }
 
-        trafficLight = try container.decode(ArmCareTrafficLight.self, forKey: .trafficLight)
+        trafficLight = try container.decodeIfPresent(ArmCareTrafficLight.self, forKey: .trafficLight) ?? .unknown
         painLocations = try container.decodeIfPresent([ArmPainLocation].self, forKey: .painLocations)
         notes = try container.decodeIfPresent(String.self, forKey: .notes)
-        createdAt = try container.decode(Date.self, forKey: .createdAt)
-        updatedAt = try container.decode(Date.self, forKey: .updatedAt)
+        createdAt = try container.decodeIfPresent(Date.self, forKey: .createdAt) ?? Date()
+        updatedAt = try container.decodeIfPresent(Date.self, forKey: .updatedAt) ?? Date()
     }
 }
 

@@ -12,7 +12,7 @@ import SwiftUI
 // MARK: - Winback Offer View
 
 struct WinbackOfferView: View {
-    @ObservedObject var winbackService = WinbackService.shared
+    @StateObject var winbackService = WinbackService.shared
     @EnvironmentObject var storeKit: StoreKitService
     @Environment(\.dismiss) private var dismiss
 

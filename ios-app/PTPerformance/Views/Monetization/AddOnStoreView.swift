@@ -16,7 +16,7 @@ import SwiftUI
 struct AddOnStoreView: View {
 
     @StateObject private var service = AddOnService.shared
-    @ObservedObject private var storeKit = StoreKitService.shared
+    @StateObject private var storeKit = StoreKitService.shared
 
     @State private var selectedAddOn: PremiumAddOn?
     @State private var showingDetail = false
@@ -302,7 +302,7 @@ struct AddOnDetailSheet: View {
     let onPurchase: () -> Void
 
     @Environment(\.dismiss) private var dismiss
-    @ObservedObject private var service = AddOnService.shared
+    @StateObject private var service = AddOnService.shared
 
     var body: some View {
         NavigationStack {

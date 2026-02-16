@@ -11,7 +11,7 @@ struct AudioHealthJournalView: View {
     @State private var entryToDelete: JournalEntry?
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             ZStack {
                 // Background
                 Color.modusSubtleGradient

@@ -13,7 +13,7 @@ struct JournalEntryRecordingView: View {
     var onSave: (JournalEntry) -> Void
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             ZStack {
                 // Background gradient
                 Color.modusSubtleGradient

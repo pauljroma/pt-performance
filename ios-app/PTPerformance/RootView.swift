@@ -20,6 +20,43 @@ struct RootView: View {
     // ACP-998: State for inline review prompt sheet
     @State private var showReviewPrompt = false
 
+    // MARK: - Presentation Priority Gating
+    // Priority order (highest first): consent > onboarding > quickSetup > welcomeBack > reviewPrompt
+    // Only one presentation may be active at a time. Higher-priority presentations suppress lower ones.
+    // Consent sheet must always win (HIPAA requirement).
+
+    /// True when the consent sheet wants to present (highest priority — ungated).
+    private var isConsentActive: Bool {
+        consentManager.showConsentUpdateSheet
+    }
+
+    /// True when onboarding wants to present AND no higher-priority presentation is active.
+    private var isOnboardingActive: Bool {
+        onboardingCoordinator.shouldShowOnboarding && !isConsentActive
+    }
+
+    /// True when quick setup wants to present AND no higher-priority presentation is active.
+    private var isQuickSetupActive: Bool {
+        showQuickSetup && !isConsentActive && !onboardingCoordinator.shouldShowOnboarding
+    }
+
+    /// True when welcome-back wants to present AND no higher-priority presentation is active.
+    private var isWelcomeBackActive: Bool {
+        reEngagementService.showWelcomeBack
+            && !isConsentActive
+            && !onboardingCoordinator.shouldShowOnboarding
+            && !showQuickSetup
+    }
+
+    /// True when review prompt wants to present AND no higher-priority presentation is active.
+    private var isReviewPromptActive: Bool {
+        showReviewPrompt
+            && !isConsentActive
+            && !onboardingCoordinator.shouldShowOnboarding
+            && !showQuickSetup
+            && !reEngagementService.showWelcomeBack
+    }
+
     var body: some View {
         Group {
             // Password reset flow takes priority - don't show normal UI
@@ -74,18 +111,34 @@ struct RootView: View {
         }
         .animation(.easeInOut(duration: AnimationDuration.standard), value: isCheckingSession)
         .animation(.easeInOut(duration: AnimationDuration.standard), value: appState.isAuthenticated)
-        .fullScreenCover(isPresented: $onboardingCoordinator.shouldShowOnboarding) {
-            OnboardingView()
-        }
-        .fullScreenCover(isPresented: $showQuickSetup) {
-            QuickSetupView()
-        }
         // ACP-1049: Re-consent prompt when consent version changes
-        .sheet(isPresented: $consentManager.showConsentUpdateSheet) {
+        // Priority 1 (highest) — HIPAA requirement: consent always wins, ungated.
+        .sheet(isPresented: Binding(
+            get: { isConsentActive },
+            set: { consentManager.showConsentUpdateSheet = $0 }
+        )) {
             ConsentUpdateSheet()
         }
+        // Priority 2: Onboarding — gated by consent not being active.
+        .fullScreenCover(isPresented: Binding(
+            get: { isOnboardingActive },
+            set: { onboardingCoordinator.shouldShowOnboarding = $0 }
+        )) {
+            OnboardingView()
+        }
+        // Priority 3: Quick setup — gated by consent and onboarding.
+        .fullScreenCover(isPresented: Binding(
+            get: { isQuickSetupActive },
+            set: { showQuickSetup = $0 }
+        )) {
+            QuickSetupView()
+        }
         // ACP-1005: Re-engagement welcome-back screen for returning inactive users
-        .fullScreenCover(isPresented: $reEngagementService.showWelcomeBack) {
+        // Priority 4: Welcome back — gated by consent, onboarding, and quick setup.
+        .fullScreenCover(isPresented: Binding(
+            get: { isWelcomeBackActive },
+            set: { reEngagementService.showWelcomeBack = $0 }
+        )) {
             WelcomeBackView(
                 onStartWorkout: {
                     appState.pendingDeepLink = .startWorkout
@@ -138,7 +191,11 @@ struct RootView: View {
                 showReviewPrompt = true
             }
         }
-        .sheet(isPresented: $showReviewPrompt) {
+        // ACP-998: Priority 5 (lowest): Review prompt — gated by all higher-priority presentations.
+        .sheet(isPresented: Binding(
+            get: { isReviewPromptActive },
+            set: { showReviewPrompt = $0 }
+        )) {
             AppStoreReviewPromptView()
                 .presentationDetents([.medium])
                 .presentationDragIndicator(.visible)
@@ -155,6 +212,55 @@ struct RootView: View {
             PTSupabaseClient.shared.userRole = nil
             PTSupabaseClient.shared.userId = nil
             sessionManager.resetSession()
+        }
+        // MARK: - Presentation Priority Enforcement
+        // When a higher-priority presentation activates, dismiss all lower-priority ones
+        // so they can re-present cleanly once the higher-priority flow completes.
+        .onChange(of: consentManager.showConsentUpdateSheet) { _, needsConsent in
+            guard needsConsent else { return }
+            // Consent (P1) activated — dismiss everything below it
+            if onboardingCoordinator.shouldShowOnboarding {
+                onboardingCoordinator.shouldShowOnboarding = false
+            }
+            if showQuickSetup {
+                showQuickSetup = false
+            }
+            if reEngagementService.showWelcomeBack {
+                reEngagementService.showWelcomeBack = false
+            }
+            if showReviewPrompt {
+                showReviewPrompt = false
+            }
+        }
+        .onChange(of: onboardingCoordinator.shouldShowOnboarding) { _, needsOnboarding in
+            guard needsOnboarding else { return }
+            // Onboarding (P2) activated — dismiss P3–P5
+            if showQuickSetup {
+                showQuickSetup = false
+            }
+            if reEngagementService.showWelcomeBack {
+                reEngagementService.showWelcomeBack = false
+            }
+            if showReviewPrompt {
+                showReviewPrompt = false
+            }
+        }
+        .onChange(of: showQuickSetup) { _, needsQuickSetup in
+            guard needsQuickSetup else { return }
+            // Quick setup (P3) activated — dismiss P4–P5
+            if reEngagementService.showWelcomeBack {
+                reEngagementService.showWelcomeBack = false
+            }
+            if showReviewPrompt {
+                showReviewPrompt = false
+            }
+        }
+        .onChange(of: reEngagementService.showWelcomeBack) { _, needsWelcomeBack in
+            guard needsWelcomeBack else { return }
+            // Welcome back (P4) activated — dismiss P5
+            if showReviewPrompt {
+                showReviewPrompt = false
+            }
         }
     }
 

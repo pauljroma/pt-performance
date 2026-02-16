@@ -24,8 +24,8 @@ import StoreKit
 /// - `.minimal` -> Inline minimal layout
 struct PaywallView: View {
     @EnvironmentObject private var storeKit: StoreKitService
-    @ObservedObject private var paywallService = PaywallService.shared
-    @ObservedObject private var freeTrialService = FreeTrialService.shared
+    @StateObject private var paywallService = PaywallService.shared
+    @StateObject private var freeTrialService = FreeTrialService.shared
     @Environment(\.dismiss) private var dismiss
     @Environment(\.colorScheme) private var colorScheme
 

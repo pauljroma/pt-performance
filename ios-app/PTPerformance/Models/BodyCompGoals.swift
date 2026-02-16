@@ -170,12 +170,12 @@ struct BodyCompGoals: Codable, Identifiable, Hashable, Equatable {
             targetDate = try container.decodeIfPresent(Date.self, forKey: .targetDate)
         }
 
-        startedAt = try container.decode(Date.self, forKey: .startedAt)
-        status = try container.decode(BodyCompGoalStatus.self, forKey: .status)
+        startedAt = try container.decodeIfPresent(Date.self, forKey: .startedAt) ?? Date()
+        status = try container.decodeIfPresent(BodyCompGoalStatus.self, forKey: .status) ?? .unknown
         achievedAt = try container.decodeIfPresent(Date.self, forKey: .achievedAt)
         notes = try container.decodeIfPresent(String.self, forKey: .notes)
-        createdAt = try container.decode(Date.self, forKey: .createdAt)
-        updatedAt = try container.decode(Date.self, forKey: .updatedAt)
+        createdAt = try container.decodeIfPresent(Date.self, forKey: .createdAt) ?? Date()
+        updatedAt = try container.decodeIfPresent(Date.self, forKey: .updatedAt) ?? Date()
     }
 
     // Helper to decode optional Double that might be a String
@@ -495,8 +495,8 @@ struct BodyCompGoalProgress: Codable, Identifiable, Hashable, Equatable {
             targetDate = try container.decodeIfPresent(Date.self, forKey: .targetDate)
         }
 
-        status = try container.decode(String.self, forKey: .status)
-        startedAt = try container.decode(Date.self, forKey: .startedAt)
+        status = try container.decodeIfPresent(String.self, forKey: .status) ?? "unknown"
+        startedAt = try container.decodeIfPresent(Date.self, forKey: .startedAt) ?? Date()
         notes = try container.decodeIfPresent(String.self, forKey: .notes)
         daysRemaining = try container.decodeIfPresent(Int.self, forKey: .daysRemaining)
     }

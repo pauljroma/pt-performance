@@ -15,7 +15,7 @@ import StoreKit
 
 struct AnnualPlanPromptView: View {
     @EnvironmentObject var storeKit: StoreKitService
-    @ObservedObject var coordinator = MonetizationCoordinator.shared
+    @StateObject var coordinator = MonetizationCoordinator.shared
     @Environment(\.dismiss) private var dismiss
 
     @State private var isPurchasing: Bool = false

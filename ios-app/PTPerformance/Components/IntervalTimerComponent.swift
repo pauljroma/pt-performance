@@ -364,7 +364,7 @@ struct CompletionRPESheet: View {
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             VStack(spacing: 30) {
                 // Header
                 VStack(spacing: 12) {

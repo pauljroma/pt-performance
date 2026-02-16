@@ -18,7 +18,7 @@ import SwiftUI
 struct ContentHubView: View {
 
     @StateObject private var service = ContentHubService.shared
-    @ObservedObject private var storeKit = StoreKitService.shared
+    @StateObject private var storeKit = StoreKitService.shared
 
     @State private var selectedArticle: ContentArticle?
     @State private var searchText = ""

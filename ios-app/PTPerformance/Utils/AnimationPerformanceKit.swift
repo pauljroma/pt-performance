@@ -567,6 +567,8 @@ private struct AdaptiveAnimationModifier: ViewModifier {
     let animation: Animation
     let reducedMotionAlternative: Animation?
 
+    // Note: ViewModifier structs cannot use @StateObject; @ObservedObject is acceptable
+    // here because these observe long-lived singletons.
     @ObservedObject private var motionResponder = AnimationPerformanceKit.ReducedMotionResponder.shared
     @ObservedObject private var throttler = AnimationPerformanceKit.AnimationThrottler.shared
 
@@ -686,6 +688,8 @@ extension EnvironmentValues {
 /// ```
 private struct ReducedMotionProviderModifier: ViewModifier {
 
+    // Note: ViewModifier structs cannot use @StateObject; @ObservedObject is acceptable
+    // here because this observes a long-lived singleton.
     @ObservedObject private var responder = AnimationPerformanceKit.ReducedMotionResponder.shared
 
     func body(content: Content) -> some View {

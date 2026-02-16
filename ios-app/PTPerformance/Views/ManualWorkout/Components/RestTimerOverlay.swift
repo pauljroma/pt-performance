@@ -260,7 +260,7 @@ struct RestTimerSettingsSheet: View {
     @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             Form {
                 Section {
                     Toggle(isOn: $autoDismiss) {

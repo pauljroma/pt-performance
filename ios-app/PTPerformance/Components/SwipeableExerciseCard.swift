@@ -698,7 +698,7 @@ struct ModificationOptionsSheet: View {
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             VStack(spacing: 24) {
                 // Exercise header
                 VStack(spacing: 8) {

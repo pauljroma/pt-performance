@@ -30,7 +30,7 @@ struct EnhancedWorkoutSummaryView: View {
     @State private var summaryImage: UIImage?
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             ScrollView {
                 VStack(spacing: Spacing.lg) {
                     // Header
