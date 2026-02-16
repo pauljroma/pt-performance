@@ -244,7 +244,9 @@ class WatchWorkoutStorage {
             let data = try encoder.encode(sessions)
             UserDefaults.standard.set(data, forKey: sessionsKey)
         } catch {
+            #if DEBUG
             print("Failed to save sessions: \(error.localizedDescription)")
+            #endif
         }
     }
 
@@ -258,7 +260,9 @@ class WatchWorkoutStorage {
             // Filter to only today's sessions
             return sessions.filter { Calendar.current.isDateInToday($0.scheduledDate) }
         } catch {
+            #if DEBUG
             print("Failed to load sessions: \(error.localizedDescription)")
+            #endif
             return []
         }
     }
@@ -289,7 +293,9 @@ class WatchWorkoutStorage {
             let data = try encoder.encode(queue)
             UserDefaults.standard.set(data, forKey: syncQueueKey)
         } catch {
+            #if DEBUG
             print("Failed to save sync queue: \(error.localizedDescription)")
+            #endif
         }
     }
 

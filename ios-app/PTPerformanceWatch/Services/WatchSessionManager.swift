@@ -53,7 +53,9 @@ class WatchSessionManager: NSObject, ObservableObject {
 
     func activateSession() {
         guard WCSession.isSupported() else {
+            #if DEBUG
             print("WatchConnectivity is not supported")
+            #endif
             return
         }
 
@@ -80,14 +82,18 @@ class WatchSessionManager: NSObject, ObservableObject {
             ]
 
             session.sendMessage(messageDict, replyHandler: replyHandler) { [weak self] error in
+                #if DEBUG
                 print("Failed to send message: \(error.localizedDescription)")
+                #endif
                 // Queue for retry
                 Task { @MainActor in
                     self?.queueMessage(message)
                 }
             }
         } catch {
+            #if DEBUG
             print("Failed to encode message: \(error.localizedDescription)")
+            #endif
         }
     }
 
@@ -100,7 +106,9 @@ class WatchSessionManager: NSObject, ObservableObject {
             let message = WatchSyncMessage(type: .setLogged, payload: payloadData)
             sendMessage(message)
         } catch {
+            #if DEBUG
             print("Failed to encode set log: \(error.localizedDescription)")
+            #endif
         }
     }
 
@@ -113,7 +121,9 @@ class WatchSessionManager: NSObject, ObservableObject {
             let message = WatchSyncMessage(type: .workoutCompleted, payload: payloadData)
             sendMessage(message)
         } catch {
+            #if DEBUG
             print("Failed to encode workout completion: \(error.localizedDescription)")
+            #endif
         }
     }
 
@@ -144,7 +154,9 @@ class WatchSessionManager: NSObject, ObservableObject {
             let data = try encoder.encode(pendingMessages)
             UserDefaults.standard.set(data, forKey: offlineQueueKey)
         } catch {
+            #if DEBUG
             print("Failed to save pending messages: \(error.localizedDescription)")
+            #endif
         }
     }
 
@@ -155,7 +167,9 @@ class WatchSessionManager: NSObject, ObservableObject {
             pendingMessages = try decoder.decode([WatchSyncMessage].self, from: data)
             pendingSyncCount = pendingMessages.count
         } catch {
+            #if DEBUG
             print("Failed to load pending messages: \(error.localizedDescription)")
+            #endif
         }
     }
 
@@ -188,7 +202,9 @@ class WatchSessionManager: NSObject, ObservableObject {
                     let session = try decoder.decode(WatchWorkoutSession.self, from: data)
                     onWorkoutDataReceived?(session)
                 } catch {
+                    #if DEBUG
                     print("Failed to decode workout data: \(error.localizedDescription)")
+                    #endif
                 }
             }
 
@@ -209,7 +225,9 @@ extension WatchSessionManager: WCSessionDelegate {
     nonisolated func session(_ session: WCSession, activationDidCompleteWith activationState: WCSessionActivationState, error: Error?) {
         Task { @MainActor in
             if let error = error {
+                #if DEBUG
                 print("WCSession activation failed: \(error.localizedDescription)")
+                #endif
                 return
             }
 
@@ -264,7 +282,9 @@ extension WatchSessionManager: WCSessionDelegate {
                 let session = try decoder.decode(WatchWorkoutSession.self, from: payloadData)
                 onWorkoutDataReceived?(session)
             } catch {
+                #if DEBUG
                 print("Failed to decode workout data: \(error.localizedDescription)")
+                #endif
             }
 
         case .syncAcknowledged:
