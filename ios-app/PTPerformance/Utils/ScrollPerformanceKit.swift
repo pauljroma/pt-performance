@@ -166,7 +166,7 @@ actor ImageDownsampler {
     /// - Parameters:
     ///   - url: The file or remote URL of the image.
     ///   - pointSize: The target display size in points.
-    ///   - scale: The screen scale factor (e.g., UIScreen.main.scale).
+    ///   - scale: The screen scale factor (e.g., UITraitCollection.current.displayScale).
     /// - Returns: A downsampled UIImage, or nil if downsampling fails.
     func downsample(url: URL, to pointSize: CGSize, scale: CGFloat) async -> UIImage? {
         return await Task.detached(priority: .utility) {
@@ -333,7 +333,7 @@ struct AsyncImageCell<Placeholder: View>: View {
                 image = await ImageDownsampler.shared.downsample(
                     url: url,
                     to: targetSize,
-                    scale: await MainActor.run { UIScreen.main.scale }
+                    scale: await MainActor.run { UITraitCollection.current.displayScale }
                 )
             } else {
                 // Download data first, then downsample
@@ -344,7 +344,7 @@ struct AsyncImageCell<Placeholder: View>: View {
                     image = await ImageDownsampler.shared.downsample(
                         data: data,
                         to: targetSize,
-                        scale: await MainActor.run { UIScreen.main.scale }
+                        scale: await MainActor.run { UITraitCollection.current.displayScale }
                     )
                 } catch {
                     return

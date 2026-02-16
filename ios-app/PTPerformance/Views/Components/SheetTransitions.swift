@@ -121,7 +121,7 @@ struct InteractiveDismissModifier: ViewModifier {
             HapticFeedback.light()
 
             withAnimation(SheetSpringConfig.dismiss) {
-                state.dragOffset = UIScreen.main.bounds.height
+                state.dragOffset = (UIApplication.shared.connectedScenes.first as? UIWindowScene)?.screen.bounds.height ?? 900
             }
 
             // Trigger dismiss after animation starts

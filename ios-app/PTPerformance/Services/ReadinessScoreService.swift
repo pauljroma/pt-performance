@@ -600,7 +600,7 @@ final class ReadinessScoreService: ObservableObject {
         let criticalContributors = contributors.filter { $0.impact == .critical }
         let positiveContributors = contributors.filter { $0.impact == .positive }
 
-        if criticalContributors.count > 0 && positiveContributors.count >= 2 {
+        if !criticalContributors.isEmpty && positiveContributors.count >= 2 {
             // Conflicting signals
             return true
         }

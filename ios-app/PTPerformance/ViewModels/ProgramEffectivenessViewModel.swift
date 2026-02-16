@@ -316,7 +316,7 @@ class ProgramEffectivenessViewModel: ObservableObject {
 
         // Create a renderer to capture the comparison view
         let renderer = ImageRenderer(content: ComparisonExportView(comparison: comparison))
-        renderer.scale = UIScreen.main.scale
+        renderer.scale = UITraitCollection.current.displayScale
 
         return renderer.uiImage
     }

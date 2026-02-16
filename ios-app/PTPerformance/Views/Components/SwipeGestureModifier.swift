@@ -255,7 +255,7 @@ struct SwipeGestureModifier: ViewModifier {
         HapticFeedback.success()
 
         // Animate off screen
-        let screenWidth = UIScreen.main.bounds.width
+        let screenWidth = (UIApplication.shared.connectedScenes.first as? UIWindowScene)?.screen.bounds.width ?? 400
         withAnimation(.spring(response: 0.25, dampingFraction: 0.8)) {
             state.offset = direction == .right ? screenWidth : -screenWidth
         }

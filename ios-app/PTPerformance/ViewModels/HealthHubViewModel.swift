@@ -219,7 +219,7 @@ final class HealthHubViewModel: ObservableObject {
         self.totalBiomarkers = biomarkerViewModel.biomarkerSummaries.count
         self.biomarkersNeedingAttention = biomarkerViewModel.concerningBiomarkers.count
         self.lastLabDate = biomarkerViewModel.lastLabDate
-        self.hasLabResults = biomarkerViewModel.biomarkerSummaries.count > 0
+        self.hasLabResults = !biomarkerViewModel.biomarkerSummaries.isEmpty
     }
 
     // MARK: - AI Insight Generation

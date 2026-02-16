@@ -446,7 +446,7 @@ struct SwipeableExerciseRow<Content: View>: View {
                                 actionTriggered = true
                                 HapticFeedback.success()
                                 withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                                    offset = UIScreen.main.bounds.width
+                                    offset = (UIApplication.shared.connectedScenes.first as? UIWindowScene)?.screen.bounds.width ?? 400
                                 }
                                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
                                     onComplete()
@@ -458,7 +458,7 @@ struct SwipeableExerciseRow<Content: View>: View {
                                 actionTriggered = true
                                 HapticFeedback.medium()
                                 withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                                    offset = -UIScreen.main.bounds.width
+                                    offset = -((UIApplication.shared.connectedScenes.first as? UIWindowScene)?.screen.bounds.width ?? 400)
                                 }
                                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
                                     onSkip()

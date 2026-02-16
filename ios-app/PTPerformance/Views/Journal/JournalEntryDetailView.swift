@@ -311,7 +311,7 @@ struct JournalEntryDetailView: View {
                     isPlaying = true
                     HapticFeedback.medium()
                 } catch {
-                    print("Playback error: \(error)")
+                    DebugLogger.shared.log("Playback error: \(error.localizedDescription)", level: .error)
                     HapticFeedback.error()
                 }
             }

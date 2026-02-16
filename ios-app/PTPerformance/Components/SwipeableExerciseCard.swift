@@ -600,7 +600,7 @@ struct SwipeableExerciseCard: View {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
             withAnimation(.spring(response: 0.35, dampingFraction: 0.7)) {
                 showCompletionCheckmark = false
-                offset = UIScreen.main.bounds.width
+                offset = (UIApplication.shared.connectedScenes.first as? UIWindowScene)?.screen.bounds.width ?? 400
                 completionOpacity = 0
             }
 
@@ -641,7 +641,7 @@ struct SwipeableExerciseCard: View {
         if option == .skip {
             // Animate skip similar to complete but to the left
             withAnimation(.spring(response: 0.35, dampingFraction: 0.7)) {
-                offset = -UIScreen.main.bounds.width
+                offset = -((UIApplication.shared.connectedScenes.first as? UIWindowScene)?.screen.bounds.width ?? 400)
                 completionOpacity = 0
             }
 

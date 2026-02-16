@@ -754,10 +754,10 @@ final class ExperimentVariantContainer: ObservableObject {
 
     /// Asynchronously resolves the variant from ABTestingService.
     private func resolveVariant() {
-        Task { @MainActor in
+        Task { @MainActor [weak self] in
             let variant = await ABTestingService.shared.getVariant(for: experimentId, trackExposure: true)
-            self.resolved = ResolvedVariant(variant: variant, experimentId: experimentId)
-            self.isResolved = true
+            self?.resolved = ResolvedVariant(variant: variant, experimentId: experimentId)
+            self?.isResolved = true
         }
     }
 
@@ -765,9 +765,9 @@ final class ExperimentVariantContainer: ObservableObject {
     ///
     /// Useful if the experiment configuration has changed after the view was created.
     func refresh() {
-        Task { @MainActor in
+        Task { @MainActor [weak self] in
             let variant = await ABTestingService.shared.getVariant(for: experimentId, trackExposure: false)
-            self.resolved = ResolvedVariant(variant: variant, experimentId: experimentId)
+            self?.resolved = ResolvedVariant(variant: variant, experimentId: experimentId)
         }
     }
 

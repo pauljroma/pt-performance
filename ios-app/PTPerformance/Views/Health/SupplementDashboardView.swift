@@ -713,7 +713,7 @@ private struct SwipeableSupplementRow: View {
                         if value.translation.width < swipeThreshold {
                             // Trigger log action
                             withAnimation(.spring(response: 0.3)) {
-                                offset = -UIScreen.main.bounds.width
+                                offset = -((UIApplication.shared.connectedScenes.first as? UIWindowScene)?.screen.bounds.width ?? 400)
                             }
                             DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
                                 onSwipeLog()

@@ -54,7 +54,7 @@ struct ImageProcessing: Hashable, Sendable {
             parts.append("b\(Int(blurRadius))")
         }
         // Use the explicit scale if set, otherwise default to 2x for cache key stability.
-        // The actual scale is resolved from UIScreen.main.scale at processing time.
+        // The actual scale is resolved from UITraitCollection.current.displayScale at processing time.
         let keyScale = scale > 0 ? scale : 2
         parts.append("@\(Int(keyScale))x")
         return parts.joined(separator: "_")
@@ -488,7 +488,7 @@ actor ImagePipeline {
     /// are applied via Core Graphics / Core Image.
     private func applyProcessing(_ processing: ImageProcessing, to image: UIImage) async -> UIImage {
         var result = image
-        let effectiveScale = processing.scale > 0 ? processing.scale : await MainActor.run { UIScreen.main.scale }
+        let effectiveScale = processing.scale > 0 ? processing.scale : await MainActor.run { UITraitCollection.current.displayScale }
 
         // Step 1: Resize using ImageDownsampler for memory efficiency
         if let targetSize = processing.targetSize {

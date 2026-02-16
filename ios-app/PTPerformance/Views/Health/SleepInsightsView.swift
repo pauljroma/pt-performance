@@ -497,7 +497,7 @@ struct SleepInsightsView: View {
         }
         .frame(maxWidth: .infinity)
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(label): \(value != nil ? "\(value!) minutes" : "not available")")
+        .accessibilityLabel("\(label): \(value.map { "\($0) minutes" } ?? "not available")")
     }
 
     private func comparisonRow(label: String, thisWeek: Double, lastWeek: Double, isMinutes: Bool) -> some View {

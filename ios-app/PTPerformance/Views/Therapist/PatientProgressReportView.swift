@@ -66,33 +66,6 @@ struct ProgressMilestone: Identifiable {
     let icon: String
     let color: Color
 
-    static func sampleMilestones() -> [ProgressMilestone] {
-        let calendar = Calendar.current
-        let now = Date()
-        return [
-            ProgressMilestone(
-                title: "First Week Complete",
-                description: "Completed all sessions in the first week",
-                achievedDate: calendar.date(byAdding: .day, value: -14, to: now) ?? now,
-                icon: "1.circle.fill",
-                color: .blue
-            ),
-            ProgressMilestone(
-                title: "Pain Reduced Below 5",
-                description: "Average pain score dropped below threshold",
-                achievedDate: calendar.date(byAdding: .day, value: -7, to: now) ?? now,
-                icon: "heart.fill",
-                color: .green
-            ),
-            ProgressMilestone(
-                title: "90% Adherence",
-                description: "Maintained excellent adherence for 2 weeks",
-                achievedDate: calendar.date(byAdding: .day, value: -3, to: now) ?? now,
-                icon: "star.fill",
-                color: .orange
-            )
-        ]
-    }
 }
 
 // MARK: - View Model

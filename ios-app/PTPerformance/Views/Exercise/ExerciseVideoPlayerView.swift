@@ -758,7 +758,7 @@ struct ExerciseVideoPlayerView: View {
                         .background(loopSegment.pointA != nil ? Color.modusTealAccent : Color.white.opacity(0.2))
                         .cornerRadius(CornerRadius.md)
                     }
-                    .accessibilityLabel(loopSegment.pointA != nil ? "Point A set at \(formatTime(loopSegment.pointA!))" : "Set point A")
+                    .accessibilityLabel(loopSegment.pointA.map { "Point A set at \(formatTime($0))" } ?? "Set point A")
 
                     // Point B
                     Button {
@@ -787,7 +787,7 @@ struct ExerciseVideoPlayerView: View {
                         .background(loopSegment.pointB != nil ? Color.modusTealAccent : Color.white.opacity(0.2))
                         .cornerRadius(CornerRadius.md)
                     }
-                    .accessibilityLabel(loopSegment.pointB != nil ? "Point B set at \(formatTime(loopSegment.pointB!))" : "Set point B")
+                    .accessibilityLabel(loopSegment.pointB.map { "Point B set at \(formatTime($0))" } ?? "Set point B")
                 }
 
                 // Active loop info

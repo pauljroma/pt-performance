@@ -114,7 +114,7 @@ private struct ScrollDepthTrackingModifier: ViewModifier {
             .onPreferenceChange(ScrollContentHeightPreferenceKey.self) { contentHeight in
                 // We need the scroll view frame to compute depth; use a
                 // reasonable heuristic based on screen height.
-                let screenHeight = UIScreen.main.bounds.height
+                let screenHeight = (UIApplication.shared.connectedScenes.first as? UIWindowScene)?.screen.bounds.height ?? 900
                 guard contentHeight > screenHeight else {
                     // Content fits on screen — full depth
                     ScreenFlowTracker.shared.reportScrollDepth(1.0, for: screenName)
