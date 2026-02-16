@@ -37,6 +37,12 @@ struct PatientTabView: View {
     // Flag to ensure tab bar appearance is only configured once
     @State private var hasConfiguredTabBarAppearance = false
 
+    // Deep link sheet presentation state
+    @State private var showDeepLinkReadiness = false
+    @State private var showDeepLinkUCLHealth = false
+    @State private var showDeepLinkSchedule = false
+    @State private var showDeepLinkRecovery = false
+
     // MARK: - Mode-Aware Tab Definitions
 
     /// Tab definitions that vary by mode
@@ -202,6 +208,103 @@ struct PatientTabView: View {
             if !hasConfiguredTabBarAppearance {
                 configureTabBarAppearance()
                 hasConfiguredTabBarAppearance = true
+            }
+        }
+        // Deep link handling for patient-level navigation
+        .onChange(of: appState.pendingDeepLink) { _, newValue in
+            guard let newValue else { return }
+
+            switch newValue {
+            case .readiness:
+                appState.pendingDeepLink = nil
+                showDeepLinkReadiness = true
+
+            case .recovery:
+                appState.pendingDeepLink = nil
+                // Switch to recovery tab if available (Performance mode), otherwise show sheet
+                if currentTabs.contains(.recovery) {
+                    selectedTab = .recovery
+                } else {
+                    showDeepLinkRecovery = true
+                }
+
+            case .progress:
+                appState.pendingDeepLink = nil
+                // Switch to the appropriate progress tab for the current mode
+                if currentTabs.contains(.rehabProgress) {
+                    selectedTab = .rehabProgress
+                } else if currentTabs.contains(.strengthProgress) {
+                    selectedTab = .strengthProgress
+                } else if currentTabs.contains(.analytics) {
+                    selectedTab = .analytics
+                }
+
+            case .schedule:
+                appState.pendingDeepLink = nil
+                showDeepLinkSchedule = true
+
+            case .uclHealth:
+                appState.pendingDeepLink = nil
+                showDeepLinkUCLHealth = true
+
+            case .settings:
+                appState.pendingDeepLink = nil
+                selectedTab = .settings
+
+            case .workout:
+                // Switch to today tab where workout context is handled
+                appState.pendingDeepLink = nil
+                selectedTab = .today
+
+            default:
+                // Other deep links handled by child views (e.g., TodayHubView)
+                break
+            }
+        }
+        // Deep link sheets for views not reachable via tab switching
+        .sheetWithHaptic(isPresented: $showDeepLinkReadiness) {
+            if let patientIdString = PTSupabaseClient.shared.userId,
+               let patientId = UUID(uuidString: patientIdString) {
+                NavigationStack {
+                    ReadinessDashboardView(patientId: patientId)
+                        .toolbar {
+                            ToolbarItem(placement: .navigationBarTrailing) {
+                                Button("Done") { showDeepLinkReadiness = false }
+                            }
+                        }
+                }
+            }
+        }
+        .sheetWithHaptic(isPresented: $showDeepLinkUCLHealth) {
+            NavigationStack {
+                UCLHealthView()
+                    .environmentObject(appState)
+                    .toolbar {
+                        ToolbarItem(placement: .navigationBarTrailing) {
+                            Button("Done") { showDeepLinkUCLHealth = false }
+                        }
+                    }
+            }
+        }
+        .sheetWithHaptic(isPresented: $showDeepLinkSchedule) {
+            NavigationStack {
+                CalendarView { _ in }
+                    .toolbar {
+                        ToolbarItem(placement: .navigationBarTrailing) {
+                            Button("Done") { showDeepLinkSchedule = false }
+                        }
+                    }
+            }
+        }
+        .sheetWithHaptic(isPresented: $showDeepLinkRecovery) {
+            NavigationStack {
+                HealthHubView()
+                    .environmentObject(storeKit)
+                    .toolbar {
+                        ToolbarItem(placement: .navigationBarTrailing) {
+                            Button("Done") { showDeepLinkRecovery = false }
+                        }
+                    }
             }
         }
         .environmentObject(featureVisibility)

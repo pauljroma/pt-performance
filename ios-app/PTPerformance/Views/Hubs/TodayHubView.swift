@@ -203,13 +203,36 @@ struct TodayHubView: View {
                     // ACP-501: Pre-load quick start data for faster response
                     _ = await quickStartService.prepareQuickStart()
                 }
-                // ACP-501: Handle deep link for starting workout
+                // ACP-501: Handle deep links for Today Hub context
                 .onChange(of: appState.pendingDeepLink) { _, newValue in
-                    if case .startWorkout = newValue {
+                    guard let newValue else { return }
+
+                    switch newValue {
+                    case .startWorkout:
                         appState.pendingDeepLink = nil
                         Task {
                             await handleQuickStart()
                         }
+
+                    case .streak:
+                        appState.pendingDeepLink = nil
+                        showStreakDashboard = true
+
+                    case .today:
+                        // Already on Today tab — just consume the deep link
+                        appState.pendingDeepLink = nil
+
+                    case .logExercise:
+                        appState.pendingDeepLink = nil
+                        showQuickPick = true
+
+                    case .restTimer:
+                        appState.pendingDeepLink = nil
+                        showTimers = true
+
+                    default:
+                        // Other deep links handled by PatientTabView
+                        break
                     }
                 }
         }

@@ -8,11 +8,15 @@ import SwiftUI
 // - Smooth tab transition animations
 
 struct TherapistTabView: View {
+    @EnvironmentObject var appState: AppState
     @StateObject private var onboardingCoordinator = OnboardingCoordinator.shared
     @StateObject private var badgeManager = TabBarBadgeManager.shared
 
     // Track selected tab for haptic feedback and icon state
     @State private var selectedTab: TherapistTab = .patients
+
+    // Deep link: navigate to a specific patient by ID
+    @State private var deepLinkPatientId: String?
 
     // MARK: - Tab Definitions
 
@@ -78,7 +82,7 @@ struct TherapistTabView: View {
 
     var body: some View {
         TabView(selection: $selectedTab) {
-            TherapistDashboardView()
+            TherapistDashboardView(deepLinkPatientId: $deepLinkPatientId)
                 .tabItem {
                     Label {
                         Text(TherapistTab.patients.title)
@@ -185,6 +189,34 @@ struct TherapistTabView: View {
         .onAppear {
             // Configure tab bar appearance for dark mode adaptation
             configureTabBarAppearance()
+        }
+        // Deep link handling for therapist-level navigation
+        .onChange(of: appState.pendingDeepLink) { _, newValue in
+            guard let newValue else { return }
+
+            switch newValue {
+            case .prescription:
+                appState.pendingDeepLink = nil
+                selectedTab = .prescriptions
+
+            case .patient(let patientId):
+                appState.pendingDeepLink = nil
+                deepLinkPatientId = patientId
+                selectedTab = .patients
+
+            case .settings:
+                appState.pendingDeepLink = nil
+                selectedTab = .settings
+
+            case .schedule:
+                appState.pendingDeepLink = nil
+                selectedTab = .schedule
+
+            default:
+                // Unknown deep link for therapist context — consume to avoid stale state
+                appState.pendingDeepLink = nil
+                DebugLogger.shared.log("[TherapistTabView] Unhandled deep link: \(String(describing: newValue))", level: .warning)
+            }
         }
     }
 

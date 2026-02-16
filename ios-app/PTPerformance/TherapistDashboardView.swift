@@ -24,6 +24,9 @@ struct TherapistDashboardView: View {
     @Environment(\.horizontalSizeClass) var horizontalSizeClass
     @EnvironmentObject var appState: AppState
 
+    /// Deep link patient ID binding — set by TherapistTabView when a `.patient` deep link arrives
+    @Binding var deepLinkPatientId: String?
+
     var shouldUseSplitView: Bool {
         DeviceHelper.shouldUseSplitView(horizontalSizeClass: horizontalSizeClass)
     }
@@ -83,6 +86,21 @@ struct TherapistDashboardView: View {
                 // This prevents unauthorized access to patient data
                 viewModel.errorMessage = "Unable to identify therapist. Please sign in again."
                 DebugLogger.shared.log("⚠️ SECURITY: Cannot load patients - no therapist ID", level: .error)
+            }
+        }
+        // Deep link: navigate to a specific patient when deepLinkPatientId is set
+        .onChange(of: deepLinkPatientId) { _, newPatientId in
+            guard let patientIdString = newPatientId,
+                  let patientUUID = UUID(uuidString: patientIdString) else { return }
+
+            // Clear the deep link so it doesn't fire again
+            deepLinkPatientId = nil
+
+            // Find the patient in the loaded list and select them
+            if let patient = viewModel.patient(for: patientUUID) {
+                handlePatientSelection(patient)
+            } else {
+                DebugLogger.shared.log("[TherapistDashboardView] Deep link patient not found: \(patientIdString)", level: .warning)
             }
         }
     }
@@ -395,7 +413,7 @@ struct AddPatientPlaceholderView: View {
 #if DEBUG
 struct TherapistDashboardView_Previews: PreviewProvider {
     static var previews: some View {
-        TherapistDashboardView()
+        TherapistDashboardView(deepLinkPatientId: .constant(nil))
             .environmentObject(AppState())
     }
 }

@@ -103,7 +103,7 @@ enum AchievementTier: String, Codable, CaseIterable, Comparable {
 
     static func < (lhs: AchievementTier, rhs: AchievementTier) -> Bool {
         let order: [AchievementTier] = [.bronze, .silver, .gold, .platinum, .diamond]
-        return order.firstIndex(of: lhs)! < order.firstIndex(of: rhs)!
+        return (order.firstIndex(of: lhs) ?? order.count) < (order.firstIndex(of: rhs) ?? order.count)
     }
 }
 
@@ -152,7 +152,7 @@ enum AchievementRarity: String, Codable, CaseIterable, Comparable {
 
     static func < (lhs: AchievementRarity, rhs: AchievementRarity) -> Bool {
         let order: [AchievementRarity] = [.common, .rare, .epic, .legendary]
-        return order.firstIndex(of: lhs)! < order.firstIndex(of: rhs)!
+        return (order.firstIndex(of: lhs) ?? order.count) < (order.firstIndex(of: rhs) ?? order.count)
     }
 
     /// Determine rarity based on tier
