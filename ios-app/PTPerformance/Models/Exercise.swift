@@ -215,9 +215,9 @@ struct Exercise: Codable, Identifiable, Hashable, Sendable {
 
     static let sampleExercises: [Exercise] = [
         Exercise(
-            id: UUID(uuidString: "00000000-0000-0000-0000-000000000010")!,
-            session_id: UUID(uuidString: "00000000-0000-0000-0000-000000000020")!,
-            exercise_template_id: UUID(uuidString: "00000000-0000-0000-0000-000000000030")!,
+            id: UUID(uuidString: "00000000-0000-0000-0000-000000000010") ?? UUID(),
+            session_id: UUID(uuidString: "00000000-0000-0000-0000-000000000020") ?? UUID(),
+            exercise_template_id: UUID(uuidString: "00000000-0000-0000-0000-000000000030") ?? UUID(),
             sequence: 1,
             target_sets: 3,
             target_reps: 10,
@@ -228,7 +228,7 @@ struct Exercise: Codable, Identifiable, Hashable, Sendable {
             rest_period_seconds: 90,
             notes: nil,
             exercise_templates: ExerciseTemplate(
-                id: UUID(uuidString: "00000000-0000-0000-0000-000000000030")!,
+                id: UUID(uuidString: "00000000-0000-0000-0000-000000000030") ?? UUID(),
                 name: "Bench Press",
                 category: "push",
                 body_region: "upper",
@@ -242,9 +242,9 @@ struct Exercise: Codable, Identifiable, Hashable, Sendable {
             )
         ),
         Exercise(
-            id: UUID(uuidString: "00000000-0000-0000-0000-000000000011")!,
-            session_id: UUID(uuidString: "00000000-0000-0000-0000-000000000020")!,
-            exercise_template_id: UUID(uuidString: "00000000-0000-0000-0000-000000000031")!,
+            id: UUID(uuidString: "00000000-0000-0000-0000-000000000011") ?? UUID(),
+            session_id: UUID(uuidString: "00000000-0000-0000-0000-000000000020") ?? UUID(),
+            exercise_template_id: UUID(uuidString: "00000000-0000-0000-0000-000000000031") ?? UUID(),
             sequence: 2,
             target_sets: 3,
             target_reps: 12,
@@ -255,7 +255,7 @@ struct Exercise: Codable, Identifiable, Hashable, Sendable {
             rest_period_seconds: 120,
             notes: nil,
             exercise_templates: ExerciseTemplate(
-                id: UUID(uuidString: "00000000-0000-0000-0000-000000000031")!,
+                id: UUID(uuidString: "00000000-0000-0000-0000-000000000031") ?? UUID(),
                 name: "Squat",
                 category: "squat",
                 body_region: "lower",

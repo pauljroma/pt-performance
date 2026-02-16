@@ -14,7 +14,7 @@ final class AICoachService: ObservableObject {
     private let edgeFunctionUrl = "unified-ai-coach"
 
     /// Demo patient ID for unauthenticated testing
-    private let demoPatientId = UUID(uuidString: "00000000-0000-0000-0000-000000000001")!
+    private let demoPatientId = UUID(uuidString: "00000000-0000-0000-0000-000000000001") ?? UUID()
 
     // MARK: - Response Caching
 

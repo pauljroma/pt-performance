@@ -15,6 +15,9 @@ struct TherapistPrescriptionDashboardView: View {
     @StateObject private var viewModel = TherapistPrescriptionDashboardViewModel()
     @EnvironmentObject var appState: AppState
 
+    // Deep link: navigate to a specific prescription by ID
+    @Binding var deepLinkPrescriptionId: String?
+
     @State private var showFilters = false
     @State private var selectedPrescription: PrescriptionWithPatient?
     @State private var showExtendSheet = false
@@ -24,6 +27,10 @@ struct TherapistPrescriptionDashboardView: View {
     @State private var selectedTab: DashboardTab = .active
 
     @Environment(\.horizontalSizeClass) var horizontalSizeClass
+
+    init(deepLinkPrescriptionId: Binding<String?> = .constant(nil)) {
+        self._deepLinkPrescriptionId = deepLinkPrescriptionId
+    }
 
     enum DashboardTab: String, CaseIterable, Identifiable {
         case active = "Active"
@@ -45,18 +52,12 @@ struct TherapistPrescriptionDashboardView: View {
 
     var body: some View {
         NavigationStack {
-            ZStack {
-                Color(.systemGroupedBackground)
-                    .ignoresSafeArea()
+            dashboardContent
+        }
+    }
 
-                if viewModel.isLoading && viewModel.prescriptions.isEmpty {
-                    loadingView
-                } else if let error = viewModel.errorMessage, viewModel.prescriptions.isEmpty {
-                    errorView(error)
-                } else {
-                    mainContent
-                }
-            }
+    private var dashboardContent: some View {
+        dashboardZStack
             .navigationTitle("Prescriptions")
             .navigationBarTitleDisplayMode(.large)
             .toolbar {
@@ -68,53 +69,83 @@ struct TherapistPrescriptionDashboardView: View {
             .refreshable {
                 await refreshData()
             }
-            .sheet(isPresented: $showFilters) {
-                filterSheet
+    }
+
+    private var dashboardZStack: some View {
+        ZStack {
+            Color(.systemGroupedBackground)
+                .ignoresSafeArea()
+
+            if viewModel.isLoading && viewModel.prescriptions.isEmpty {
+                loadingView
+            } else if let error = viewModel.errorMessage, viewModel.prescriptions.isEmpty {
+                errorView(error)
+            } else {
+                mainContent
             }
-            .sheet(isPresented: $showExtendSheet) {
-                if let prescription = prescriptionToExtend {
-                    ExtendDueDateSheet(
-                        prescription: prescription,
-                        onExtend: { newDate in
-                            Task {
-                                _ = await viewModel.extendDueDate(for: prescription.id, newDueDate: newDate)
-                                showExtendSheet = false
-                                prescriptionToExtend = nil
-                            }
-                        },
-                        onCancel: {
+        }
+        .sheet(isPresented: $showFilters) {
+            filterSheet
+        }
+        .sheet(isPresented: $showExtendSheet) {
+            if let prescription = prescriptionToExtend {
+                ExtendDueDateSheet(
+                    prescription: prescription,
+                    onExtend: { newDate in
+                        Task {
+                            _ = await viewModel.extendDueDate(for: prescription.id, newDueDate: newDate)
                             showExtendSheet = false
                             prescriptionToExtend = nil
                         }
-                    )
-                }
+                    },
+                    onCancel: {
+                        showExtendSheet = false
+                        prescriptionToExtend = nil
+                    }
+                )
             }
-            .alert("Cancel Prescription", isPresented: $showCancelConfirmation) {
-                Button("Keep", role: .cancel) {
-                    prescriptionToCancel = nil
-                }
-                Button("Cancel Prescription", role: .destructive) {
-                    if let id = prescriptionToCancel {
-                        Task {
-                            _ = await viewModel.cancelPrescription(id)
-                            prescriptionToCancel = nil
-                        }
+        }
+        .alert("Cancel Prescription", isPresented: $showCancelConfirmation) {
+            Button("Keep", role: .cancel) {
+                prescriptionToCancel = nil
+            }
+            Button("Cancel Prescription", role: .destructive) {
+                if let id = prescriptionToCancel {
+                    Task {
+                        _ = await viewModel.cancelPrescription(id)
+                        prescriptionToCancel = nil
                     }
                 }
-            } message: {
-                Text("Are you sure you want to cancel this prescription? The patient will no longer see it in their assigned workouts.")
             }
-            .task {
-                await loadData()
+        } message: {
+            Text("Are you sure you want to cancel this prescription? The patient will no longer see it in their assigned workouts.")
+        }
+        .task {
+            await loadData()
+        }
+        .onAppear {
+            if let therapistId = appState.userId {
+                viewModel.startAutoRefresh(therapistId: therapistId)
             }
-            .onAppear {
-                if let therapistId = appState.userId {
-                    viewModel.startAutoRefresh(therapistId: therapistId)
-                }
-            }
-            .onDisappear {
-                viewModel.stopAutoRefresh()
-            }
+        }
+        .onDisappear {
+            viewModel.stopAutoRefresh()
+        }
+        .onChange(of: deepLinkPrescriptionId) { _, _ in
+            handleDeepLinkSelection()
+        }
+        .onChange(of: viewModel.prescriptions.count) { _, _ in
+            handleDeepLinkSelection()
+        }
+    }
+
+    /// Attempt to navigate to a deep-linked prescription if one is pending
+    private func handleDeepLinkSelection() {
+        guard let prescriptionId = deepLinkPrescriptionId,
+              let uuid = UUID(uuidString: prescriptionId) else { return }
+        if let match = viewModel.prescriptions.first(where: { $0.prescription.id == uuid }) {
+            selectedPrescription = match
+            deepLinkPrescriptionId = nil
         }
     }
 
@@ -665,7 +696,7 @@ private struct ExtendDueDateSheet: View {
 #if DEBUG
 struct TherapistPrescriptionDashboardView_Previews: PreviewProvider {
     static var previews: some View {
-        TherapistPrescriptionDashboardView()
+        TherapistPrescriptionDashboardView(deepLinkPrescriptionId: .constant(nil))
             .environmentObject(AppState())
     }
 }

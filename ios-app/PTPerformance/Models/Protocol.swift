@@ -1360,7 +1360,7 @@ struct PlanCustomization {
 
 extension ProtocolTemplate {
     static let postWorkoutRecovery = ProtocolTemplate(
-        id: UUID(uuidString: "11111111-1111-1111-1111-111111111111")!,
+        id: UUID(uuidString: "11111111-1111-1111-1111-111111111111") ?? UUID(),
         name: "Post-Workout Recovery",
         category: .recovery,
         description: "Comprehensive recovery routine for post-workout muscle recovery and soreness prevention",
@@ -1411,7 +1411,7 @@ extension ProtocolTemplate {
     )
 
     static let returnToTraining = ProtocolTemplate(
-        id: UUID(uuidString: "22222222-2222-2222-2222-222222222222")!,
+        id: UUID(uuidString: "22222222-2222-2222-2222-222222222222") ?? UUID(),
         name: "Return to Training (Mild Strain)",
         category: .returnToPlay,
         description: "Progressive return protocol following mild muscle strain with gradual load increase",
@@ -1472,7 +1472,7 @@ extension ProtocolTemplate {
     )
 
     static let performanceOptimization = ProtocolTemplate(
-        id: UUID(uuidString: "33333333-3333-3333-3333-333333333333")!,
+        id: UUID(uuidString: "33333333-3333-3333-3333-333333333333") ?? UUID(),
         name: "Performance Optimization",
         category: .performance,
         description: "Peak performance protocol combining activation, recovery, and readiness optimization",
@@ -1533,7 +1533,7 @@ extension ProtocolTemplate {
     )
 
     static let sleepImprovement = ProtocolTemplate(
-        id: UUID(uuidString: "44444444-4444-4444-4444-444444444444")!,
+        id: UUID(uuidString: "44444444-4444-4444-4444-444444444444") ?? UUID(),
         name: "Sleep Improvement Protocol",
         category: .maintenance,
         description: "Evidence-based sleep hygiene and recovery optimization program",
@@ -1594,7 +1594,7 @@ extension ProtocolTemplate {
     )
 
     static let stressManagement = ProtocolTemplate(
-        id: UUID(uuidString: "55555555-5555-5555-5555-555555555555")!,
+        id: UUID(uuidString: "55555555-5555-5555-5555-555555555555") ?? UUID(),
         name: "Stress Management",
         category: .maintenance,
         description: "Holistic stress reduction protocol combining movement, breathing, and mindfulness",

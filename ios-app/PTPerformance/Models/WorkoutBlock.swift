@@ -394,6 +394,7 @@ typealias WorkoutBlocks = [WorkoutBlock]
 
 // MARK: - Sample Data
 
+#if DEBUG
 extension WorkoutBlock {
     static let sampleBlocks: [WorkoutBlock] = [
         WorkoutBlock(
@@ -419,3 +420,4 @@ extension WorkoutBlock {
         )
     ]
 }
+#endif

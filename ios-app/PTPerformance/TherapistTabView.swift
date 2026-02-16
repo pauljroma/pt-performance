@@ -18,6 +18,9 @@ struct TherapistTabView: View {
     // Deep link: navigate to a specific patient by ID
     @State private var deepLinkPatientId: String?
 
+    // Deep link: navigate to a specific prescription by ID
+    @State private var deepLinkPrescriptionId: String?
+
     // MARK: - Tab Definitions
 
     enum TherapistTab: Int, CaseIterable {
@@ -123,7 +126,7 @@ struct TherapistTabView: View {
                 .accessibilityLabel(TherapistTab.programs.title)
                 .accessibilityHint(TherapistTab.programs.accessibilityHint)
 
-            TherapistPrescriptionDashboardView()
+            TherapistPrescriptionDashboardView(deepLinkPrescriptionId: $deepLinkPrescriptionId)
                 .tabItem {
                     Label {
                         Text(TherapistTab.prescriptions.title)
@@ -195,8 +198,9 @@ struct TherapistTabView: View {
             guard let newValue else { return }
 
             switch newValue {
-            case .prescription:
+            case .prescription(let prescriptionId):
                 appState.pendingDeepLink = nil
+                deepLinkPrescriptionId = prescriptionId
                 selectedTab = .prescriptions
 
             case .patient(let patientId):

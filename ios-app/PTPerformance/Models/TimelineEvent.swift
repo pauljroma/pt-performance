@@ -407,12 +407,12 @@ enum TimelineDateRange: String, CaseIterable, Identifiable {
 
 extension TimelineEvent {
     // Static UUIDs for sample data to avoid unnecessary re-renders
-    private static let sampleEventID = UUID(uuidString: "00000000-0000-0000-0000-000000000001")!
-    private static let samplePatientID = UUID(uuidString: "00000000-0000-0000-0000-000000000002")!
-    private static let sampleWorkoutID = UUID(uuidString: "00000000-0000-0000-0000-000000000003")!
-    private static let sampleSleepID = UUID(uuidString: "00000000-0000-0000-0000-000000000004")!
-    private static let sampleConflictID = UUID(uuidString: "00000000-0000-0000-0000-000000000005")!
-    private static let sampleConflictRefID = UUID(uuidString: "00000000-0000-0000-0000-000000000006")!
+    private static let sampleEventID = UUID(uuidString: "00000000-0000-0000-0000-000000000001") ?? UUID()
+    private static let samplePatientID = UUID(uuidString: "00000000-0000-0000-0000-000000000002") ?? UUID()
+    private static let sampleWorkoutID = UUID(uuidString: "00000000-0000-0000-0000-000000000003") ?? UUID()
+    private static let sampleSleepID = UUID(uuidString: "00000000-0000-0000-0000-000000000004") ?? UUID()
+    private static let sampleConflictID = UUID(uuidString: "00000000-0000-0000-0000-000000000005") ?? UUID()
+    private static let sampleConflictRefID = UUID(uuidString: "00000000-0000-0000-0000-000000000006") ?? UUID()
 
     /// Sample event for previews
     static var sample: TimelineEvent {
@@ -503,9 +503,9 @@ extension TimelineEvent {
             let timestamp = calendar.date(byAdding: .hour, value: -hoursAgo, to: Date()) ?? Date()
 
             // Deterministic UUIDs based on index
-            let eventID = UUID(uuidString: String(format: "00000000-0000-0000-0001-%012d", index))!
-            let patientID = UUID(uuidString: "00000000-0000-0000-0000-000000000002")!
-            let conflictID = UUID(uuidString: String(format: "00000000-0000-0000-0002-%012d", index))!
+            let eventID = UUID(uuidString: String(format: "00000000-0000-0000-0001-%012d", index)) ?? UUID()
+            let patientID = UUID(uuidString: "00000000-0000-0000-0000-000000000002") ?? UUID()
+            let conflictID = UUID(uuidString: String(format: "00000000-0000-0000-0002-%012d", index)) ?? UUID()
 
             let conflicts: [UUID]? = index % 5 == 0 ? [conflictID] : nil
             return TimelineEvent(
@@ -525,13 +525,13 @@ extension TimelineEvent {
 
 extension TimelineEventDetail {
     // Static UUIDs for sample data to avoid unnecessary re-renders
-    private static let sampleDetailID = UUID(uuidString: "00000000-0000-0000-0000-000000000010")!
-    private static let sampleSectionMetricsID = UUID(uuidString: "00000000-0000-0000-0000-000000000011")!
-    private static let sampleSectionNotesID = UUID(uuidString: "00000000-0000-0000-0000-000000000012")!
-    private static let sampleItemEnergyID = UUID(uuidString: "00000000-0000-0000-0000-000000000013")!
-    private static let sampleItemSleepID = UUID(uuidString: "00000000-0000-0000-0000-000000000014")!
-    private static let sampleItemSorenessID = UUID(uuidString: "00000000-0000-0000-0000-000000000015")!
-    private static let sampleItemCommentID = UUID(uuidString: "00000000-0000-0000-0000-000000000016")!
+    private static let sampleDetailID = UUID(uuidString: "00000000-0000-0000-0000-000000000010") ?? UUID()
+    private static let sampleSectionMetricsID = UUID(uuidString: "00000000-0000-0000-0000-000000000011") ?? UUID()
+    private static let sampleSectionNotesID = UUID(uuidString: "00000000-0000-0000-0000-000000000012") ?? UUID()
+    private static let sampleItemEnergyID = UUID(uuidString: "00000000-0000-0000-0000-000000000013") ?? UUID()
+    private static let sampleItemSleepID = UUID(uuidString: "00000000-0000-0000-0000-000000000014") ?? UUID()
+    private static let sampleItemSorenessID = UUID(uuidString: "00000000-0000-0000-0000-000000000015") ?? UUID()
+    private static let sampleItemCommentID = UUID(uuidString: "00000000-0000-0000-0000-000000000016") ?? UUID()
 
     /// Sample detail for previews
     static var sample: TimelineEventDetail {

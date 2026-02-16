@@ -115,8 +115,8 @@ struct Patient: Codable, Identifiable, Hashable {
 
     static let samplePatients: [Patient] = [
         Patient(
-            id: UUID(uuidString: "00000000-0000-0000-0000-000000000001")!,
-            therapistId: UUID(uuidString: "00000000-0000-0000-0000-000000000100")!,
+            id: UUID(uuidString: "00000000-0000-0000-0000-000000000001") ?? UUID(),
+            therapistId: UUID(uuidString: "00000000-0000-0000-0000-000000000100") ?? UUID(),
             firstName: "John",
             lastName: "Brebbia",
             email: "demo-patient@ptperformance.app",
@@ -132,8 +132,8 @@ struct Patient: Codable, Identifiable, Hashable {
             lastSessionDate: Date()
         ),
         Patient(
-            id: UUID(uuidString: "00000000-0000-0000-0000-000000000002")!,
-            therapistId: UUID(uuidString: "00000000-0000-0000-0000-000000000100")!,
+            id: UUID(uuidString: "00000000-0000-0000-0000-000000000002") ?? UUID(),
+            therapistId: UUID(uuidString: "00000000-0000-0000-0000-000000000100") ?? UUID(),
             firstName: "Sarah",
             lastName: "Johnson",
             email: "sarah@example.com",
@@ -186,8 +186,8 @@ extension Patient {
     static var mockPatients: [Patient] {
         [
             Patient(
-                id: UUID(uuidString: "00000000-0000-0000-0000-000000000010")!,
-                therapistId: UUID(uuidString: "00000000-0000-0000-0000-000000000100")!,
+                id: UUID(uuidString: "00000000-0000-0000-0000-000000000010") ?? UUID(),
+                therapistId: UUID(uuidString: "00000000-0000-0000-0000-000000000100") ?? UUID(),
                 firstName: "John",
                 lastName: "Smith",
                 email: "john.smith@example.com",
@@ -201,8 +201,8 @@ extension Patient {
                 adherencePercentage: 88.5
             ),
             Patient(
-                id: UUID(uuidString: "00000000-0000-0000-0000-000000000011")!,
-                therapistId: UUID(uuidString: "00000000-0000-0000-0000-000000000100")!,
+                id: UUID(uuidString: "00000000-0000-0000-0000-000000000011") ?? UUID(),
+                therapistId: UUID(uuidString: "00000000-0000-0000-0000-000000000100") ?? UUID(),
                 firstName: "Sarah",
                 lastName: "Johnson",
                 email: "sarah.johnson@example.com",
@@ -216,8 +216,8 @@ extension Patient {
                 adherencePercentage: 92.0
             ),
             Patient(
-                id: UUID(uuidString: "00000000-0000-0000-0000-000000000012")!,
-                therapistId: UUID(uuidString: "00000000-0000-0000-0000-000000000100")!,
+                id: UUID(uuidString: "00000000-0000-0000-0000-000000000012") ?? UUID(),
+                therapistId: UUID(uuidString: "00000000-0000-0000-0000-000000000100") ?? UUID(),
                 firstName: "Mike",
                 lastName: "Williams",
                 email: "mike.williams@example.com",
@@ -231,8 +231,8 @@ extension Patient {
                 adherencePercentage: 75.0
             ),
             Patient(
-                id: UUID(uuidString: "00000000-0000-0000-0000-000000000013")!,
-                therapistId: UUID(uuidString: "00000000-0000-0000-0000-000000000100")!,
+                id: UUID(uuidString: "00000000-0000-0000-0000-000000000013") ?? UUID(),
+                therapistId: UUID(uuidString: "00000000-0000-0000-0000-000000000100") ?? UUID(),
                 firstName: "Emily",
                 lastName: "Davis",
                 email: "emily.davis@example.com",
@@ -246,8 +246,8 @@ extension Patient {
                 adherencePercentage: 95.0
             ),
             Patient(
-                id: UUID(uuidString: "00000000-0000-0000-0000-000000000014")!,
-                therapistId: UUID(uuidString: "00000000-0000-0000-0000-000000000100")!,
+                id: UUID(uuidString: "00000000-0000-0000-0000-000000000014") ?? UUID(),
+                therapistId: UUID(uuidString: "00000000-0000-0000-0000-000000000100") ?? UUID(),
                 firstName: "Chris",
                 lastName: "Brown",
                 email: "chris.brown@example.com",

@@ -45,7 +45,7 @@ final class SupplementService: ObservableObject {
     private let edgeFunctionUrl = "ai-supplement-recommendation"
 
     /// Demo patient UUID for unauthenticated users
-    private let demoPatientId = UUID(uuidString: "00000000-0000-0000-0000-000000000001")!
+    private let demoPatientId = UUID(uuidString: "00000000-0000-0000-0000-000000000001") ?? UUID()
 
     /// Maximum retry attempts for transient network failures
     private let maxRetryAttempts = 3

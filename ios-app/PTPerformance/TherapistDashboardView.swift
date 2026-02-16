@@ -77,10 +77,11 @@ struct TherapistDashboardView: View {
         }
         .task {
             if let therapistId = appState.userId {
-                await viewModel.loadPatients(therapistId: therapistId)
-                await viewModel.loadActiveFlags(therapistId: therapistId)
-                await schedulingViewModel.loadAllSessions(therapistId: therapistId)
-                try? await escalationService.fetchActiveEscalations(for: therapistId)
+                async let patients: () = viewModel.loadPatients(therapistId: therapistId)
+                async let flags: () = viewModel.loadActiveFlags(therapistId: therapistId)
+                async let sessions: () = schedulingViewModel.loadAllSessions(therapistId: therapistId)
+                async let escalations: () = { try? await escalationService.fetchActiveEscalations(for: therapistId) }()
+                _ = await (patients, flags, sessions, escalations)
             } else {
                 // SECURITY: Do NOT load patients without therapist ID
                 // This prevents unauthorized access to patient data
@@ -279,9 +280,10 @@ struct TherapistDashboardView: View {
         }
         .refreshableWithHaptic {
             if let therapistId = appState.userId {
-                await viewModel.refresh(therapistId: therapistId)
-                await schedulingViewModel.refresh(therapistId: therapistId)
-                try? await escalationService.fetchActiveEscalations(for: therapistId)
+                async let refresh: () = viewModel.refresh(therapistId: therapistId)
+                async let sessions: () = schedulingViewModel.refresh(therapistId: therapistId)
+                async let escalations: () = { try? await escalationService.fetchActiveEscalations(for: therapistId) }()
+                _ = await (refresh, sessions, escalations)
             } else {
                 // SECURITY: Do NOT refresh without therapist ID
                 // This prevents unauthorized access to patient data

@@ -198,7 +198,7 @@ class ReferralService: ObservableObject {
         guard let url = URL(string: urlString) else {
             // Percent-encode the code in case it contains special characters
             let fallback = "https://app.moduspt.com/invite/MODUS"
-            return URL(string: fallback)!  // Known-valid literal
+            return URL(string: fallback)! // Known-valid static literal
         }
         return url
     }
