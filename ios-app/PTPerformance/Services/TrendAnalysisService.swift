@@ -321,14 +321,9 @@ final class TrendAnalysisService: ObservableObject {
                     movingAverage: nil
                 )
             })
-        } catch let error as DecodingError {
-            errorLogger.logError(error, context: "TrendAnalysisService.fetchDataPoints - Decoding error")
-            // Return mock data for development/testing
-            return generateMockDataPoints(for: metric, range: range)
         } catch {
-            errorLogger.logError(error, context: "TrendAnalysisService.fetchDataPoints")
-            // Return mock data for development/testing
-            return generateMockDataPoints(for: metric, range: range)
+            DebugLogger.shared.log("Failed to fetch trend data: \(error)", level: .warning)
+            return []
         }
     }
 

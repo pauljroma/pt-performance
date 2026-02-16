@@ -100,6 +100,17 @@ class CohortAnalyticsViewModel: ObservableObject {
         benchmarks != nil || !patientRankings.isEmpty
     }
 
+    /// User-friendly message when there is no cohort data to display
+    var noDataMessage: String? {
+        // Only show the message after loading has completed and there is no data
+        guard !isLoading else { return nil }
+        if benchmarks == nil && patientRankings.isEmpty && complianceDistribution == nil
+            && retentionData == nil && programOutcomes == nil {
+            return "Cohort analytics will appear once patients begin completing sessions and logging progress."
+        }
+        return nil
+    }
+
     /// Overall cohort health indicator
     var cohortHealthStatus: CohortHealthStatus {
         guard let benchmarks = benchmarks else { return .unknown }

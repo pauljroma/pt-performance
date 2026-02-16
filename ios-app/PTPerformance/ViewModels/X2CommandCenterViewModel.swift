@@ -24,6 +24,7 @@ final class X2CommandCenterViewModel: ObservableObject {
     @Published private(set) var hasLoaded = false
     @Published var errorMessage: String?
     @Published var showError = false
+    @Published var loadError: String?
 
     // MARK: - Private Properties
 
@@ -213,29 +214,13 @@ final class X2CommandCenterViewModel: ObservableObject {
         do {
             let reports = try await reportService.getRecentReports(for: therapistId, limit: 5)
             recentReports = reports.map { WeeklyReportSummary(from: $0) }
+            loadError = nil
         } catch {
             DebugLogger.shared.log("Failed to load reports: \(error)", level: .error)
-            // In development, use mock data
-            recentReports = generateMockReports()
+            // Show empty state instead of mock data
+            self.recentReports = []
+            self.loadError = "Unable to load reports. Pull to refresh."
         }
-    }
-
-    private func generateMockReports() -> [WeeklyReportSummary] {
-        // Return mock data for development
-        return [
-            WeeklyReportSummary(
-                title: "Week 5",
-                dateRange: "Jan 27 - Feb 2",
-                patientCount: 12,
-                highlights: "85% adherence rate"
-            ),
-            WeeklyReportSummary(
-                title: "Week 4",
-                dateRange: "Jan 20 - Jan 26",
-                patientCount: 12,
-                highlights: "3 patients hit goals"
-            )
-        ]
     }
 }
 

@@ -588,6 +588,24 @@ class StoreKitService: ObservableObject {
 
     // MARK: - Receipt Validation (Server-Side)
 
+    /// Request body for server-side receipt validation
+    private struct ReceiptValidationRequest: Encodable {
+        let transaction_id: String
+        let original_transaction_id: String
+        let product_id: String
+        let purchase_date: String
+        let expires_at: String?
+        let jws_representation: String
+        let bundle_id: String
+        let environment: String
+    }
+
+    /// Response from the validate-receipt edge function
+    private struct ReceiptValidationResponse: Decodable {
+        let valid: Bool
+        let message: String?
+    }
+
     /// Validates the app receipt with the server for additional security
     ///
     /// While StoreKit 2 provides cryptographic verification locally, server-side
@@ -597,30 +615,87 @@ class StoreKitService: ObservableObject {
     /// - Creates an audit trail for purchases
     /// - Allows server-side feature gating
     ///
+    /// Uses StoreKit 2 JWS (JSON Web Signature) tokens from `Transaction.currentEntitlements`,
+    /// which are sent to the `validate-receipt` edge function for verification via
+    /// Apple's App Store Server API.
+    ///
     /// - Important: This should be called after critical purchases to ensure
     ///   the purchase is recorded server-side before granting access
     ///
     /// - Returns: True if server validation succeeded
     func validateReceiptWithServer() async -> Bool {
-        // TODO: Implement server-side receipt validation via validate-receipt edge function
-        // The edge function exists at /supabase/functions/validate-receipt/index.ts
-        // but needs to be updated to:
-        // 1. Use the correct bundle ID (com.getmodus.app)
-        // 2. Use the correct product IDs from Config.Subscription
-        // 3. Handle StoreKit 2 JWS tokens instead of legacy receipts
-        //
-        // For StoreKit 2, we can use Transaction.currentEntitlements to get
-        // the JWS (JSON Web Signature) which can be verified server-side using
-        // Apple's App Store Server API instead of the legacy verifyReceipt endpoint.
-        //
-        // See: https://developer.apple.com/documentation/appstoreserverapi
+        guard PTSupabaseClient.shared.userId != nil else {
+            logger.diagnostic("StoreKit: No user logged in, skipping receipt validation")
+            return false
+        }
 
-        logger.diagnostic("StoreKit: Server-side receipt validation not yet implemented")
-        logger.diagnostic("StoreKit: Using client-side StoreKit 2 verification (cryptographically secure)")
+        logger.info("StoreKit", "Starting server-side receipt validation")
 
-        // For now, sync subscription status to backend as a partial solution
-        await syncSubscriptionToBackend()
+        // Collect the most recent verified transaction from current entitlements
+        var latestTransaction: Transaction?
 
-        return true
+        for await result in Transaction.currentEntitlements {
+            guard let transaction = try? checkVerified(result) else {
+                continue
+            }
+
+            // Skip revoked transactions
+            if transaction.revocationDate != nil {
+                continue
+            }
+
+            // Only validate our known product IDs
+            guard Self.productIDs.contains(transaction.productID) else {
+                continue
+            }
+
+            // Pick the most recent transaction by purchase date
+            if let existing = latestTransaction {
+                if transaction.purchaseDate > existing.purchaseDate {
+                    latestTransaction = transaction
+                }
+            } else {
+                latestTransaction = transaction
+            }
+        }
+
+        guard let transaction = latestTransaction else {
+            logger.info("StoreKit", "No active entitlements to validate")
+            return false
+        }
+
+        // Build the receipt validation request using the JWS representation
+        let receiptData = ReceiptValidationRequest(
+            transaction_id: String(transaction.id),
+            original_transaction_id: String(transaction.originalID),
+            product_id: transaction.productID,
+            purchase_date: Self.isoFormatter.string(from: transaction.purchaseDate),
+            expires_at: transaction.expirationDate.map { Self.isoFormatter.string(from: $0) },
+            jws_representation: transaction.jsonRepresentation.base64EncodedString(),
+            bundle_id: Bundle.main.bundleIdentifier ?? "com.getmodus.app",
+            environment: transaction.environment.rawValue
+        )
+
+        do {
+            let responseData: Data = try await PTSupabaseClient.shared.client.functions
+                .invoke("validate-receipt", options: .init(body: receiptData))
+
+            // Attempt to decode the response to check validation result
+            let response = try JSONDecoder().decode(ReceiptValidationResponse.self, from: responseData)
+
+            if response.valid {
+                logger.success("StoreKit", "Server-side receipt validation succeeded")
+                return true
+            } else {
+                let reason = response.message ?? "unknown reason"
+                logger.warning("StoreKit", "Server-side receipt validation rejected: \(reason)")
+                return false
+            }
+        } catch {
+            // Non-fatal: don't block the user if server validation fails
+            // Client-side StoreKit 2 cryptographic verification is still in place
+            logger.warning("StoreKit", "Server-side receipt validation failed: \(error.localizedDescription)")
+            return false
+        }
     }
 }

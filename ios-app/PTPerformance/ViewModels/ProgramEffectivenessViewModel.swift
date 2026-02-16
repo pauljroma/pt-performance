@@ -127,6 +127,20 @@ class ProgramEffectivenessViewModel: ObservableObject {
         )
     }
 
+    /// Indicates when there is not enough data to show meaningful analytics
+    var hasInsufficientData: Bool {
+        // No programs loaded at all, or too few data points to be meaningful
+        if programMetrics.isEmpty {
+            return true
+        }
+        // If all programs have zero enrollments, there is no meaningful data
+        let totalEnrollments = programMetrics.map { $0.totalEnrollmentsValue }.reduce(0, +)
+        if totalEnrollments == 0 {
+            return true
+        }
+        return false
+    }
+
     /// Top performing programs
     var topPrograms: [ProgramMetrics] {
         Array(programMetrics.prefix(3))

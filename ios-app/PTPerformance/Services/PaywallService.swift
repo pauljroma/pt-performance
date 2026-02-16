@@ -419,6 +419,14 @@ class PaywallService: ObservableObject {
 
         logger.diagnostic("Paywall: Analytics event dispatched — \(payload)")
 
-        // TODO: Wire to AnalyticsTracker.shared.track("paywall_event", properties: payload)
+        // ACP-990: Wire paywall analytics to AnalyticsTracker
+        switch impression.action {
+        case .impression:
+            AnalyticsTracker.shared.track(event: AnalyticsEventCatalog.Subscription.paywallViewed(source: impression.trigger.analyticsName).eventName, properties: payload)
+        case .dismissal:
+            AnalyticsTracker.shared.track(event: AnalyticsEventCatalog.Subscription.paywallDismissed.eventName, properties: payload)
+        case .conversion:
+            AnalyticsTracker.shared.track(event: AnalyticsEventCatalog.Subscription.purchaseCompleted(tier: impression.variantName, revenue: 0).eventName, properties: payload)
+        }
     }
 }

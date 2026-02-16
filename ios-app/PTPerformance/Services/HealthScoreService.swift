@@ -1,4 +1,5 @@
 import Foundation
+import Supabase
 
 /// Service for health score calculation and AI insights
 ///
@@ -436,41 +437,97 @@ final class HealthScoreService: ObservableObject {
 
     /// Send a message to the AI health coach and receive a response
     ///
-    /// Note: AI backend integration pending. Currently returns contextual placeholder
-    /// responses based on the current health score. Full AI integration will connect
-    /// to the coaching API endpoint for personalized, dynamic responses.
-    /// Ticket: ACP-701 - AI Health Coach Backend Integration
+    /// Calls the unified-ai-coach edge function for personalized responses.
+    /// Falls back to a generic message if the AI service is unavailable.
     func sendMessage(_ message: String) async -> HealthCoachMessage {
-        // Generate a contextual response based on current health data
-        let content: String
-        let category: InsightCategory
+        do {
+            let userId = supabase.client.auth.currentUser?.id.uuidString ?? ""
 
-        if let score = currentScore {
-            if score.overallScore >= 80 {
-                content = "Your health metrics are excellent! Keep up the great work with your recovery and training balance."
-                category = .general
-            } else if score.recoveryScore < 60 {
-                content = "Based on your health data, I recommend focusing on recovery. Your recent training load has been high."
-                category = .recovery
-            } else if score.sleepScore < 60 {
-                content = "Your sleep score suggests room for improvement. Try to maintain a consistent sleep schedule for better recovery."
-                category = .sleep
-            } else {
-                content = "Your health metrics look good overall. Keep monitoring your recovery and adjust training as needed."
-                category = .general
+            var requestBody: [String: Any] = [
+                "user_id": userId,
+                "type": "health_chat",
+                "message": message
+            ]
+
+            // Include current health context if available
+            if let score = currentScore {
+                requestBody["health_context"] = [
+                    "overall_score": score.overallScore,
+                    "sleep_score": score.sleepScore,
+                    "recovery_score": score.recoveryScore,
+                    "nutrition_score": score.nutritionScore,
+                    "activity_score": score.activityScore,
+                    "stress_score": score.stressScore
+                ]
             }
-        } else {
-            content = "I'm here to help with your health and recovery. Complete a readiness check-in to get personalized recommendations."
-            category = .general
-        }
 
-        return HealthCoachMessage(
-            id: UUID(),
-            role: .assistant,
-            content: content,
-            timestamp: Date(),
-            category: category
-        )
+            let bodyData = try JSONSerialization.data(withJSONObject: requestBody)
+
+            let responseData: Data = try await supabase.client.functions.invoke(
+                "unified-ai-coach",
+                options: FunctionInvokeOptions(body: bodyData)
+            ) { data, _ in
+                data
+            }
+
+            // Parse AI response
+            guard let json = try? JSONSerialization.jsonObject(with: responseData) as? [String: Any],
+                  let responseText = json["message"] as? String else {
+                throw NSError(domain: "HealthScoreService", code: -1, userInfo: [NSLocalizedDescriptionKey: "Invalid AI response"])
+            }
+
+            let categoryString = json["category"] as? String
+            let category = categoryString.flatMap { categoryFromString($0) } ?? .general
+
+            return HealthCoachMessage(
+                id: UUID(),
+                role: .assistant,
+                content: responseText,
+                timestamp: Date(),
+                category: category
+            )
+        } catch {
+            DebugLogger.shared.log("AI coach chat unavailable: \(error)", level: .warning)
+
+            // Fallback: generic response when AI is unavailable
+            return HealthCoachMessage(
+                id: UUID(),
+                role: .assistant,
+                content: "I'm unable to connect to the AI coach right now. Please try again shortly.",
+                timestamp: Date(),
+                category: .general
+            )
+        }
+    }
+
+    // MARK: - AI Personalized Insights
+
+    /// Fetch personalized health insights from the unified AI coach
+    func fetchPersonalizedInsights(for userId: String) async -> String? {
+        do {
+            let requestBody: [String: Any] = [
+                "user_id": userId,
+                "type": "health_insight"
+            ]
+
+            let bodyData = try JSONSerialization.data(withJSONObject: requestBody)
+
+            let responseData: Data = try await supabase.client.functions.invoke(
+                "unified-ai-coach",
+                options: FunctionInvokeOptions(body: bodyData)
+            ) { data, _ in
+                data
+            }
+
+            struct InsightResponse: Codable {
+                let insight: String?
+            }
+            let decoded = try JSONDecoder().decode(InsightResponse.self, from: responseData)
+            return decoded.insight
+        } catch {
+            DebugLogger.shared.log("AI coach insights unavailable: \(error)", level: .warning)
+            return nil
+        }
     }
 
     // MARK: - Helpers

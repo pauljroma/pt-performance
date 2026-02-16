@@ -309,7 +309,17 @@ class ProtocolBuilderViewModel: ObservableObject {
         // Log for debugging
         DebugLogger.shared.log("[ProtocolBuilder] Assignment KPI: Duration=\(formattedAssignmentTime), Met<60s=\(kpiData.metTarget), Tasks=\(customization.includedTaskCount)", level: .diagnostic)
 
-        // TODO: Send to analytics service
+        // Wire to KPITrackingService for plan assignment tracking
+        await KPITrackingService.shared.trackPlanAssigned(ptId: kpiData.assignedBy, athleteId: athleteId)
+
+        // Wire to AnalyticsTracker for protocol assignment analytics
+        AnalyticsTracker.shared.track(event: "protocol_assigned", properties: [
+            "athlete_id": athleteId.uuidString,
+            "template_id": templateId.uuidString,
+            "duration_seconds": Int(duration),
+            "met_target": duration < 60,
+            "task_count": customization.includedTaskCount
+        ])
     }
 }
 

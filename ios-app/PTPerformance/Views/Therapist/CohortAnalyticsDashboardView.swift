@@ -53,6 +53,12 @@ struct CohortAnalyticsDashboardView: View {
                     loadingView
                 } else if let error = viewModel.errorMessage, !viewModel.hasData {
                     errorView(error)
+                } else if let noDataMessage = viewModel.noDataMessage {
+                    ContentUnavailableView(
+                        "No Cohort Data",
+                        systemImage: "person.3.sequence",
+                        description: Text(noDataMessage)
+                    )
                 } else {
                     mainContent
                 }

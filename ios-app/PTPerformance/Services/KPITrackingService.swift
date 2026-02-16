@@ -504,13 +504,28 @@ final class KPITrackingService: ObservableObject {
                 let tasksCompleted = tasksResponse.count ?? 0
                 let taskCompletionRate = sessionsStarted > 0 ? min(1.0, Double(tasksCompleted) / Double(sessionsStarted)) : 0.0
 
+                // Query streak records to calculate average streak days
+                let streakResponse = try await supabase.client
+                    .from("streak_records")
+                    .select("current_streak")
+                    .execute()
+
+                struct StreakRow: Codable {
+                    let currentStreak: Int
+                    enum CodingKeys: String, CodingKey {
+                        case currentStreak = "current_streak"
+                    }
+                }
+                let streaks = try decoder.decode([StreakRow].self, from: streakResponse.data)
+                let avgStreakDays = streaks.isEmpty ? 0.0 : Double(streaks.map(\.currentStreak).reduce(0, +)) / Double(streaks.count)
+
                 return AthleteMetrics(
                     totalAthletes: row.totalAthletes,
                     weeklyActiveAthletes: row.activeAthletes,
                     wauPercentage: row.wauPercentage,
                     checkInsCompleted: checkInsResponse.count ?? 0,
                     taskCompletionRate: taskCompletionRate,
-                    avgStreakDays: 3.5 // Would need separate streak calculation
+                    avgStreakDays: avgStreakDays
                 )
             }
         } catch {
@@ -968,8 +983,21 @@ final class KPITrackingService: ObservableObject {
 
             let taskCompletionRate = sessionsStarted > 0 ? min(1.0, Double(tasksCompleted) / Double(sessionsStarted)) : 0
 
-            // Get average streak (simplified - would need streak table in production)
-            let avgStreakDays = 3.5 // Placeholder
+            // Query streak records to calculate average streak days
+            let streakResponse = try await supabase.client
+                .from("streak_records")
+                .select("current_streak")
+                .execute()
+
+            struct StreakRow: Codable {
+                let currentStreak: Int
+                enum CodingKeys: String, CodingKey {
+                    case currentStreak = "current_streak"
+                }
+            }
+            let streakDecoder = JSONDecoder()
+            let streaks = try streakDecoder.decode([StreakRow].self, from: streakResponse.data)
+            let avgStreakDays = streaks.isEmpty ? 0.0 : Double(streaks.map(\.currentStreak).reduce(0, +)) / Double(streaks.count)
 
             return AthleteMetrics(
                 totalAthletes: totalAthletes,

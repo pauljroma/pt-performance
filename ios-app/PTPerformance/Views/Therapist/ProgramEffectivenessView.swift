@@ -49,6 +49,12 @@ struct ProgramEffectivenessView: View {
                     loadingView
                 } else if let error = viewModel.errorMessage, viewModel.programMetrics.isEmpty {
                     errorView(error)
+                } else if viewModel.hasInsufficientData {
+                    ContentUnavailableView(
+                        "Not Enough Data",
+                        systemImage: "chart.bar.xaxis",
+                        description: Text("Program effectiveness data will appear after patients complete more sessions.")
+                    )
                 } else {
                     mainContent
                 }

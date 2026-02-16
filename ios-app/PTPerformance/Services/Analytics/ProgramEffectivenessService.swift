@@ -306,6 +306,12 @@ final class ProgramEffectivenessService {
                 avgDays = 7.0 * Double(phase.phaseNumber) // Estimate
             }
 
+            let dropoffReasons = await determineDropoffReasons(
+                for: phase.id,
+                programId: programId,
+                droppedPatientIds: droppedPatients
+            )
+
             dropoffData.append(PhaseDropoffData(
                 id: UUID(),
                 programId: programId,
@@ -315,13 +321,50 @@ final class ProgramEffectivenessService {
                 completingPatients: completingPatients.count,
                 droppedPatients: droppedPatients.count,
                 averageCompletionDays: avgDays,
-                commonDropoffReasons: determineDropoffReasons(for: phase.phaseNumber)
+                commonDropoffReasons: dropoffReasons
             ))
 
             previousPhasePatients = completingPatients
         }
 
         return dropoffData
+    }
+
+    /// Row struct for decoding pain_logs results per phase
+    private struct PhasePainRow: Codable, Sendable {
+        let athleteId: String
+        let intensity: Int
+        let loggedAt: Date
+
+        enum CodingKeys: String, CodingKey {
+            case athleteId = "athlete_id"
+            case intensity
+            case loggedAt = "logged_at"
+        }
+    }
+
+    /// Row struct for decoding exercise_logs results per phase
+    private struct PhaseExerciseRow: Codable, Sendable {
+        let patientId: String
+        let actualLoad: Double?
+        let loggedAt: Date?
+
+        enum CodingKeys: String, CodingKey {
+            case patientId = "patient_id"
+            case actualLoad = "actual_load"
+            case loggedAt = "logged_at"
+        }
+    }
+
+    /// Row struct for decoding session date ranges per phase
+    private struct PhaseSessionDateRow: Codable, Sendable {
+        let patientId: String
+        let scheduledDate: String
+
+        enum CodingKeys: String, CodingKey {
+            case patientId = "patient_id"
+            case scheduledDate = "scheduled_date"
+        }
     }
 
     /// Fetch heatmap data for program phases
@@ -332,28 +375,175 @@ final class ProgramEffectivenessService {
     func fetchHeatmapData(programId: UUID, metricType: HeatmapMetricType) async throws -> [HeatmapDataPoint] {
         let dropoffData = try await fetchProgramDropoffAnalysis(programId: programId)
 
-        return dropoffData.map { phase in
+        // For pain and strength metrics, fetch the phases to get date ranges and patient sets
+        let phasesResponse = try await supabase.client
+            .from("phases")
+            .select("id, phase_number")
+            .eq("program_id", value: programId.uuidString)
+            .order("phase_number", ascending: true)
+            .execute()
+
+        struct PhaseIdRow: Codable {
+            let id: UUID
+            let phaseNumber: Int
+            enum CodingKeys: String, CodingKey {
+                case id
+                case phaseNumber = "phase_number"
+            }
+        }
+
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        let phaseRows = (try? decoder.decode([PhaseIdRow].self, from: phasesResponse.data)) ?? []
+
+        var dataPoints: [HeatmapDataPoint] = []
+
+        for phase in dropoffData {
             let value: Double
             switch metricType {
             case .completion:
                 value = phase.completionRate
             case .adherence:
-                value = phase.completionRate * 0.9 // Approximate
+                value = phase.completionRate * 0.9
             case .painLevel:
-                // Simulate pain levels decreasing over phases
-                value = max(1, 8 - Double(phase.phaseNumber) * 1.5)
+                value = await fetchAveragePainForPhase(
+                    programId: programId,
+                    phaseId: phaseRows.first(where: { $0.phaseNumber == phase.phaseNumber })?.id
+                )
             case .strengthProgress:
-                // Simulate strength progress increasing over phases
-                value = min(0.5, Double(phase.phaseNumber) * 0.12)
+                value = await fetchAverageStrengthGainForPhase(
+                    programId: programId,
+                    phaseId: phaseRows.first(where: { $0.phaseNumber == phase.phaseNumber })?.id
+                )
             }
 
-            return HeatmapDataPoint(
+            dataPoints.append(HeatmapDataPoint(
                 phaseNumber: phase.phaseNumber,
                 phaseName: phase.phaseName,
                 metricType: metricType,
                 value: value,
                 patientCount: phase.startingPatients
-            )
+            ))
+        }
+
+        return dataPoints
+    }
+
+    /// Fetch average pain level for patients during a specific phase
+    /// Queries pain_logs for entries logged during the phase's session date range
+    private func fetchAveragePainForPhase(programId: UUID, phaseId: UUID?) async -> Double {
+        guard let phaseId = phaseId else { return 0 }
+        do {
+            // Get session date range and patient IDs for this phase
+            let sessionsResponse = try await supabase.client
+                .from("scheduled_sessions")
+                .select("patient_id, scheduled_date")
+                .eq("program_id", value: programId.uuidString)
+                .eq("phase_id", value: phaseId.uuidString)
+                .order("scheduled_date", ascending: true)
+                .execute()
+
+            let decoder = JSONDecoder()
+            let sessionRows = try decoder.decode([PhaseSessionDateRow].self, from: sessionsResponse.data)
+
+            guard !sessionRows.isEmpty else { return 0 }
+
+            let patientIds = Array(Set(sessionRows.map { $0.patientId }))
+            let dates = sessionRows.compactMap { $0.scheduledDate }.sorted()
+            guard let minDate = dates.first, let maxDate = dates.last else { return 0 }
+
+            // Query pain_logs for these patients within the phase date range
+            let painResponse = try await supabase.client
+                .from("pain_logs")
+                .select("athlete_id, intensity, logged_at")
+                .in("athlete_id", values: patientIds)
+                .gte("logged_at", value: minDate)
+                .lte("logged_at", value: maxDate + "T23:59:59Z")
+                .execute()
+
+            decoder.dateDecodingStrategy = .iso8601
+            let painRows = try decoder.decode([PhasePainRow].self, from: painResponse.data)
+
+            guard !painRows.isEmpty else { return 0 }
+
+            let totalIntensity = painRows.reduce(0) { $0 + $1.intensity }
+            return Double(totalIntensity) / Double(painRows.count)
+        } catch {
+            DebugLogger.shared.log("Failed to fetch pain data for phase \(phaseId): \(error)", level: .error)
+            return 0
+        }
+    }
+
+    /// Fetch average strength gain for patients during a specific phase
+    /// Queries exercise_logs for entries logged during the phase's session date range
+    /// Returns fractional gain (e.g. 0.2 = 20% improvement)
+    private func fetchAverageStrengthGainForPhase(programId: UUID, phaseId: UUID?) async -> Double {
+        guard let phaseId = phaseId else { return 0 }
+        do {
+            // Get session date range and patient IDs for this phase
+            let sessionsResponse = try await supabase.client
+                .from("scheduled_sessions")
+                .select("patient_id, scheduled_date")
+                .eq("program_id", value: programId.uuidString)
+                .eq("phase_id", value: phaseId.uuidString)
+                .order("scheduled_date", ascending: true)
+                .execute()
+
+            let decoder = JSONDecoder()
+            let sessionRows = try decoder.decode([PhaseSessionDateRow].self, from: sessionsResponse.data)
+
+            guard !sessionRows.isEmpty else { return 0 }
+
+            let patientIds = Array(Set(sessionRows.map { $0.patientId }))
+            let dates = sessionRows.compactMap { $0.scheduledDate }.sorted()
+            guard let minDate = dates.first, let maxDate = dates.last else { return 0 }
+
+            // Query exercise_logs for these patients within the phase date range
+            let logsResponse = try await supabase.client
+                .from("exercise_logs")
+                .select("patient_id, actual_load, logged_at")
+                .in("patient_id", values: patientIds)
+                .not("actual_load", operator: .is, value: "null")
+                .gte("logged_at", value: minDate)
+                .lte("logged_at", value: maxDate + "T23:59:59Z")
+                .order("logged_at", ascending: true)
+                .execute()
+
+            decoder.dateDecodingStrategy = .iso8601
+            let exerciseRows = try decoder.decode([PhaseExerciseRow].self, from: logsResponse.data)
+
+            guard !exerciseRows.isEmpty else { return 0 }
+
+            // Group by patient and compute per-patient gain
+            let byPatient = Dictionary(grouping: exerciseRows) { $0.patientId }
+            var gains: [Double] = []
+
+            for (_, logs) in byPatient {
+                let validLogs = logs.compactMap { $0.actualLoad }
+                guard validLogs.count >= 2,
+                      let firstLoad = validLogs.first,
+                      let lastLoad = validLogs.last,
+                      firstLoad > 0 else { continue }
+                let gain = max(0, (lastLoad - firstLoad) / firstLoad)
+                gains.append(gain)
+            }
+
+            guard !gains.isEmpty else { return 0 }
+            return gains.reduce(0, +) / Double(gains.count)
+        } catch {
+            DebugLogger.shared.log("Failed to fetch strength data for phase \(phaseId): \(error)", level: .error)
+            return 0
+        }
+    }
+
+    /// Row struct for decoding enrollment dates from patient_programs
+    private struct PatientProgramDateRow: Codable, Sendable {
+        let patientId: String
+        let createdAt: Date?
+
+        enum CodingKeys: String, CodingKey {
+            case patientId = "patient_id"
+            case createdAt = "created_at"
         }
     }
 
@@ -408,6 +598,12 @@ final class ProgramEffectivenessService {
         // Group sessions by patient
         let patientSessions = Dictionary(grouping: sessions) { $0.patientId }
 
+        // Fetch actual enrollment dates from patient_programs for all patients in this program
+        let enrollmentDates = await fetchEnrollmentDates(
+            patientIds: Array(patientSessions.keys),
+            programId: programId
+        )
+
         var programPatients: [ProgramPatient] = []
 
         for (patientId, sessions) in patientSessions {
@@ -428,22 +624,55 @@ final class ProgramEffectivenessService {
                 status = "paused"
             }
 
+            // Use real enrollment date from patient_programs, fall back to earliest session date
+            let enrollmentDate = enrollmentDates[patientId] ?? Date()
+
             programPatients.append(ProgramPatient(
                 id: UUID(),
                 patientId: patientId,
                 firstName: firstSession.patients.firstName,
                 lastName: firstSession.patients.lastName,
                 programId: programId,
-                enrollmentDate: Date().addingTimeInterval(-Double.random(in: 30...180) * 86400), // Approximate
-                currentPhase: max(1, Int(completionPercentage * 4)), // Approximate phase
+                enrollmentDate: enrollmentDate,
+                currentPhase: max(1, Int(completionPercentage * 4)),
                 completionPercentage: completionPercentage,
-                adherenceRate: completionPercentage * 0.95, // Approximate
+                adherenceRate: completionPercentage * 0.95,
                 painReduction: await fetchPatientPainReduction(patientId: patientId),
                 status: status
             ))
         }
 
         return programPatients.sorted { $0.completionPercentage > $1.completionPercentage }
+    }
+
+    /// Fetch real enrollment dates from patient_programs for a set of patients and program
+    /// Falls back to empty dictionary on error
+    private func fetchEnrollmentDates(patientIds: [UUID], programId: UUID) async -> [UUID: Date] {
+        do {
+            let patientIdStrings = patientIds.map { $0.uuidString }
+
+            let response = try await supabase.client
+                .from("patient_programs")
+                .select("patient_id, created_at")
+                .in("patient_id", values: patientIdStrings)
+                .eq("template_id", value: programId.uuidString)
+                .execute()
+
+            let decoder = JSONDecoder()
+            decoder.dateDecodingStrategy = .iso8601
+            let rows = try decoder.decode([PatientProgramDateRow].self, from: response.data)
+
+            var result: [UUID: Date] = [:]
+            for row in rows {
+                if let uuid = UUID(uuidString: row.patientId), let date = row.createdAt {
+                    result[uuid] = date
+                }
+            }
+            return result
+        } catch {
+            DebugLogger.shared.log("Failed to fetch enrollment dates: \(error)", level: .error)
+            return [:]
+        }
     }
 
     // MARK: - Private Methods
@@ -678,17 +907,61 @@ final class ProgramEffectivenessService {
         return gains.reduce(0, +) / Double(gains.count)
     }
 
-    /// Determine common dropoff reasons based on phase
-    private func determineDropoffReasons(for phaseNumber: Int) -> [String] {
-        switch phaseNumber {
-        case 1:
-            return ["Time constraints", "Lack of motivation", "Did not see results"]
-        case 2:
-            return ["Difficulty level", "Pain during exercises", "Schedule conflicts"]
-        case 3:
-            return ["Insurance limitations", "Return to activities", "Financial constraints"]
-        default:
-            return ["Cleared by physician", "Goal achieved", "Life circumstances"]
+    /// Row struct for decoding enrollment notes from cancelled/paused enrollments
+    private struct EnrollmentDropoffRow: Codable, Sendable {
+        let status: String
+        let notes: String?
+    }
+
+    /// Determine common dropoff reasons by querying cancelled/paused enrollments for a phase
+    /// Falls back to status-derived reasons if no notes are available
+    private func determineDropoffReasons(for phaseId: UUID, programId: UUID, droppedPatientIds: Set<UUID>) async -> [String] {
+        guard !droppedPatientIds.isEmpty else { return [] }
+        do {
+            let patientIdStrings = droppedPatientIds.map { $0.uuidString }
+
+            // Query program_enrollments for cancelled/paused enrollments with notes
+            let response = try await supabase.client
+                .from("program_enrollments")
+                .select("status, notes")
+                .in("patient_id", values: patientIdStrings)
+                .in("status", values: ["cancelled", "paused"])
+                .execute()
+
+            let decoder = JSONDecoder()
+            let rows = try decoder.decode([EnrollmentDropoffRow].self, from: response.data)
+
+            // Collect non-empty notes as reasons
+            var reasons: [String] = []
+            for row in rows {
+                if let notes = row.notes, !notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                    reasons.append(notes)
+                }
+            }
+
+            // If we found real notes, return unique reasons (up to 3)
+            if !reasons.isEmpty {
+                let uniqueReasons = Array(Set(reasons)).prefix(3)
+                return Array(uniqueReasons)
+            }
+
+            // Fall back to status-based summary when no notes exist
+            let cancelledCount = rows.filter { $0.status == "cancelled" }.count
+            let pausedCount = rows.filter { $0.status == "paused" }.count
+            var fallbackReasons: [String] = []
+            if cancelledCount > 0 {
+                fallbackReasons.append("Cancelled enrollment (\(cancelledCount))")
+            }
+            if pausedCount > 0 {
+                fallbackReasons.append("Paused enrollment (\(pausedCount))")
+            }
+            if fallbackReasons.isEmpty {
+                fallbackReasons.append("Did not complete phase sessions")
+            }
+            return fallbackReasons
+        } catch {
+            DebugLogger.shared.log("Failed to fetch dropoff reasons for phase \(phaseId): \(error)", level: .error)
+            return ["Unable to determine reason"]
         }
     }
 }
