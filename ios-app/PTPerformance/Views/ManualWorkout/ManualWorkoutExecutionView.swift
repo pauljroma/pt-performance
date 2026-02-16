@@ -144,12 +144,52 @@ class ManualWorkoutExecutionViewModel: ObservableObject {
     @Published var completedExerciseIds: Set<UUID> = []
     @Published var skippedExerciseIds: Set<UUID> = []
 
+    // MARK: - UI Presentation States (moved from View @State)
+
+    /// Track which exercises are expanded in the list
+    @Published var expandedExercises: Set<UUID> = []
+
+    // Exercise detail sheet
+    @Published var showExerciseDetail = false
+    @Published var selectedExerciseForDetail: ManualSessionExercise?
+
+    // AI substitution sheet
+    @Published var showAISubstitution = false
+    @Published var selectedExerciseForSubstitution: ManualSessionExercise?
+
+    // Add exercise sheet
+    @Published var showAddExercise = false
+
+    // Collapsible RPE/Pain section
+    @Published var showAdvancedOptions = false
+
+    // Rest timer state
+    @Published var showRestTimer = false
+    @Published var restDuration: TimeInterval = 90
+    @Published var restTimeRemaining: TimeInterval = 0
+
+    // Gesture hints
+    @Published var showGestureHints = false
+
+    // Progression suggestion
+    @Published var progressionSuggestion: ProgressionSuggestion?
+    @Published var showProgressionSuggestion = false
+
+    // Fatigue info alert
+    @Published var showFatigueInfo = false
+
     // MARK: - Private Properties
 
     private let service: ManualWorkoutService
     let patientId: UUID  // BUILD 260: Made internal for exercise picker
     private var timerCancellable: AnyCancellable?
     private var startTime: Date?
+    private var restTimer: Timer?
+
+    // Services for fatigue and progression
+    private let progressiveOverloadService = ProgressiveOverloadAIService()
+    private let fatigueService = FatigueTrackingService()
+    private let deloadService = DeloadRecommendationService()
 
     // BUILD 258: Support for prescribed sessions
     private var isPrescribedSession: Bool = false
@@ -709,6 +749,160 @@ class ManualWorkoutExecutionViewModel: ObservableObject {
         exercises.append(newExercise)
         DebugLogger.shared.log("➕ Added exercise: \(template.name)", level: .success)
     }
+
+    // MARK: - Rest Timer Management
+
+    /// Whether there are more exercises to complete
+    var hasMoreExercises: Bool {
+        completedCount < totalExercises
+    }
+
+    /// Start the rest timer after exercise completion
+    func startRestTimer() {
+        // Get rest duration from current exercise, default to 90 seconds
+        restDuration = TimeInterval(currentExercise?.restPeriodSeconds ?? 90)
+        restTimeRemaining = restDuration
+        showRestTimer = true
+
+        restTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
+            guard let self = self else { return }
+            Task { @MainActor in
+                if self.restTimeRemaining > 0 {
+                    self.restTimeRemaining -= 1
+                } else {
+                    self.endRestTimer()
+                }
+            }
+        }
+    }
+
+    /// End rest timer and advance to next exercise
+    func endRestTimer() {
+        restTimer?.invalidate()
+        restTimer = nil
+        showRestTimer = false
+
+        // Haptic feedback when rest ends
+        let generator = UINotificationFeedbackGenerator()
+        generator.notificationOccurred(.success)
+    }
+
+    /// Skip rest and advance immediately
+    func skipRest() {
+        restTimer?.invalidate()
+        restTimer = nil
+        showRestTimer = false
+    }
+
+    /// Adjust rest time on-the-fly
+    func adjustRestTime(_ adjustment: TimeInterval) {
+        restTimeRemaining = max(0, restTimeRemaining + adjustment)
+        restDuration = max(restDuration, restTimeRemaining)
+    }
+
+    /// Clean up rest timer resources
+    func cleanUpRestTimer() {
+        restTimer?.invalidate()
+        restTimer = nil
+    }
+
+    // MARK: - Fatigue & Progression
+
+    /// Load fatigue state for the patient
+    /// Checks for active deload period first, then falls back to fatigue accumulation
+    func loadFatigueState() async {
+        // First check if patient is in an active deload period
+        do {
+            if let activeDeload = try await deloadService.checkActiveDeload(), activeDeload.isActive {
+                // Use deload settings for adjustment
+                let adjustment = FatigueAdjustment.from(deload: activeDeload)
+                fatigueAdjustment = adjustment
+                applyFatigueAdjustment(adjustment)
+                DebugLogger.shared.info("FATIGUE", "Active deload period found - load: -\(Int(activeDeload.loadReductionPct * 100))%, volume: -\(Int(activeDeload.volumeReductionPct * 100))%")
+                return
+            }
+        } catch {
+            DebugLogger.shared.warning("FATIGUE", "Failed to check active deload: \(error.localizedDescription)")
+        }
+
+        // If no active deload, check fatigue accumulation
+        do {
+            try await fatigueService.fetchCurrentFatigue(patientId: patientId)
+            if let fatigue = fatigueService.currentFatigue {
+                let adjustment = FatigueAdjustment.from(fatigue: fatigue)
+                fatigueAdjustment = adjustment
+                applyFatigueAdjustment(adjustment)
+
+                if let adj = adjustment {
+                    DebugLogger.shared.info("FATIGUE", "Fatigue adjustment applied - band: \(fatigue.fatigueBand.displayName), load: -\(adj.loadReductionPercent)%")
+                }
+            }
+        } catch {
+            DebugLogger.shared.error("FATIGUE", "Failed to load fatigue state: \(error.localizedDescription)")
+        }
+    }
+
+    /// Request AI progression suggestion after completing a set
+    func onSetCompleted() {
+        guard let exercise = currentExercise,
+              let templateId = exercise.exerciseTemplateId else {
+            return
+        }
+
+        // Get current weight and reps from what was just logged
+        let currentLoad = actualLoad ?? exercise.targetLoad ?? 0
+        let currentReps = repsPerSet.first ?? Int(exercise.targetReps ?? "10") ?? 10
+
+        Task {
+            do {
+                let suggestion = try await progressiveOverloadService.getSuggestion(
+                    patientId: patientId,
+                    exerciseTemplateId: templateId,
+                    currentLoad: currentLoad,
+                    currentReps: currentReps,
+                    recentRPE: rpe
+                )
+
+                withAnimation(.easeIn(duration: 0.3)) {
+                    progressionSuggestion = suggestion
+                    showProgressionSuggestion = true
+                }
+            } catch {
+                DebugLogger.shared.error("PROGRESSION", "Failed to get suggestion: \(error.localizedDescription)")
+            }
+        }
+    }
+
+    /// Apply a progression suggestion to the current exercise inputs
+    func applyProgressionSuggestion(_ suggestion: ProgressionSuggestion) {
+        // Apply the suggested weight to all sets
+        for i in 0..<weightPerSet.count {
+            weightPerSet[i] = suggestion.nextLoad
+        }
+
+        // Apply suggested reps
+        for i in 0..<repsPerSet.count {
+            repsPerSet[i] = suggestion.nextReps
+        }
+
+        // Clear the suggestion after applying
+        withAnimation(.easeOut(duration: 0.2)) {
+            showProgressionSuggestion = false
+        }
+
+        HapticFeedback.success()
+    }
+
+    /// Adjust a base load value based on active deload or fatigue adjustment
+    func adjustedLoad(baseLoad: Double) -> Double {
+        if let activeDeload = deloadService.activeDeload, activeDeload.isActive {
+            return baseLoad * (1 - activeDeload.loadReductionPct)
+        }
+        if let adjustment = fatigueAdjustment, adjustment.isActive {
+            return adjustment.adjustedLoad(baseLoad)
+        }
+        return baseLoad
+    }
 }
 
 // MARK: - Gesture-Based Input Components
@@ -724,36 +918,9 @@ struct ManualWorkoutExecutionView: View {
     @Environment(\.colorScheme) private var colorScheme
     @EnvironmentObject var supabase: PTSupabaseClient  // BUILD 261: For exercise picker sheet
     // ACP-515: Removed showEndEarlyConfirmation - using undo pattern instead
-    @State private var expandedExercises: Set<UUID> = []  // BUILD 216: Track expanded exercises
     let onComplete: (() -> Void)?
 
-    // BUILD 260: Exercise detail, AI substitution, and add exercise
-    @State private var showExerciseDetail = false
-    @State private var selectedExerciseForDetail: ManualSessionExercise?
-    @State private var showAISubstitution = false
-    @State private var selectedExerciseForSubstitution: ManualSessionExercise?
-    @State private var showAddExercise = false
-
-    // BUILD 309: Collapsible RPE/Pain section - hidden by default for simplified logging
-    @State private var showAdvancedOptions = false
-
-    // Auto-Start Rest Timer state
-    @State private var showRestTimer = false
-    @State private var restDuration: TimeInterval = 90  // Default 90 seconds
-    @State private var restTimeRemaining: TimeInterval = 0
-    @State private var restTimer: Timer?
-
-    // Gesture hints state
-    @State private var showGestureHints = false
-
-    // Fatigue and progression state
-    @State private var fatigueAdjustment: FatigueAdjustment?
-    @State private var progressionSuggestion: ProgressionSuggestion?
-    @State private var showProgressionSuggestion = false
-    @State private var showFatigueInfo = false
-    @StateObject private var progressiveOverloadService = ProgressiveOverloadAIService()
-    @StateObject private var fatigueService = FatigueTrackingService()
-    @StateObject private var deloadService = DeloadRecommendationService()
+    // All @State properties, services, and business logic have been moved to ManualWorkoutExecutionViewModel
 
     init(session: ManualSession, exercises: [ManualSessionExercise], patientId: UUID, onComplete: (() -> Void)? = nil) {
         _viewModel = StateObject(wrappedValue: ManualWorkoutExecutionViewModel(
@@ -855,7 +1022,7 @@ struct ManualWorkoutExecutionView: View {
                 DebugLogger.shared.log("After load, exercise count: \(viewModel.exercises.count)", level: .diagnostic)
 
                 // Load fatigue state for adjustments banner
-                await loadFatigueState()
+                await viewModel.loadFatigueState()
 
                 // Start the timer
                 viewModel.startTimer()
@@ -886,22 +1053,22 @@ struct ManualWorkoutExecutionView: View {
                 Text("Great job! You've completed all exercises.")
             }
             // BUILD 285: Exercise detail sheet with video + technique cues
-            .sheet(isPresented: $showExerciseDetail) {
-                if let exercise = selectedExerciseForDetail {
+            .sheet(isPresented: $viewModel.showExerciseDetail) {
+                if let exercise = viewModel.selectedExerciseForDetail {
                     ExerciseInfoSheet(exercise: exercise)
                         .environmentObject(supabase)
                 }
             }
             // BUILD 285: AI substitution sheet with real alternative lookup
-            .sheet(isPresented: $showAISubstitution) {
-                if let exercise = selectedExerciseForSubstitution {
+            .sheet(isPresented: $viewModel.showAISubstitution) {
+                if let exercise = viewModel.selectedExerciseForSubstitution {
                     NavigationStack {
                         AISubstitutionSheetForManual(
                             exercise: exercise,
                             patientId: viewModel.patientId,
                             onSubstitutionApplied: { newExercise in
                                 viewModel.replaceExercise(exercise, with: newExercise)
-                                showAISubstitution = false
+                                viewModel.showAISubstitution = false
                             }
                         )
                     }
@@ -909,12 +1076,12 @@ struct ManualWorkoutExecutionView: View {
                 }
             }
             // BUILD 260: Add exercise sheet
-            .sheet(isPresented: $showAddExercise) {
+            .sheet(isPresented: $viewModel.showAddExercise) {
                 NavigationStack {
                     ExercisePickerForWorkout(
                         onExerciseSelected: { template in
                             viewModel.addExerciseFromTemplate(template)
-                            showAddExercise = false
+                            viewModel.showAddExercise = false
                         }
                     )
                 }
@@ -926,8 +1093,7 @@ struct ManualWorkoutExecutionView: View {
             .onDisappear {
                 viewModel.stopTimer()
                 // Clean up rest timer
-                restTimer?.invalidate()
-                restTimer = nil
+                viewModel.cleanUpRestTimer()
             }
             // ACP-515: Add undo toast overlay for immediate actions
             .withUndoToasts()
@@ -941,7 +1107,7 @@ struct ManualWorkoutExecutionView: View {
         ScrollView {
             VStack(spacing: 20) {
                 // Fatigue Adjustment Banner (when active)
-                if let adjustment = fatigueAdjustment, adjustment.isActive {
+                if let adjustment = viewModel.fatigueAdjustment, adjustment.isActive {
                     fatigueAdjustmentBanner(adjustment)
                 }
 
@@ -949,7 +1115,7 @@ struct ManualWorkoutExecutionView: View {
                 progressHeader
 
                 // AI Progression Suggestion (after completing a set)
-                if showProgressionSuggestion, let suggestion = progressionSuggestion {
+                if viewModel.showProgressionSuggestion, let suggestion = viewModel.progressionSuggestion {
                     progressionSuggestionCard(suggestion)
                 }
 
@@ -974,12 +1140,12 @@ struct ManualWorkoutExecutionView: View {
         }
         // Rest Timer Overlay - shows after completing an exercise
         .overlay {
-            if showRestTimer {
+            if viewModel.showRestTimer {
                 RestTimerOverlay(
-                    timeRemaining: restTimeRemaining,
-                    totalTime: restDuration,
-                    onSkip: skipRest,
-                    onAdjust: adjustRestTime,
+                    timeRemaining: viewModel.restTimeRemaining,
+                    totalTime: viewModel.restDuration,
+                    onSkip: { viewModel.skipRest() },
+                    onAdjust: { viewModel.adjustRestTime($0) },
                     exerciseCategory: viewModel.currentExercise?.blockName
                 )
                 .transition(.move(edge: .bottom).combined(with: .opacity))
@@ -987,7 +1153,7 @@ struct ManualWorkoutExecutionView: View {
         }
         // BUILD 320: Gesture hints overlay
         .overlay {
-            GestureHintOverlay(isVisible: $showGestureHints)
+            GestureHintOverlay(isVisible: $viewModel.showGestureHints)
         }
     }
 
@@ -1034,7 +1200,7 @@ struct ManualWorkoutExecutionView: View {
 
                 // Info button
                 Button {
-                    showFatigueInfo = true
+                    viewModel.showFatigueInfo = true
                 } label: {
                     Image(systemName: "info.circle")
                         .font(.title3)
@@ -1050,7 +1216,7 @@ struct ManualWorkoutExecutionView: View {
             RoundedRectangle(cornerRadius: 12)
                 .stroke(Color.orange.opacity(0.3), lineWidth: 1)
         )
-        .alert("Recovery Adjustment", isPresented: $showFatigueInfo) {
+        .alert("Recovery Adjustment", isPresented: $viewModel.showFatigueInfo) {
             Button("OK", role: .cancel) { }
         } message: {
             Text(adjustment.reason)
@@ -1062,47 +1228,13 @@ struct ManualWorkoutExecutionView: View {
     private func progressionSuggestionCard(_ suggestion: ProgressionSuggestion) -> some View {
         ProgressionSuggestionCard(
             suggestion: suggestion,
-            onApply: { applyProgressionSuggestion(suggestion) },
+            onApply: { viewModel.applyProgressionSuggestion(suggestion) },
             onDismiss: {
                 withAnimation(.easeOut(duration: 0.2)) {
-                    showProgressionSuggestion = false
+                    viewModel.showProgressionSuggestion = false
                 }
             }
         )
-    }
-
-    private func applyProgressionSuggestion(_ suggestion: ProgressionSuggestion) {
-        // Apply the suggested weight to all sets
-        for i in 0..<viewModel.weightPerSet.count {
-            viewModel.weightPerSet[i] = suggestion.nextLoad
-        }
-
-        // Apply suggested reps
-        for i in 0..<viewModel.repsPerSet.count {
-            viewModel.repsPerSet[i] = suggestion.nextReps
-        }
-
-        // Clear the suggestion after applying
-        withAnimation(.easeOut(duration: 0.2)) {
-            showProgressionSuggestion = false
-        }
-
-        HapticFeedback.success()
-    }
-
-    // MARK: - Load Adjustment Helper
-
-    /// Adjust a base load value based on active deload or fatigue adjustment
-    /// - Parameter baseLoad: The original prescribed load
-    /// - Returns: The adjusted load accounting for any active deload/fatigue reduction
-    private func adjustedLoad(baseLoad: Double) -> Double {
-        if let activeDeload = deloadService.activeDeload, activeDeload.isActive {
-            return baseLoad * (1 - activeDeload.loadReductionPct)
-        }
-        if let adjustment = fatigueAdjustment, adjustment.isActive {
-            return adjustment.adjustedLoad(baseLoad)
-        }
-        return baseLoad
     }
 
     // MARK: - Progress Header
@@ -1183,7 +1315,7 @@ struct ManualWorkoutExecutionView: View {
         let isCompleted = viewModel.completedExerciseIds.contains(exercise.id)
         let isSkipped = viewModel.skippedExerciseIds.contains(exercise.id)
         let isCurrent = viewModel.currentExercise?.id == exercise.id
-        let isExpanded = expandedExercises.contains(exercise.id)
+        let isExpanded = viewModel.expandedExercises.contains(exercise.id)
 
         return SwipeableExerciseRow(
             exercise: exercise,
@@ -1192,8 +1324,8 @@ struct ManualWorkoutExecutionView: View {
             onComplete: {
                 Task {
                     await viewModel.quickCompleteExercise(exercise)
-                    if hasMoreExercises {
-                        startRestTimer()
+                    if viewModel.hasMoreExercises {
+                        viewModel.startRestTimer()
                     }
                 }
             },
@@ -1214,10 +1346,10 @@ struct ManualWorkoutExecutionView: View {
             // Header row (always visible)
             Button {
                 withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                    if expandedExercises.contains(exercise.id) {
-                        expandedExercises.remove(exercise.id)
+                    if viewModel.expandedExercises.contains(exercise.id) {
+                        viewModel.expandedExercises.remove(exercise.id)
                     } else {
-                        expandedExercises.insert(exercise.id)
+                        viewModel.expandedExercises.insert(exercise.id)
                         // Also select as current exercise
                         if !isCompleted && !isSkipped {
                             viewModel.selectExercise(exercise)
@@ -1309,11 +1441,11 @@ struct ManualWorkoutExecutionView: View {
                         Task {
                             await viewModel.quickCompleteExercise(exercise)
                             _ = withAnimation {
-                                expandedExercises.remove(exercise.id)
+                                viewModel.expandedExercises.remove(exercise.id)
                             }
                             // Auto-start rest timer if there are more exercises
-                            if hasMoreExercises {
-                                startRestTimer()
+                            if viewModel.hasMoreExercises {
+                                viewModel.startRestTimer()
                             }
                         }
                     } label: {
@@ -1357,7 +1489,7 @@ struct ManualWorkoutExecutionView: View {
                     Button {
                         viewModel.skipExercise(exercise)
                         _ = withAnimation {
-                            expandedExercises.remove(exercise.id)
+                            viewModel.expandedExercises.remove(exercise.id)
                         }
 
                         // Register undo action
@@ -1431,8 +1563,8 @@ struct ManualWorkoutExecutionView: View {
                 HStack(spacing: 12) {
                     // Exercise info button
                     Button {
-                        selectedExerciseForDetail = exercise
-                        showExerciseDetail = true
+                        viewModel.selectedExerciseForDetail = exercise
+                        viewModel.showExerciseDetail = true
                     } label: {
                         Image(systemName: "info.circle")
                             .font(.title2)
@@ -1443,8 +1575,8 @@ struct ManualWorkoutExecutionView: View {
 
                     // AI substitute button
                     Button {
-                        selectedExerciseForSubstitution = exercise
-                        showAISubstitution = true
+                        viewModel.selectedExerciseForSubstitution = exercise
+                        viewModel.showAISubstitution = true
                     } label: {
                         Image(systemName: "arrow.triangle.swap")
                             .font(.title2)
@@ -1455,7 +1587,7 @@ struct ManualWorkoutExecutionView: View {
 
                     // Add exercise button
                     Button {
-                        showAddExercise = true
+                        viewModel.showAddExercise = true
                     } label: {
                         Image(systemName: "plus.circle")
                             .font(.title2)
@@ -1494,7 +1626,7 @@ struct ManualWorkoutExecutionView: View {
                         // Gesture hint button
                         Button {
                             withAnimation(.easeIn(duration: 0.2)) {
-                                showGestureHints = true
+                                viewModel.showGestureHints = true
                             }
                         } label: {
                             Image(systemName: "questionmark.circle")
@@ -1553,7 +1685,7 @@ struct ManualWorkoutExecutionView: View {
 
             // BUILD 309: Collapsible RPE/Pain section - hidden by default for simplified logging
             DisclosureGroup(
-                isExpanded: $showAdvancedOptions,
+                isExpanded: $viewModel.showAdvancedOptions,
                 content: {
                     VStack(spacing: 16) {
                         // RPE Slider
@@ -1632,7 +1764,7 @@ struct ManualWorkoutExecutionView: View {
                             .font(.subheadline)
                             .fontWeight(.medium)
                         Spacer()
-                        if !showAdvancedOptions {
+                        if !viewModel.showAdvancedOptions {
                             Text("RPE: \(Int(viewModel.rpe)) | Pain: \(Int(viewModel.painScore))")
                                 .font(.caption)
                                 .foregroundColor(.secondary)
@@ -1674,10 +1806,10 @@ struct ManualWorkoutExecutionView: View {
                 Task {
                     await viewModel.completeCurrentExercise()
                     // Request AI progression suggestion for next exercise
-                    onSetCompleted()
+                    viewModel.onSetCompleted()
                     // Auto-start rest timer if there are more exercises
-                    if hasMoreExercises {
-                        startRestTimer()
+                    if viewModel.hasMoreExercises {
+                        viewModel.startRestTimer()
                     }
                 }
             } label: {
@@ -1785,125 +1917,6 @@ struct ManualWorkoutExecutionView: View {
             averagePain: viewModel.averagePain,
             onDismiss: { dismiss() }
         )
-    }
-
-    // MARK: - Fatigue & Progression Helpers
-
-    /// Load fatigue state for the patient
-    /// Checks for active deload period first, then falls back to fatigue accumulation
-    private func loadFatigueState() async {
-        // First check if patient is in an active deload period
-        do {
-            if let activeDeload = try await deloadService.checkActiveDeload(), activeDeload.isActive {
-                // Use deload settings for adjustment
-                let adjustment = FatigueAdjustment.from(deload: activeDeload)
-                fatigueAdjustment = adjustment
-                viewModel.applyFatigueAdjustment(adjustment)
-                DebugLogger.shared.info("FATIGUE", "Active deload period found - load: -\(Int(activeDeload.loadReductionPct * 100))%, volume: -\(Int(activeDeload.volumeReductionPct * 100))%")
-                return
-            }
-        } catch {
-            DebugLogger.shared.warning("FATIGUE", "Failed to check active deload: \(error.localizedDescription)")
-        }
-
-        // If no active deload, check fatigue accumulation
-        do {
-            try await fatigueService.fetchCurrentFatigue(patientId: viewModel.patientId)
-            if let fatigue = fatigueService.currentFatigue {
-                let adjustment = FatigueAdjustment.from(fatigue: fatigue)
-                fatigueAdjustment = adjustment
-                // Apply to viewModel so it adjusts weights automatically
-                viewModel.applyFatigueAdjustment(adjustment)
-
-                if let adj = adjustment {
-                    DebugLogger.shared.info("FATIGUE", "Fatigue adjustment applied - band: \(fatigue.fatigueBand.displayName), load: -\(adj.loadReductionPercent)%")
-                }
-            }
-        } catch {
-            DebugLogger.shared.error("FATIGUE", "Failed to load fatigue state: \(error.localizedDescription)")
-        }
-    }
-
-    /// Request AI progression suggestion after completing a set
-    private func onSetCompleted() {
-        guard let exercise = viewModel.currentExercise,
-              let templateId = exercise.exerciseTemplateId else {
-            return
-        }
-
-        // Get current weight and reps from what was just logged
-        let currentLoad = viewModel.actualLoad ?? exercise.targetLoad ?? 0
-        let currentReps = viewModel.repsPerSet.first ?? Int(exercise.targetReps ?? "10") ?? 10
-
-        Task {
-            do {
-                let suggestion = try await progressiveOverloadService.getSuggestion(
-                    patientId: viewModel.patientId,
-                    exerciseTemplateId: templateId,
-                    currentLoad: currentLoad,
-                    currentReps: currentReps,
-                    recentRPE: viewModel.rpe
-                )
-
-                await MainActor.run {
-                    withAnimation(.easeIn(duration: 0.3)) {
-                        progressionSuggestion = suggestion
-                        showProgressionSuggestion = true
-                    }
-                }
-            } catch {
-                DebugLogger.shared.error("PROGRESSION", "Failed to get suggestion: \(error.localizedDescription)")
-            }
-        }
-    }
-
-    // MARK: - Rest Timer Methods
-
-    /// Start the rest timer after exercise completion
-    private func startRestTimer() {
-        // Get rest duration from current exercise, default to 90 seconds
-        restDuration = TimeInterval(viewModel.currentExercise?.restPeriodSeconds ?? 90)
-        restTimeRemaining = restDuration
-        showRestTimer = true
-
-        restTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { _ in
-            if restTimeRemaining > 0 {
-                restTimeRemaining -= 1
-            } else {
-                endRestTimer()
-            }
-        }
-    }
-
-    /// End rest timer and advance to next exercise
-    private func endRestTimer() {
-        restTimer?.invalidate()
-        restTimer = nil
-        showRestTimer = false
-
-        // Haptic feedback when rest ends
-        let generator = UINotificationFeedbackGenerator()
-        generator.notificationOccurred(.success)
-
-        // Auto-advance to next exercise (already handled by completeCurrentExercise -> moveToNextExercise)
-    }
-
-    /// Skip rest and advance immediately
-    private func skipRest() {
-        restTimer?.invalidate()
-        restTimer = nil
-        showRestTimer = false
-    }
-
-    /// Adjust rest time on-the-fly
-    private func adjustRestTime(_ adjustment: TimeInterval) {
-        restTimeRemaining = max(0, restTimeRemaining + adjustment)
-        restDuration = max(restDuration, restTimeRemaining) // Ensure totalTime reflects adjustment
-    }
-
-    /// Check if there are more exercises to complete
-    private var hasMoreExercises: Bool {
-        viewModel.completedCount < viewModel.totalExercises
     }
 
     // MARK: - Color Helpers

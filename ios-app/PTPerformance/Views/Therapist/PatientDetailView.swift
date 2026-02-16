@@ -1,22 +1,45 @@
 import SwiftUI
 
+// MARK: - Sheet Type Enum
+
+enum PatientDetailSheetType: Identifiable {
+    case programViewer
+    case addNote
+    case progressReport
+    case prescribeWorkout
+    case reportBuilder
+    case intakeAssessment
+    case soapNote
+    case assessmentHistory
+    case weeklyReports
+    case generateWeeklyReport
+    case programProgress
+    case modeSwitching
+
+    var id: String {
+        switch self {
+        case .programViewer: return "programViewer"
+        case .addNote: return "addNote"
+        case .progressReport: return "progressReport"
+        case .prescribeWorkout: return "prescribeWorkout"
+        case .reportBuilder: return "reportBuilder"
+        case .intakeAssessment: return "intakeAssessment"
+        case .soapNote: return "soapNote"
+        case .assessmentHistory: return "assessmentHistory"
+        case .weeklyReports: return "weeklyReports"
+        case .generateWeeklyReport: return "generateWeeklyReport"
+        case .programProgress: return "programProgress"
+        case .modeSwitching: return "modeSwitching"
+        }
+    }
+}
+
 /// Patient detail view for therapists
 struct PatientDetailView: View {
     let patient: Patient
 
     @StateObject private var viewModel: PatientDetailViewModel
-    @State private var showProgramViewer = false
-    @State private var showAddNote = false
-    @State private var showProgressReport = false
-    @State private var showPrescribeWorkout = false
-    @State private var showReportBuilder = false
-    @State private var showIntakeAssessment = false
-    @State private var showSOAPNote = false
-    @State private var showAssessmentHistory = false
-    @State private var showWeeklyReports = false
-    @State private var showGenerateWeeklyReport = false
-    @State private var showProgramProgress = false
-    @State private var showModeSwitching = false
+    @State private var activeSheet: PatientDetailSheetType?
     @State private var quickReportError: String?
     @State private var showQuickReportError = false
     @Environment(\.horizontalSizeClass) var horizontalSizeClass
@@ -110,13 +133,13 @@ struct PatientDetailView: View {
 
                     // Quick actions
                     QuickActionsCard(
-                        onViewProgram: { showProgramViewer = true },
-                        onAddNote: { showAddNote = true },
-                        onPrescribeWorkout: { showPrescribeWorkout = true },
-                        onGenerateReport: { showReportBuilder = true },
-                        onNewAssessment: { showIntakeAssessment = true },
-                        onNewSOAPNote: { showSOAPNote = true },
-                        onProgramProgress: { showProgramProgress = true }
+                        onViewProgram: { activeSheet = .programViewer },
+                        onAddNote: { activeSheet = .addNote },
+                        onPrescribeWorkout: { activeSheet = .prescribeWorkout },
+                        onGenerateReport: { activeSheet = .reportBuilder },
+                        onNewAssessment: { activeSheet = .intakeAssessment },
+                        onNewSOAPNote: { activeSheet = .soapNote },
+                        onProgramProgress: { activeSheet = .programProgress }
                     )
                 }
             }
@@ -133,13 +156,13 @@ struct PatientDetailView: View {
                 Menu {
                     // Weekly Reports Section
                     Button {
-                        showWeeklyReports = true
+                        activeSheet = .weeklyReports
                     } label: {
                         Label("Weekly Reports", systemImage: "calendar.badge.clock")
                     }
 
                     Button {
-                        showGenerateWeeklyReport = true
+                        activeSheet = .generateWeeklyReport
                     } label: {
                         Label("Generate Weekly Report", systemImage: "plus.rectangle.on.folder")
                     }
@@ -147,19 +170,19 @@ struct PatientDetailView: View {
                     Divider()
 
                     Button {
-                        showReportBuilder = true
+                        activeSheet = .reportBuilder
                     } label: {
                         Label("Generate PDF Report", systemImage: "doc.text.fill")
                     }
 
                     Button {
-                        showProgressReport = true
+                        activeSheet = .progressReport
                     } label: {
                         Label("View Progress Summary", systemImage: "chart.line.uptrend.xyaxis")
                     }
 
                     Button {
-                        showProgramProgress = true
+                        activeSheet = .programProgress
                     } label: {
                         Label("Program Progress", systemImage: "chart.bar.doc.horizontal")
                     }
@@ -168,7 +191,7 @@ struct PatientDetailView: View {
 
                     // Mode Management
                     Button {
-                        showModeSwitching = true
+                        activeSheet = .modeSwitching
                     } label: {
                         Label("Change Patient Mode", systemImage: "switch.2")
                     }
@@ -177,19 +200,19 @@ struct PatientDetailView: View {
 
                     // Clinical Documentation
                     Button {
-                        showIntakeAssessment = true
+                        activeSheet = .intakeAssessment
                     } label: {
                         Label("New Clinical Assessment", systemImage: "list.clipboard")
                     }
 
                     Button {
-                        showSOAPNote = true
+                        activeSheet = .soapNote
                     } label: {
                         Label("New SOAP Note", systemImage: "doc.text")
                     }
 
                     Button {
-                        showAssessmentHistory = true
+                        activeSheet = .assessmentHistory
                     } label: {
                         Label("Assessment History", systemImage: "chart.xyaxis.line")
                     }
@@ -217,99 +240,102 @@ struct PatientDetailView: View {
         .task {
             await viewModel.fetchData(for: patient.id.uuidString)
         }
-        .sheet(isPresented: $showProgramViewer) {
-            NavigationStack {
-                ProgramViewerView(patientId: patient.id.uuidString)
-            }
-        }
-        .sheet(isPresented: $showAddNote) {
-            NavigationStack {
-                NotesView(patientId: patient.id.uuidString)
-            }
-        }
-        .sheet(isPresented: $showProgressReport) {
-            NavigationStack {
-                PatientProgressReportView(patient: patient)
-            }
-        }
-        .sheet(isPresented: $showPrescribeWorkout) {
-            PrescribeWorkoutSheet(
-                patient: patient,
-                therapistId: PTSupabaseClient.shared.userId ?? "",
-                onDismiss: {}
-            )
-        }
-        .sheet(isPresented: $showReportBuilder) {
-            ReportBuilderView(patient: patient)
-        }
-        .sheet(isPresented: $showIntakeAssessment) {
-            NavigationStack {
-                if let therapistIdString = PTSupabaseClient.shared.userId,
-                   let therapistUUID = UUID(uuidString: therapistIdString) {
-                    IntakeAssessmentView(
-                        patientId: patient.id,
-                        therapistId: therapistUUID
-                    )
-                } else {
-                    Text("Unable to load assessment. Please sign in again.")
-                        .foregroundColor(.secondary)
-                        .padding()
+        .sheet(item: $activeSheet) { sheet in
+            switch sheet {
+            case .programViewer:
+                NavigationStack {
+                    ProgramViewerView(patientId: patient.id.uuidString)
                 }
-            }
-        }
-        .sheet(isPresented: $showSOAPNote) {
-            NavigationStack {
-                SOAPNoteEditorView(patientId: patient.id.uuidString, sessionId: nil)
-            }
-        }
-        .sheet(isPresented: $showAssessmentHistory) {
-            NavigationStack {
-                AssessmentHistoryView(patientId: patient.id, patientName: patient.fullName)
-            }
-        }
-        .sheet(isPresented: $showWeeklyReports) {
-            NavigationStack {
-                ReportHistoryView(patient: patient)
+
+            case .addNote:
+                NavigationStack {
+                    NotesView(patientId: patient.id.uuidString)
+                }
+
+            case .progressReport:
+                NavigationStack {
+                    PatientProgressReportView(patient: patient)
+                }
+
+            case .prescribeWorkout:
+                PrescribeWorkoutSheet(
+                    patient: patient,
+                    therapistId: PTSupabaseClient.shared.userId ?? "",
+                    onDismiss: {}
+                )
+
+            case .reportBuilder:
+                ReportBuilderView(patient: patient)
+
+            case .intakeAssessment:
+                NavigationStack {
+                    if let therapistIdString = PTSupabaseClient.shared.userId,
+                       let therapistUUID = UUID(uuidString: therapistIdString) {
+                        IntakeAssessmentView(
+                            patientId: patient.id,
+                            therapistId: therapistUUID
+                        )
+                    } else {
+                        Text("Unable to load assessment. Please sign in again.")
+                            .foregroundColor(.secondary)
+                            .padding()
+                    }
+                }
+
+            case .soapNote:
+                NavigationStack {
+                    SOAPNoteEditorView(patientId: patient.id.uuidString, sessionId: nil)
+                }
+
+            case .assessmentHistory:
+                NavigationStack {
+                    AssessmentHistoryView(patientId: patient.id, patientName: patient.fullName)
+                }
+
+            case .weeklyReports:
+                NavigationStack {
+                    ReportHistoryView(patient: patient)
+                        .toolbar {
+                            ToolbarItem(placement: .navigationBarLeading) {
+                                Button("Close") {
+                                    activeSheet = nil
+                                }
+                            }
+                        }
+                }
+
+            case .generateWeeklyReport:
+                NavigationStack {
+                    GenerateWeeklyReportSheet(patient: patient, onDismiss: {
+                        activeSheet = nil
+                    })
+                }
+
+            case .programProgress:
+                NavigationStack {
+                    PatientProgramProgressView(patient: patient)
+                        .toolbar {
+                            ToolbarItem(placement: .navigationBarLeading) {
+                                Button("Close") {
+                                    activeSheet = nil
+                                }
+                            }
+                        }
+                }
+
+            case .modeSwitching:
+                NavigationStack {
+                    ScrollView {
+                        ModeSwitchingPanel(patientId: patient.id.uuidString)
+                            .padding()
+                    }
+                    .navigationTitle("Patient Mode")
+                    .navigationBarTitleDisplayMode(.inline)
                     .toolbar {
                         ToolbarItem(placement: .navigationBarLeading) {
                             Button("Close") {
-                                showWeeklyReports = false
+                                activeSheet = nil
                             }
-                        }
-                    }
-            }
-        }
-        .sheet(isPresented: $showGenerateWeeklyReport) {
-            NavigationStack {
-                GenerateWeeklyReportSheet(patient: patient, onDismiss: {
-                    showGenerateWeeklyReport = false
-                })
-            }
-        }
-        .sheet(isPresented: $showProgramProgress) {
-            NavigationStack {
-                PatientProgramProgressView(patient: patient)
-                    .toolbar {
-                        ToolbarItem(placement: .navigationBarLeading) {
-                            Button("Close") {
-                                showProgramProgress = false
-                            }
-                        }
-                    }
-            }
-        }
-        .sheet(isPresented: $showModeSwitching) {
-            NavigationStack {
-                ScrollView {
-                    ModeSwitchingPanel(patientId: patient.id.uuidString)
-                        .padding()
-                }
-                .navigationTitle("Patient Mode")
-                .navigationBarTitleDisplayMode(.inline)
-                .toolbar {
-                    ToolbarItem(placement: .navigationBarLeading) {
-                        Button("Close") {
-                            showModeSwitching = false
                         }
                     }
                 }
@@ -332,7 +358,7 @@ struct PatientDetailView: View {
                     patient: patient
                 )
                 // Show report builder after successful generation
-                showReportBuilder = true
+                activeSheet = .reportBuilder
             } catch {
                 DebugLogger.shared.log("[PatientDetailView] Quick report generation failed: \(error.localizedDescription)", level: .error)
                 await MainActor.run {

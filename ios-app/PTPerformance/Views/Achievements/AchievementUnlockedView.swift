@@ -9,274 +9,51 @@
 
 import SwiftUI
 
-// MARK: - Achievement Unlocked View
+// MARK: - Achievement Animation Controller
 
-/// Full-screen celebration when an achievement is unlocked
-struct AchievementUnlockedView: View {
+/// Manages all animation state and sequencing for the achievement unlock celebration.
+/// Extracted from AchievementUnlockedView to reduce @State property explosion.
+@MainActor
+final class AchievementAnimationController: ObservableObject {
+
+    // MARK: - Configuration
+
     let event: AchievementUnlockEvent
-    let onDismiss: () -> Void
-    var onShare: (() -> Void)?
 
-    @State private var showBadge = false
-    @State private var badgeScale: CGFloat = 0.1
-    @State private var badgeRotation: Double = -30
-    @State private var ringScale: CGFloat = 0.5
-    @State private var ringOpacity: Double = 0
-    @State private var secondRingScale: CGFloat = 0.5
-    @State private var secondRingOpacity: Double = 0
-    @State private var thirdRingScale: CGFloat = 0.5
-    @State private var thirdRingOpacity: Double = 0
-    @State private var textOpacity: Double = 0
-    @State private var buttonsOpacity: Double = 0
-    @State private var sparkles: [SparkleParticle] = []
-    @State private var showConfetti = false
-    @State private var glowPulse = false
-
-    private var achievement: AchievementDefinition { event.achievement }
+    var achievement: AchievementDefinition { event.achievement }
 
     /// Whether this is a major achievement (gold tier or higher) that deserves confetti
-    private var isMajorAchievement: Bool {
-        achievement.tier >= .gold
-    }
+    var isMajorAchievement: Bool { achievement.tier >= .gold }
 
-    var body: some View {
-        ZStack {
-            // Background
-            backgroundGradient
+    // MARK: - Badge Animation State
 
-            // Confetti for major achievements
-            if showConfetti && isMajorAchievement {
-                AchievementConfettiView(
-                    colors: confettiColors,
-                    particleCount: confettiCount
-                )
-                .ignoresSafeArea()
-            }
+    @Published var showBadge = false
+    @Published var badgeScale: CGFloat = 0.1
+    @Published var badgeRotation: Double = -30
 
-            // Sparkle particles
-            ForEach(sparkles) { sparkle in
-                SparkleView(sparkle: sparkle)
-            }
+    // MARK: - Ring Animation State
 
-            // Main content
-            VStack(spacing: Spacing.xl) {
-                Spacer()
+    @Published var ringScale: CGFloat = 0.5
+    @Published var ringOpacity: Double = 0
+    @Published var secondRingScale: CGFloat = 0.5
+    @Published var secondRingOpacity: Double = 0
+    @Published var thirdRingScale: CGFloat = 0.5
+    @Published var thirdRingOpacity: Double = 0
 
-                // "Achievement Unlocked" header
-                Text("ACHIEVEMENT UNLOCKED")
-                    .font(.caption)
-                    .fontWeight(.bold)
-                    .tracking(4)
-                    .foregroundColor(achievement.tier.color.opacity(0.8))
-                    .opacity(textOpacity)
-                    .accessibilityAddTraits(.isHeader)
+    // MARK: - Content Animation State
 
-                // Badge with multi-ring glow
-                ZStack {
-                    // Third outer glow ring (for platinum/diamond)
-                    if achievement.tier >= .platinum {
-                        Circle()
-                            .stroke(achievement.tier.glowColor.opacity(0.3), lineWidth: 2)
-                            .frame(width: 220, height: 220)
-                            .scaleEffect(thirdRingScale)
-                            .opacity(thirdRingOpacity)
-                    }
+    @Published var textOpacity: Double = 0
+    @Published var buttonsOpacity: Double = 0
+    @Published var showConfetti = false
+    @Published var glowPulse = false
 
-                    // Second outer glow ring (for gold+)
-                    if achievement.tier >= .gold {
-                        Circle()
-                            .stroke(achievement.tier.glowColor.opacity(0.5), lineWidth: 2)
-                            .frame(width: 200, height: 200)
-                            .scaleEffect(secondRingScale)
-                            .opacity(secondRingOpacity)
-                    }
+    // MARK: - Particle State
 
-                    // Primary outer glow ring
-                    Circle()
-                        .stroke(achievement.tier.glowColor, lineWidth: 3)
-                        .frame(width: 180, height: 180)
-                        .scaleEffect(ringScale)
-                        .opacity(ringOpacity)
-
-                    // Animated inner glow
-                    Circle()
-                        .fill(
-                            RadialGradient(
-                                colors: [achievement.tier.color.opacity(glowPulse ? 0.5 : 0.3), Color.clear],
-                                center: .center,
-                                startRadius: 30,
-                                endRadius: glowPulse ? 120 : 100
-                            )
-                        )
-                        .frame(width: 200, height: 200)
-                        .opacity(showBadge ? 1 : 0)
-
-                    // Badge background with enhanced shadow
-                    Circle()
-                        .fill(
-                            LinearGradient(
-                                colors: [
-                                    achievement.tier.color,
-                                    achievement.tier.color.opacity(0.7)
-                                ],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
-                        )
-                        .frame(width: 140, height: 140)
-                        .overlay(
-                            Circle()
-                                .stroke(
-                                    LinearGradient(
-                                        colors: [Color.white.opacity(0.5), Color.white.opacity(0.1)],
-                                        startPoint: .topLeading,
-                                        endPoint: .bottomTrailing
-                                    ),
-                                    lineWidth: 2
-                                )
-                        )
-                        .shadow(color: achievement.tier.glowColor, radius: glowPulse ? 25 : 20)
-                        .shadow(color: achievement.tier.glowColor.opacity(0.5), radius: 40)
-                        .scaleEffect(badgeScale)
-                        .rotationEffect(.degrees(badgeRotation))
-
-                    // Achievement icon with subtle bounce
-                    Image(systemName: achievement.iconName)
-                        .font(.system(size: 60))
-                        .foregroundColor(.white)
-                        .shadow(color: Color(.systemGray4).opacity(0.3), radius: 5)
-                        .scaleEffect(badgeScale * (glowPulse ? 1.05 : 1.0))
-                        .rotationEffect(.degrees(badgeRotation))
-                }
-                .accessibilityElement(children: .ignore)
-                .accessibilityLabel("\(achievement.tier.displayName) tier badge")
-
-                // Tier badge
-                Text(achievement.tier.displayName.uppercased())
-                    .font(.caption)
-                    .fontWeight(.bold)
-                    .foregroundColor(achievement.tier.color)
-                    .padding(.horizontal, Spacing.md)
-                    .padding(.vertical, Spacing.xxs)
-                    .background(
-                        Capsule()
-                            .fill(achievement.tier.color.opacity(0.2))
-                    )
-                    .opacity(textOpacity)
-
-                // Achievement info
-                VStack(spacing: Spacing.sm) {
-                    Text(achievement.title)
-                        .font(.title)
-                        .fontWeight(.bold)
-                        .foregroundColor(.white)
-                        .multilineTextAlignment(.center)
-
-                    Text(achievement.description)
-                        .font(.body)
-                        .foregroundColor(.white.opacity(0.8))
-                        .multilineTextAlignment(.center)
-                        .padding(.horizontal, Spacing.xl)
-
-                    // Points earned with animated appearance
-                    HStack(spacing: Spacing.xs) {
-                        Image(systemName: "star.fill")
-                            .foregroundColor(.yellow)
-                        Text("+\(achievement.tier.points) points")
-                            .fontWeight(.semibold)
-                            .foregroundColor(.yellow)
-                    }
-                    .padding(.top, Spacing.sm)
-                    .scaleEffect(textOpacity > 0.5 ? 1.0 : 0.8)
-                }
-                .opacity(textOpacity)
-                .accessibilityElement(children: .combine)
-                .accessibilityLabel("\(achievement.title). \(achievement.description). Plus \(achievement.tier.points) points")
-
-                Spacer()
-
-                // Buttons
-                VStack(spacing: Spacing.md) {
-                    // Share button (optional)
-                    if onShare != nil {
-                        Button(action: {
-                            HapticFeedback.medium()
-                            onShare?()
-                        }) {
-                            HStack {
-                                Image(systemName: "square.and.arrow.up")
-                                Text("Share Achievement")
-                            }
-                            .font(.headline)
-                            .foregroundColor(achievement.tier.color)
-                            .padding(.horizontal, Spacing.xl)
-                            .padding(.vertical, Spacing.md)
-                            .background(
-                                RoundedRectangle(cornerRadius: CornerRadius.md)
-                                    .stroke(achievement.tier.color, lineWidth: 2)
-                            )
-                        }
-                        .accessibilityLabel("Share this achievement")
-                    }
-
-                    // Dismiss button
-                    Button(action: {
-                        HapticFeedback.light()
-                        onDismiss()
-                    }) {
-                        Text("Awesome!")
-                            .font(.headline)
-                            .foregroundColor(Color(.systemBackground))
-                            .padding(.horizontal, Spacing.xxl)
-                            .padding(.vertical, Spacing.md)
-                            .background(
-                                LinearGradient(
-                                    colors: [achievement.tier.color, achievement.tier.color.opacity(0.8)],
-                                    startPoint: .leading,
-                                    endPoint: .trailing
-                                )
-                            )
-                            .cornerRadius(CornerRadius.lg)
-                            .shadow(color: achievement.tier.color.opacity(0.5), radius: 10)
-                    }
-                    .accessibilityLabel("Dismiss celebration")
-                }
-                .opacity(buttonsOpacity)
-                .padding(.bottom, Spacing.xxl)
-            }
-        }
-        .onAppear {
-            animateIn()
-            generateSparkles()
-            triggerTierHaptic()
-        }
-        .accessibilityElement(children: .contain)
-        .accessibilityLabel("Achievement unlocked: \(achievement.title)")
-    }
-
-    // MARK: - Background
-
-    private var backgroundGradient: some View {
-        ZStack {
-            Color.black
-
-            RadialGradient(
-                colors: [
-                    achievement.tier.color.opacity(0.3),
-                    achievement.type.color.opacity(0.1),
-                    Color.clear
-                ],
-                center: .center,
-                startRadius: 50,
-                endRadius: 400
-            )
-        }
-        .ignoresSafeArea()
-    }
+    @Published var sparkles: [SparkleParticle] = []
 
     // MARK: - Confetti Configuration
 
-    private var confettiColors: [Color] {
+    var confettiColors: [Color] {
         switch achievement.tier {
         case .gold:
             return [.yellow, .orange, Color(red: 1.0, green: 0.84, blue: 0)]
@@ -289,7 +66,7 @@ struct AchievementUnlockedView: View {
         }
     }
 
-    private var confettiCount: Int {
+    var confettiCount: Int {
         switch achievement.tier {
         case .gold: return 50
         case .platinum: return 75
@@ -298,9 +75,15 @@ struct AchievementUnlockedView: View {
         }
     }
 
-    // MARK: - Animations
+    // MARK: - Init
 
-    private func animateIn() {
+    init(event: AchievementUnlockEvent) {
+        self.event = event
+    }
+
+    // MARK: - Animation Sequences
+
+    func animateIn() {
         // Badge appearance with spring animation
         withAnimation(.spring(response: 0.5, dampingFraction: 0.6, blendDuration: 0).delay(0.1)) {
             showBadge = true
@@ -351,24 +134,24 @@ struct AchievementUnlockedView: View {
 
         // Confetti for major achievements
         if isMajorAchievement {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                showConfetti = true
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
+                self?.showConfetti = true
             }
         }
 
         // Start glow pulse animation
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) { [weak self] in
             withAnimation(
                 .easeInOut(duration: 1.5)
                 .repeatForever(autoreverses: true)
             ) {
-                glowPulse = true
+                self?.glowPulse = true
             }
         }
     }
 
     /// Triggers tier-specific haptic pattern
-    private func triggerTierHaptic() {
+    func triggerTierHaptic() {
         switch achievement.tier {
         case .bronze:
             // Simple success
@@ -421,7 +204,7 @@ struct AchievementUnlockedView: View {
         }
     }
 
-    private func generateSparkles() {
+    func generateSparkles() {
         let sparkleCount = isMajorAchievement ? 30 : 20
         sparkles = (0..<sparkleCount).map { _ in
             SparkleParticle(
@@ -430,6 +213,261 @@ struct AchievementUnlockedView: View {
                 delay: Double.random(in: 0...0.8)
             )
         }
+    }
+}
+
+// MARK: - Achievement Unlocked View
+
+/// Full-screen celebration when an achievement is unlocked
+struct AchievementUnlockedView: View {
+    let event: AchievementUnlockEvent
+    let onDismiss: () -> Void
+    var onShare: (() -> Void)?
+
+    @StateObject private var animationController: AchievementAnimationController
+
+    init(event: AchievementUnlockEvent, onDismiss: @escaping () -> Void, onShare: (() -> Void)? = nil) {
+        self.event = event
+        self.onDismiss = onDismiss
+        self.onShare = onShare
+        self._animationController = StateObject(wrappedValue: AchievementAnimationController(event: event))
+    }
+
+    private var achievement: AchievementDefinition { event.achievement }
+
+    var body: some View {
+        ZStack {
+            // Background
+            backgroundGradient
+
+            // Confetti for major achievements
+            if animationController.showConfetti && animationController.isMajorAchievement {
+                AchievementConfettiView(
+                    colors: animationController.confettiColors,
+                    particleCount: animationController.confettiCount
+                )
+                .ignoresSafeArea()
+            }
+
+            // Sparkle particles
+            ForEach(animationController.sparkles) { sparkle in
+                SparkleView(sparkle: sparkle)
+            }
+
+            // Main content
+            VStack(spacing: Spacing.xl) {
+                Spacer()
+
+                // "Achievement Unlocked" header
+                Text("ACHIEVEMENT UNLOCKED")
+                    .font(.caption)
+                    .fontWeight(.bold)
+                    .tracking(4)
+                    .foregroundColor(achievement.tier.color.opacity(0.8))
+                    .opacity(animationController.textOpacity)
+                    .accessibilityAddTraits(.isHeader)
+
+                // Badge with multi-ring glow
+                ZStack {
+                    // Third outer glow ring (for platinum/diamond)
+                    if achievement.tier >= .platinum {
+                        Circle()
+                            .stroke(achievement.tier.glowColor.opacity(0.3), lineWidth: 2)
+                            .frame(width: 220, height: 220)
+                            .scaleEffect(animationController.thirdRingScale)
+                            .opacity(animationController.thirdRingOpacity)
+                    }
+
+                    // Second outer glow ring (for gold+)
+                    if achievement.tier >= .gold {
+                        Circle()
+                            .stroke(achievement.tier.glowColor.opacity(0.5), lineWidth: 2)
+                            .frame(width: 200, height: 200)
+                            .scaleEffect(animationController.secondRingScale)
+                            .opacity(animationController.secondRingOpacity)
+                    }
+
+                    // Primary outer glow ring
+                    Circle()
+                        .stroke(achievement.tier.glowColor, lineWidth: 3)
+                        .frame(width: 180, height: 180)
+                        .scaleEffect(animationController.ringScale)
+                        .opacity(animationController.ringOpacity)
+
+                    // Animated inner glow
+                    Circle()
+                        .fill(
+                            RadialGradient(
+                                colors: [achievement.tier.color.opacity(animationController.glowPulse ? 0.5 : 0.3), Color.clear],
+                                center: .center,
+                                startRadius: 30,
+                                endRadius: animationController.glowPulse ? 120 : 100
+                            )
+                        )
+                        .frame(width: 200, height: 200)
+                        .opacity(animationController.showBadge ? 1 : 0)
+
+                    // Badge background with enhanced shadow
+                    Circle()
+                        .fill(
+                            LinearGradient(
+                                colors: [
+                                    achievement.tier.color,
+                                    achievement.tier.color.opacity(0.7)
+                                ],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .frame(width: 140, height: 140)
+                        .overlay(
+                            Circle()
+                                .stroke(
+                                    LinearGradient(
+                                        colors: [Color.white.opacity(0.5), Color.white.opacity(0.1)],
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
+                                    ),
+                                    lineWidth: 2
+                                )
+                        )
+                        .shadow(color: achievement.tier.glowColor, radius: animationController.glowPulse ? 25 : 20)
+                        .shadow(color: achievement.tier.glowColor.opacity(0.5), radius: 40)
+                        .scaleEffect(animationController.badgeScale)
+                        .rotationEffect(.degrees(animationController.badgeRotation))
+
+                    // Achievement icon with subtle bounce
+                    Image(systemName: achievement.iconName)
+                        .font(.system(size: 60))
+                        .foregroundColor(.white)
+                        .shadow(color: Color(.systemGray4).opacity(0.3), radius: 5)
+                        .scaleEffect(animationController.badgeScale * (animationController.glowPulse ? 1.05 : 1.0))
+                        .rotationEffect(.degrees(animationController.badgeRotation))
+                }
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel("\(achievement.tier.displayName) tier badge")
+
+                // Tier badge
+                Text(achievement.tier.displayName.uppercased())
+                    .font(.caption)
+                    .fontWeight(.bold)
+                    .foregroundColor(achievement.tier.color)
+                    .padding(.horizontal, Spacing.md)
+                    .padding(.vertical, Spacing.xxs)
+                    .background(
+                        Capsule()
+                            .fill(achievement.tier.color.opacity(0.2))
+                    )
+                    .opacity(animationController.textOpacity)
+
+                // Achievement info
+                VStack(spacing: Spacing.sm) {
+                    Text(achievement.title)
+                        .font(.title)
+                        .fontWeight(.bold)
+                        .foregroundColor(.white)
+                        .multilineTextAlignment(.center)
+
+                    Text(achievement.description)
+                        .font(.body)
+                        .foregroundColor(.white.opacity(0.8))
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, Spacing.xl)
+
+                    // Points earned with animated appearance
+                    HStack(spacing: Spacing.xs) {
+                        Image(systemName: "star.fill")
+                            .foregroundColor(.yellow)
+                        Text("+\(achievement.tier.points) points")
+                            .fontWeight(.semibold)
+                            .foregroundColor(.yellow)
+                    }
+                    .padding(.top, Spacing.sm)
+                    .scaleEffect(animationController.textOpacity > 0.5 ? 1.0 : 0.8)
+                }
+                .opacity(animationController.textOpacity)
+                .accessibilityElement(children: .combine)
+                .accessibilityLabel("\(achievement.title). \(achievement.description). Plus \(achievement.tier.points) points")
+
+                Spacer()
+
+                // Buttons
+                VStack(spacing: Spacing.md) {
+                    // Share button (optional)
+                    if onShare != nil {
+                        Button(action: {
+                            HapticFeedback.medium()
+                            onShare?()
+                        }) {
+                            HStack {
+                                Image(systemName: "square.and.arrow.up")
+                                Text("Share Achievement")
+                            }
+                            .font(.headline)
+                            .foregroundColor(achievement.tier.color)
+                            .padding(.horizontal, Spacing.xl)
+                            .padding(.vertical, Spacing.md)
+                            .background(
+                                RoundedRectangle(cornerRadius: CornerRadius.md)
+                                    .stroke(achievement.tier.color, lineWidth: 2)
+                            )
+                        }
+                        .accessibilityLabel("Share this achievement")
+                    }
+
+                    // Dismiss button
+                    Button(action: {
+                        HapticFeedback.light()
+                        onDismiss()
+                    }) {
+                        Text("Awesome!")
+                            .font(.headline)
+                            .foregroundColor(Color(.systemBackground))
+                            .padding(.horizontal, Spacing.xxl)
+                            .padding(.vertical, Spacing.md)
+                            .background(
+                                LinearGradient(
+                                    colors: [achievement.tier.color, achievement.tier.color.opacity(0.8)],
+                                    startPoint: .leading,
+                                    endPoint: .trailing
+                                )
+                            )
+                            .cornerRadius(CornerRadius.lg)
+                            .shadow(color: achievement.tier.color.opacity(0.5), radius: 10)
+                    }
+                    .accessibilityLabel("Dismiss celebration")
+                }
+                .opacity(animationController.buttonsOpacity)
+                .padding(.bottom, Spacing.xxl)
+            }
+        }
+        .onAppear {
+            animationController.animateIn()
+            animationController.generateSparkles()
+            animationController.triggerTierHaptic()
+        }
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("Achievement unlocked: \(achievement.title)")
+    }
+
+    // MARK: - Background
+
+    private var backgroundGradient: some View {
+        ZStack {
+            Color.black
+
+            RadialGradient(
+                colors: [
+                    achievement.tier.color.opacity(0.3),
+                    achievement.type.color.opacity(0.1),
+                    Color.clear
+                ],
+                center: .center,
+                startRadius: 50,
+                endRadius: 400
+            )
+        }
+        .ignoresSafeArea()
     }
 }
 
