@@ -306,8 +306,7 @@ class AdaptiveTrainingService: ObservableObject {
                 // Parse pain locations from notes
                 if let range = notes.range(of: "Joint pain: ") {
                     let locationsStr = String(notes[range.upperBound...])
-                    painLocations = locationsStr
-                        .components(separatedBy: "|")[0]
+                    painLocations = (locationsStr.components(separatedBy: "|").first ?? locationsStr)
                         .components(separatedBy: ", ")
                         .map { $0.trimmingCharacters(in: .whitespaces) }
                 }

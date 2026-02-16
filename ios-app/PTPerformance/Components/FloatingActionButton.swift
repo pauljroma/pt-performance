@@ -196,13 +196,19 @@ struct FloatingActionButton: View {
 
         FloatingActionButton(
             onAddToToday: {
+                #if DEBUG
                 print("Add to Today tapped")
+                #endif
             },
             onNewWorkout: {
+                #if DEBUG
                 print("New Workout tapped")
+                #endif
             },
             onFromLibrary: {
+                #if DEBUG
                 print("From Library tapped")
+                #endif
             }
         )
     }

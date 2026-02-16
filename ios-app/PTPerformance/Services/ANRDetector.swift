@@ -57,39 +57,46 @@ final class ANRDetector {
 
     /// Start the ANR watchdog. Safe to call multiple times; subsequent calls are no-ops.
     func start() {
-        lock.lock()
-        defer { lock.unlock() }
+        let didStart = lock.withLock { () -> Bool in
+            guard !isRunning else {
+                return false
+            }
 
-        guard !isRunning else {
+            isRunning = true
+
+            let thread = Thread { [weak self] in
+                self?.watchdogLoop()
+            }
+            thread.name = "com.ptperformance.anr-detector"
+            thread.qualityOfService = .userInitiated
+            thread.start()
+            watchdogThread = thread
+
+            return true
+        }
+
+        if didStart {
+            logger.info("ANRDetector started: ping=\(self.pingInterval)s, threshold=\(self.anrThreshold)s")
+        } else {
             logger.info("ANRDetector already running, skipping start")
-            return
         }
-
-        isRunning = true
-
-        let thread = Thread { [weak self] in
-            self?.watchdogLoop()
-        }
-        thread.name = "com.ptperformance.anr-detector"
-        thread.qualityOfService = .userInitiated
-        thread.start()
-        watchdogThread = thread
-
-        logger.info("ANRDetector started: ping=\(self.pingInterval)s, threshold=\(self.anrThreshold)s")
     }
 
     /// Stop the ANR watchdog.
     func stop() {
-        lock.lock()
-        defer { lock.unlock() }
+        let stats: (count: Int, duration: TimeInterval)? = lock.withLock {
+            guard isRunning else { return nil }
 
-        guard isRunning else { return }
+            isRunning = false
+            watchdogThread?.cancel()
+            watchdogThread = nil
 
-        isRunning = false
-        watchdogThread?.cancel()
-        watchdogThread = nil
+            return (anrCount, totalANRDuration)
+        }
 
-        logger.info("ANRDetector stopped. Session ANRs: \(self.anrCount), total duration: \(String(format: "%.1f", self.totalANRDuration))s")
+        if let stats {
+            logger.info("ANRDetector stopped. Session ANRs: \(stats.count), total duration: \(String(format: "%.1f", stats.duration))s")
+        }
     }
 
     // MARK: - Watchdog Loop
@@ -127,14 +134,15 @@ final class ANRDetector {
         let callStack = captureMainThreadCallStack()
         let anrStart = Date()
 
-        lock.lock()
-        anrCount += 1
-        let currentCount = anrCount
-        lock.unlock()
+        let currentCount = lock.withLock { () -> Int in
+            anrCount += 1
+            return anrCount
+        }
 
         logger.error("ANR detected (#\(currentCount))! Main thread unresponsive for >\(self.anrThreshold)s")
 
-        // Wait for the main thread to recover so we can measure total ANR duration
+        // Wait for the main thread to recover so we can measure total ANR duration.
+        // This blocks (up to 30s) so it must NOT be done while holding the lock.
         let recoverySemaphore = DispatchSemaphore(value: 0)
         DispatchQueue.main.async {
             recoverySemaphore.signal()
@@ -143,9 +151,10 @@ final class ANRDetector {
         let recovered = recoverySemaphore.wait(timeout: .now() + 30.0)
         let anrDuration = Date().timeIntervalSince(anrStart)
 
-        lock.lock()
-        totalANRDuration += anrDuration
-        lock.unlock()
+        let cumulativeDuration = lock.withLock { () -> TimeInterval in
+            totalANRDuration += anrDuration
+            return totalANRDuration
+        }
 
         if recovered == .success {
             logger.info("Main thread recovered after \(String(format: "%.1f", anrDuration))s")
@@ -156,6 +165,7 @@ final class ANRDetector {
         reportANRToSentry(
             callStack: callStack,
             duration: anrDuration,
+            totalDuration: cumulativeDuration,
             count: currentCount,
             recovered: recovered == .success
         )
@@ -184,7 +194,7 @@ final class ANRDetector {
 
     // MARK: - Sentry Reporting
 
-    private func reportANRToSentry(callStack: [String], duration: TimeInterval, count: Int, recovered: Bool) {
+    private func reportANRToSentry(callStack: [String], duration: TimeInterval, totalDuration: TimeInterval, count: Int, recovered: Bool) {
         #if canImport(Sentry)
         let event = Event(level: .warning)
         event.message = SentryMessage(formatted: "ANR Detected: Main thread unresponsive for \(String(format: "%.1f", duration))s")
@@ -198,7 +208,7 @@ final class ANRDetector {
         event.extra = [
             "anr_duration_seconds": duration,
             "anr_session_count": count,
-            "anr_total_duration_seconds": totalANRDuration,
+            "anr_total_duration_seconds": totalDuration,
             "anr_recovered": recovered,
             "call_stack": callStack.joined(separator: "\n")
         ]

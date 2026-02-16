@@ -188,7 +188,9 @@ struct UndoToastPreview: View {
                         exerciseId: UUID(),
                         exerciseName: "Bench Press"
                     ) {
+                        #if DEBUG
                         print("Restored exercise")
+                        #endif
                     }
                 }
 
@@ -198,7 +200,9 @@ struct UndoToastPreview: View {
                         setNumber: 2,
                         exerciseName: "Squats"
                     ) {
+                        #if DEBUG
                         print("Restored set")
+                        #endif
                     }
                 }
 
@@ -208,7 +212,9 @@ struct UndoToastPreview: View {
                         completedExercises: 3,
                         totalExercises: 5
                     ) {
+                        #if DEBUG
                         print("Restored workout")
+                        #endif
                     }
                 }
 

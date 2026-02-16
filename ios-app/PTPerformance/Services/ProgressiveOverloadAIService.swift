@@ -719,7 +719,15 @@ class ProgressiveOverloadAIService: ObservableObject {
         let trend = calculateTrend(from: sessionsToAnalyze)
 
         // Calculate estimated 1RM from most recent session
-        let mostRecent = sessionsToAnalyze[0]
+        guard let mostRecent = sessionsToAnalyze.first else {
+            return PerformanceAnalysis(
+                trend: .plateaued,
+                estimated1RM: nil,
+                velocityTrend: nil,
+                fatigueImpact: nil,
+                recentSessions: 0
+            )
+        }
         let estimated1RM = calculateEstimated1RM(
             weight: mostRecent.load,
             reps: Int(mostRecent.averageReps),
@@ -979,17 +987,19 @@ class ProgressiveOverloadAIService: ObservableObject {
 
     /// Calculate trend from performance sessions (sync version for local suggestions)
     private nonisolated func calculateTrendSync(from sessions: [ExercisePerformance]) -> PerformanceTrend {
-        guard sessions.count >= 2 else { return .plateaued }
+        guard sessions.count >= 2,
+              let recent = sessions.first,
+              let older = sessions.last else { return .plateaued }
 
         // Compare volume over time (most recent vs oldest in window)
-        let recentVolume = sessions[0].totalVolume
-        let olderVolume = sessions[sessions.count - 1].totalVolume
+        let recentVolume = recent.totalVolume
+        let olderVolume = older.totalVolume
 
         let volumeChange = (recentVolume - olderVolume) / olderVolume
 
         // Also consider load progression
-        let recentLoad = sessions[0].load
-        let olderLoad = sessions[sessions.count - 1].load
+        let recentLoad = recent.load
+        let olderLoad = older.load
         let loadChange = (recentLoad - olderLoad) / olderLoad
 
         // Combined metric
@@ -1006,10 +1016,12 @@ class ProgressiveOverloadAIService: ObservableObject {
 
     /// Calculate velocity trend based on RPE changes
     private func calculateVelocityTrend(from sessions: [ExercisePerformance]) -> String {
-        guard sessions.count >= 2 else { return "insufficient data" }
+        guard sessions.count >= 2,
+              let recent = sessions.first,
+              let older = sessions.last else { return "insufficient data" }
 
-        let recentRPE = sessions[0].rpe
-        let olderRPE = sessions[sessions.count - 1].rpe
+        let recentRPE = recent.rpe
+        let olderRPE = older.rpe
 
         // Same or more reps at same/higher load with lower RPE = improving velocity
         // Higher RPE for same work = declining velocity
