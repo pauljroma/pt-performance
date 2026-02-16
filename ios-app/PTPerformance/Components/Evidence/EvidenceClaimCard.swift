@@ -29,7 +29,7 @@ struct EvidenceClaimCardComponent: View {
     @State private var sources: [EvidenceSource] = []
     @State private var isLoadingSources = false
 
-    @EnvironmentObject private var provenanceService: ProvenanceService
+    @StateObject private var provenanceService = ProvenanceService()
 
     var body: some View {
         VStack(alignment: .leading, spacing: Spacing.sm) {

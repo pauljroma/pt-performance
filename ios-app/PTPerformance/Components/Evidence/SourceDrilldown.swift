@@ -502,7 +502,7 @@ struct SourceDrilldownSheet: View {
     let evidenceRef: EvidenceClaim.EvidenceRef
     var onNavigateToOriginal: (() -> Void)?
 
-    @EnvironmentObject private var provenanceService: ProvenanceService
+    @StateObject private var provenanceService = ProvenanceService()
     @State private var source: EvidenceSource?
     @State private var isLoading = true
 

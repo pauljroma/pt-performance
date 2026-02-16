@@ -34,6 +34,9 @@ struct TherapistLinkingView: View {
             // The timeRemaining computed property will recalculate
             viewModel.objectWillChange.send()
         }
+        .onDisappear {
+            timer.upstream.connect().cancel()
+        }
     }
 
     // MARK: - Therapist Linking Content

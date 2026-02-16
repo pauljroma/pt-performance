@@ -566,6 +566,9 @@ struct DeadlineCountdownView: View {
             RoundedRectangle(cornerRadius: CornerRadius.md)
                 .fill(Color(.secondarySystemBackground))
         )
+        .onDisappear {
+            timer.upstream.connect().cancel()
+        }
     }
 
     private var completedView: some View {

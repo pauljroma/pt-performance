@@ -25,7 +25,7 @@ struct EvidenceDetailView: View {
     var onRelatedClaimTap: ((EvidenceClaim) -> Void)?
 
     @Environment(\.dismiss) private var dismiss
-    @EnvironmentObject private var provenanceService: ProvenanceService
+    @StateObject private var provenanceService = ProvenanceService()
 
     @State private var sources: [EvidenceSource] = []
     @State private var confidenceBreakdown: ConfidenceBreakdown?

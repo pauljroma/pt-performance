@@ -166,6 +166,7 @@ struct KPIDashboardView: View {
             }
             .onDisappear {
                 kpiService.stopAutoRefresh()
+                refreshTimer.upstream.connect().cancel()
             }
             .sheet(item: $selectedIncident) { incident in
                 SafetyIncidentDetailSheet(incident: incident, onDismiss: {
