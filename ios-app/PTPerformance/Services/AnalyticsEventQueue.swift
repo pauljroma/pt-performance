@@ -93,7 +93,8 @@ actor AnalyticsEventQueue {
     // MARK: - Initialisation
 
     init() {
-        let cachesDir = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!
+        let cachesDir = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first
+            ?? URL(fileURLWithPath: NSTemporaryDirectory())
         self.fileURL = cachesDir.appendingPathComponent(Self.fileName)
         loadFromDisk()
     }

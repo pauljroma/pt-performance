@@ -17,9 +17,9 @@ struct RehabModeContentModifier: ViewModifier {
     @State private var showRehabStatusCard = true
     @State private var painLocations: [PainLocation] = []
     @State private var todayPainScore: Int?
-    @State private var previousPainScore: Int? // TODO: Wire when PainTrackingService is available
-    @State private var hasActiveAlerts = false // TODO: Wire when PainTrackingService is available
-    @State private var alertCount = 0 // TODO: Wire when PainTrackingService is available
+    @State private var previousPainScore: Int? // Populated from pain_logs via PainTrackingService
+    @State private var hasActiveAlerts = false // True when recent pain entries have intensity >= 5
+    @State private var alertCount = 0 // Count of high-severity pain entries in recent history
     @State private var deloadUrgency: DeloadUrgency?
     @State private var showPainDiagram = false
     @State private var showRehabDashboard = false
@@ -203,15 +203,54 @@ struct RehabModeContentModifier: ViewModifier {
             DebugLogger.shared.log("Failed to load deload status: \(error)", level: .warning)
         }
 
-        // Pain data and alerts are loaded by the parent RehabModeDashboardView
-        // This modifier focuses on deload status for the overlay banner
+        // Load pain history from PainTrackingService
+        let painEntries = await PainTrackingService.shared.fetchPainHistory(athleteId: patientId, limit: 10)
+
+        if let mostRecent = painEntries.first {
+            todayPainScore = mostRecent.intensity
+
+            // Second most recent entry becomes the previous score for trend display
+            if painEntries.count >= 2 {
+                previousPainScore = painEntries[1].intensity
+            }
+        }
+
+        // High-severity alerts: pain entries with intensity >= 5
+        let highPainEntries = painEntries.filter { $0.intensity >= 5 }
+        hasActiveAlerts = !highPainEntries.isEmpty
+        alertCount = highPainEntries.count
     }
 
     private func savePainData() async {
-        // NOTE: Pain data is only stored locally in @State for this session.
-        // No persistence layer exists yet. Full pain tracking is available
-        // through RehabModeDashboardView once PainTrackingService is implemented.
-        if !painLocations.isEmpty {
+        guard !painLocations.isEmpty, let patientId = patientId else { return }
+
+        let regions = painLocations.map { $0.region.rawValue }
+        let maxIntensity = painLocations.map(\.intensity).max() ?? 5
+        let notes: String? = painLocations.count > 1
+            ? painLocations.map { "\($0.region.displayName): \($0.intensity)/10" }.joined(separator: "; ")
+            : painLocations.first?.notes
+
+        do {
+            try await PainTrackingService.shared.savePainEntry(
+                athleteId: patientId,
+                regions: regions,
+                intensity: maxIntensity,
+                notes: notes
+            )
+
+            // Update local state after successful save
+            let totalIntensity = painLocations.reduce(0) { $0 + $1.intensity }
+            previousPainScore = todayPainScore
+            todayPainScore = Int(round(Double(totalIntensity) / Double(painLocations.count)))
+
+            // Refresh alert state if high pain was logged
+            if maxIntensity >= 5 {
+                hasActiveAlerts = true
+                alertCount += 1
+            }
+        } catch {
+            DebugLogger.shared.log("Failed to save pain data: \(error)", level: .error)
+            // Still update local state so user sees their input reflected
             let totalIntensity = painLocations.reduce(0) { $0 + $1.intensity }
             todayPainScore = Int(round(Double(totalIntensity) / Double(painLocations.count)))
         }

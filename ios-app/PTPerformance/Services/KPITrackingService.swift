@@ -686,7 +686,7 @@ final class KPITrackingService: ObservableObject {
     private func loadPTWauTrendData(periodDays: Int) async -> [KPITrendDataPoint] {
         do {
             guard let periodStart = Calendar.current.date(byAdding: .day, value: -periodDays, to: Date()) else {
-                return generateSampleTrendData(periodDays: periodDays, baseValue: 0.65, variance: 0.1)
+                return []
             }
             let startString = Self.iso8601Formatter.string(from: periodStart)
 
@@ -705,8 +705,8 @@ final class KPITrackingService: ObservableObject {
 
             return rows.map { KPITrendDataPoint(date: $0.date, value: $0.value) }
         } catch {
-            // Fallback: generate sample trend data
-            return generateSampleTrendData(periodDays: periodDays, baseValue: 0.65, variance: 0.1)
+            errorLogger.logWarning("Failed to load PT WAU trend data: \(error.localizedDescription)")
+            return []
         }
     }
 
@@ -727,7 +727,8 @@ final class KPITrackingService: ObservableObject {
 
             return rows.map { KPITrendDataPoint(date: $0.date, value: $0.value) }
         } catch {
-            return generateSampleTrendData(periodDays: periodDays, baseValue: 0.60, variance: 0.12)
+            errorLogger.logWarning("Failed to load athlete WAU trend data: \(error.localizedDescription)")
+            return []
         }
     }
 
@@ -745,7 +746,7 @@ final class KPITrackingService: ObservableObject {
             }
 
             guard let periodStart = Calendar.current.date(byAdding: .day, value: -periodDays, to: Date()) else {
-                return generateSampleTrendData(periodDays: periodDays, baseValue: 0.95, variance: 0.03)
+                return []
             }
             let startString = Self.iso8601Formatter.string(from: periodStart)
 
@@ -761,7 +762,8 @@ final class KPITrackingService: ObservableObject {
 
             return rows.map { KPITrendDataPoint(date: $0.day, value: $0.citationCoverage) }
         } catch {
-            return generateSampleTrendData(periodDays: periodDays, baseValue: 0.95, variance: 0.03)
+            errorLogger.logWarning("Failed to load citation trend data: \(error.localizedDescription)")
+            return []
         }
     }
 
@@ -779,7 +781,7 @@ final class KPITrackingService: ObservableObject {
             }
 
             guard let periodStart = Calendar.current.date(byAdding: .day, value: -periodDays, to: Date()) else {
-                return generateSampleTrendData(periodDays: periodDays, baseValue: 3000, variance: 500)
+                return []
             }
             let startString = Self.iso8601Formatter.string(from: periodStart)
 
@@ -798,24 +800,9 @@ final class KPITrackingService: ObservableObject {
                 return KPITrendDataPoint(date: row.day, value: latency)
             }
         } catch {
-            return generateSampleTrendData(periodDays: periodDays, baseValue: 3000, variance: 500)
+            errorLogger.logWarning("Failed to load latency trend data: \(error.localizedDescription)")
+            return []
         }
-    }
-
-    /// Generate sample trend data for fallback
-    private func generateSampleTrendData(periodDays: Int, baseValue: Double, variance: Double) -> [KPITrendDataPoint] {
-        let calendar = Calendar.current
-        var points: [KPITrendDataPoint] = []
-
-        for dayOffset in (0..<periodDays).reversed() {
-            if let date = calendar.date(byAdding: .day, value: -dayOffset, to: Date()) {
-                let randomVariance = Double.random(in: -variance...variance)
-                let value = max(0, min(1, baseValue + randomVariance))
-                points.append(KPITrendDataPoint(date: date, value: value))
-            }
-        }
-
-        return points
     }
 
     // MARK: - Metric Fetching

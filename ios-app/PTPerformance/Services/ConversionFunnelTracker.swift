@@ -91,7 +91,9 @@ actor ConversionFunnelTracker {
 
     /// File URL for persisting conversion events across sessions
     private let persistenceURL: URL = {
-        let directory = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
+        guard let directory = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first else {
+            return URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("conversion_funnel_events.json")
+        }
         let appDirectory = directory.appendingPathComponent("PTPerformance", isDirectory: true)
         // Ensure directory exists
         try? FileManager.default.createDirectory(at: appDirectory, withIntermediateDirectories: true)

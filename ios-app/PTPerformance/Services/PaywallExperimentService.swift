@@ -99,7 +99,9 @@ class PaywallExperimentService: ObservableObject {
     }
 
     private let metricsFileURL: URL = {
-        let directory = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
+        guard let directory = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first else {
+            return URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("paywall_experiment_metrics.json")
+        }
         let appDirectory = directory.appendingPathComponent("PTPerformance", isDirectory: true)
         try? FileManager.default.createDirectory(at: appDirectory, withIntermediateDirectories: true)
         return appDirectory.appendingPathComponent("paywall_experiment_metrics.json")

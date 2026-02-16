@@ -276,7 +276,7 @@ struct HealthSyncStatusView: View {
                 )
             }
 
-            if syncManager.pendingExports.count > 0 {
+            if !syncManager.pendingExports.isEmpty {
                 syncDetailRow(
                     icon: "arrow.up.circle",
                     label: "Pending Exports",

@@ -191,7 +191,7 @@ struct LeaderboardView: View {
                 }
 
                 // 1st place (center, tallest)
-                if entries.count > 0 {
+                if !entries.isEmpty {
                     podiumEntry(entries[0], height: 130)
                 }
 

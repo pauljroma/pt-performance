@@ -636,7 +636,17 @@ struct BiomarkerEducationDetailView_Previews: PreviewProvider {
     static var previews: some View {
         NavigationStack {
             BiomarkerEducationDetailView(
-                education: BiomarkerEducation.allEducation.first!
+                education: BiomarkerEducation.allEducation.first ?? BiomarkerEducation(
+                    biomarkerName: "crp",
+                    displayName: "C-Reactive Protein (CRP)",
+                    category: "Inflammation",
+                    shortDescription: "A marker of systemic inflammation.",
+                    detailedDescription: "Preview placeholder",
+                    clinicalSignificance: "Preview placeholder",
+                    dietarySources: [],
+                    lifestyleFactors: [],
+                    unit: "mg/L"
+                )
             )
         }
     }

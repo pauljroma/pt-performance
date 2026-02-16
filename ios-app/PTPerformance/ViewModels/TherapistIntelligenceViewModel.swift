@@ -257,13 +257,52 @@ final class TherapistIntelligenceViewModel: ObservableObject {
         decoder.dateDecodingStrategy = .iso8601
         patients = try decoder.decode([Patient].self, from: response.data)
 
-        // Store previous period count for trend calculation
-        previousPeriodPatientCount = max(0, patients.count - 2) // Simulated
+        // Load previous period data for trend calculation
+        await loadPreviousPeriodData(therapistId: therapistId)
+    }
 
-        // Calculate simulated previous period adherence
-        if let currentAdherence = averageAdherence {
-            // Simulate slight variation for demo purposes
-            previousPeriodAdherence = currentAdherence * Double.random(in: 0.92...1.08)
+    /// Load previous period patient data for trend calculations
+    /// Queries the previous 7-day window to compare against current metrics
+    private func loadPreviousPeriodData(therapistId: String) async {
+        do {
+            let calendar = Calendar.current
+            let now = Date()
+            guard let periodEnd = calendar.date(byAdding: .day, value: -7, to: now),
+                  let periodStart = calendar.date(byAdding: .day, value: -14, to: now) else {
+                previousPeriodAdherence = nil
+                previousPeriodPatientCount = nil
+                return
+            }
+
+            let formatter = ISO8601DateFormatter()
+            let startString = formatter.string(from: periodStart)
+            let endString = formatter.string(from: periodEnd)
+
+            // Query patients that were active in the previous period
+            let response = try await supabase.client
+                .from("patients")
+                .select()
+                .eq("therapist_id", value: therapistId)
+                .gte("last_session_date", value: startString)
+                .lte("last_session_date", value: endString)
+                .execute()
+
+            let decoder = JSONDecoder()
+            decoder.dateDecodingStrategy = .iso8601
+            let previousPatients = try decoder.decode([Patient].self, from: response.data)
+
+            previousPeriodPatientCount = previousPatients.count
+
+            let adherenceValues = previousPatients.compactMap { $0.adherencePercentage }
+            if !adherenceValues.isEmpty {
+                previousPeriodAdherence = adherenceValues.reduce(0, +) / Double(adherenceValues.count)
+            } else {
+                previousPeriodAdherence = nil
+            }
+        } catch {
+            ErrorLogger.shared.logWarning("Failed to load previous period data: \(error.localizedDescription)")
+            previousPeriodAdherence = nil
+            previousPeriodPatientCount = nil
         }
     }
 

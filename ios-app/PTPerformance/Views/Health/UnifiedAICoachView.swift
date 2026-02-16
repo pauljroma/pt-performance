@@ -33,7 +33,7 @@ struct UnifiedAICoachView: View {
                                             insightsAppeared = true
                                         }
                                         // Haptic feedback for high priority insights
-                                        if viewModel.highPriorityInsights.count > 0 {
+                                        if !viewModel.highPriorityInsights.isEmpty {
                                             HapticFeedback.warning()
                                         }
                                     }

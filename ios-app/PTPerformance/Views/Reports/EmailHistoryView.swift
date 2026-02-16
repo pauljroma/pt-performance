@@ -560,7 +560,9 @@ struct EmailHistoryButton: View {
 #if DEBUG
 struct EmailHistoryView_Previews: PreviewProvider {
     static var previews: some View {
-        EmailHistoryView(patient: Patient.samplePatients[0])
+        if let patient = Patient.samplePatients.first {
+            EmailHistoryView(patient: patient)
+        }
     }
 }
 #endif

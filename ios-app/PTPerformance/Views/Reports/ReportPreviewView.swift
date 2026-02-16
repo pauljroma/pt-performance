@@ -564,11 +564,13 @@ struct ReportPreviewView_Previews: PreviewProvider {
             fileURL: nil
         )
 
-        ReportPreviewView(
-            report: sampleReport,
-            patient: Patient.samplePatients.first!,
-            therapistEmail: "therapist@clinic.com"
-        )
+        if let patient = Patient.samplePatients.first {
+            ReportPreviewView(
+                report: sampleReport,
+                patient: patient,
+                therapistEmail: "therapist@clinic.com"
+            )
+        }
     }
 }
 #endif

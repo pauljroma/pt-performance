@@ -707,8 +707,23 @@ struct GuidedBreathingView: View {
                 VStack(spacing: Spacing.md) {
                     Button {
                         HapticFeedback.success()
+
+                        // Track breathing session completion to analytics
+                        AnalyticsTracker.shared.track(
+                            event: "breathing_session_saved",
+                            properties: [
+                                "technique": breathingManager.session.name,
+                                "duration_seconds": breathingManager.elapsedSeconds,
+                                "completed_breaths": breathingManager.completedBreaths,
+                                "target_duration_seconds": breathingManager.session.targetDuration,
+                                "completion_rate": breathingManager.session.targetDuration > 0
+                                    ? Double(breathingManager.elapsedSeconds) / Double(breathingManager.session.targetDuration)
+                                    : 0,
+                                "ambient_sound": breathingManager.session.ambientSound?.rawValue ?? "none"
+                            ]
+                        )
+
                         showingCompletionSummary = false
-                        // TODO: Save to health log
                     } label: {
                         HStack {
                             Image(systemName: "square.and.arrow.down.fill")

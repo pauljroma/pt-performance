@@ -224,14 +224,15 @@ extension HRVReading {
         HRVReading(date: Date(), hrvSDNN: 65.5)
     }
 
-    /// Sample history for previews
+    /// Sample history for previews (deterministic values)
     static var sampleHistory: [HRVReading] {
         let calendar = Calendar.current
+        let fixedValues: [Double] = [65.0, 62.5, 68.0, 60.5, 70.0, 63.5, 67.0]
         return (0..<7).compactMap { offset in
             guard let date = calendar.date(byAdding: .day, value: -offset, to: Date()) else {
                 return nil
             }
-            return HRVReading(date: date, hrvSDNN: Double.random(in: 55...75))
+            return HRVReading(date: date, hrvSDNN: fixedValues[offset])
         }
     }
 }

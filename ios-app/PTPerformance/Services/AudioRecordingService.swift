@@ -179,7 +179,9 @@ class AudioRecordingService: NSObject, ObservableObject {
     }
 
     private func createRecordingURL() throws -> URL {
-        let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+        guard let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else {
+            throw RecordingError.recordingFailed
+        }
         let journalDirectory = documentsPath.appendingPathComponent("JournalRecordings", isDirectory: true)
 
         // Create directory if needed

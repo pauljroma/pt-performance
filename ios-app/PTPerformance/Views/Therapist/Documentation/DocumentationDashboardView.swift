@@ -202,7 +202,7 @@ struct DocumentationDashboardView: View {
 
                 Spacer()
 
-                if viewModel.pendingDrafts.count > 0 {
+                if !viewModel.pendingDrafts.isEmpty {
                     Text("\(viewModel.pendingDrafts.count)")
                         .font(.caption)
                         .fontWeight(.bold)

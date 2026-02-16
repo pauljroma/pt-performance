@@ -489,7 +489,7 @@ struct NutritionDashboardView: View {
                 let totalCount = viewModel.todaysLogs.count + viewModel.todaysPlannedMeals.count
                 if totalCount > 0 {
                     HStack(spacing: Spacing.xs) {
-                        if viewModel.todaysLogs.count > 0 {
+                        if !viewModel.todaysLogs.isEmpty {
                             HStack(spacing: 2) {
                                 Image(systemName: "checkmark.circle.fill")
                                     .font(.caption2)
@@ -499,7 +499,7 @@ struct NutritionDashboardView: View {
                                     .foregroundColor(.green)
                             }
                         }
-                        if viewModel.todaysPlannedMeals.count > 0 {
+                        if !viewModel.todaysPlannedMeals.isEmpty {
                             HStack(spacing: 2) {
                                 Image(systemName: "calendar")
                                     .font(.caption2)

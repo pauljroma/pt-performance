@@ -278,7 +278,7 @@ struct AsyncImageCell<Placeholder: View>: View {
         url: URL?,
         targetSize: CGSize = CGSize(width: 60, height: 60),
         cornerRadius: CGFloat = 8,
-        @ViewBuilder placeholder: @escaping () -> Placeholder = { Color.gray.opacity(0.2) as! Placeholder }
+        @ViewBuilder placeholder: @escaping () -> Placeholder
     ) {
         self.url = url
         self.targetSize = targetSize

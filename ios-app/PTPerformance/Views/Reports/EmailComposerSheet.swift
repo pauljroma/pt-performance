@@ -509,11 +509,13 @@ struct EmailComposerSheet_Previews: PreviewProvider {
             fileURL: nil
         )
 
-        EmailComposerSheet(
-            report: sampleReport,
-            patient: Patient.samplePatients[0],
-            therapistEmail: "therapist@clinic.com"
-        )
+        if let patient = Patient.samplePatients.first {
+            EmailComposerSheet(
+                report: sampleReport,
+                patient: patient,
+                therapistEmail: "therapist@clinic.com"
+            )
+        }
     }
 }
 #endif
