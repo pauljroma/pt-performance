@@ -218,6 +218,7 @@ final class FastingTrackerViewModel: ObservableObject {
     private let service = FastingTrackerService.shared
     private var timerCancellable: AnyCancellable?
     private var cancellables = Set<AnyCancellable>()
+    private var notificationObservers: [Any] = []
 
     // MARK: - Initialization
 
@@ -233,28 +234,31 @@ final class FastingTrackerViewModel: ObservableObject {
         timerCancellable = nil
         // Cancel all Combine subscriptions
         cancellables.removeAll()
-        // Remove background observers
-        NotificationCenter.default.removeObserver(self)
+        // Remove block-based notification observers by token
+        notificationObservers.forEach { NotificationCenter.default.removeObserver($0) }
+        notificationObservers.removeAll()
     }
 
     // MARK: - Background Handling
 
     private func setupBackgroundHandling() {
-        NotificationCenter.default.addObserver(
+        let resignObserver = NotificationCenter.default.addObserver(
             forName: UIApplication.willResignActiveNotification,
             object: nil,
             queue: .main
         ) { [weak self] _ in
             self?.handleEnterBackground()
         }
+        notificationObservers.append(resignObserver)
 
-        NotificationCenter.default.addObserver(
+        let activeObserver = NotificationCenter.default.addObserver(
             forName: UIApplication.didBecomeActiveNotification,
             object: nil,
             queue: .main
         ) { [weak self] _ in
             self?.handleReturnFromBackground()
         }
+        notificationObservers.append(activeObserver)
     }
 
     private func handleEnterBackground() {

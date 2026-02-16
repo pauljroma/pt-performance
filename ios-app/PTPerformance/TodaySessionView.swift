@@ -21,7 +21,7 @@ struct TodaySessionView: View {
     @State private var isLoadingArmCare = false
 
     // ACP-MODE: Mode-specific dashboard navigation
-    @StateObject private var modeService = ModeService.shared
+    @EnvironmentObject private var modeService: ModeService
     @State private var showRehabDashboard = false
     @State private var showStrengthDashboard = false
     @State private var showPerformanceDashboard = false

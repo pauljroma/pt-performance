@@ -23,7 +23,7 @@ struct TodayHubView: View {
     @EnvironmentObject var appState: AppState
     @EnvironmentObject var supabase: PTSupabaseClient
     @EnvironmentObject var storeKit: StoreKitService
-    @StateObject private var modeService = ModeService.shared
+    @EnvironmentObject private var modeService: ModeService
 
     // MARK: - State
 
@@ -402,4 +402,5 @@ extension Notification.Name {
         .environmentObject(AppState())
         .environmentObject(PTSupabaseClient.shared)
         .environmentObject(StoreKitService.shared)
+        .environmentObject(ModeService.shared)
 }

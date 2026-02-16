@@ -21,8 +21,8 @@ struct PatientTabView: View {
     @StateObject private var supabase = PTSupabaseClient.shared
     @EnvironmentObject var storeKit: StoreKitService
     @EnvironmentObject var appState: AppState
-    @StateObject private var badgeManager = TabBarBadgeManager.shared
-    @StateObject private var modeService = ModeService.shared
+    @EnvironmentObject private var badgeManager: TabBarBadgeManager
+    @EnvironmentObject private var modeService: ModeService
     @StateObject private var featureVisibility = FeatureVisibilityViewModel()
 
     // Track selected tab for haptic feedback

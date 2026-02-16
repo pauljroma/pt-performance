@@ -9,8 +9,8 @@ import SwiftUI
 
 struct TherapistTabView: View {
     @EnvironmentObject var appState: AppState
-    @StateObject private var onboardingCoordinator = OnboardingCoordinator.shared
-    @StateObject private var badgeManager = TabBarBadgeManager.shared
+    @EnvironmentObject private var onboardingCoordinator: OnboardingCoordinator
+    @EnvironmentObject private var badgeManager: TabBarBadgeManager
 
     // Track selected tab for haptic feedback and icon state
     @State private var selectedTab: TherapistTab = .patients
@@ -261,7 +261,7 @@ struct TherapistTabView: View {
 // MARK: - Therapist Settings View
 
 struct TherapistSettingsView: View {
-    @StateObject private var onboardingCoordinator = OnboardingCoordinator.shared
+    @EnvironmentObject private var onboardingCoordinator: OnboardingCoordinator
     @EnvironmentObject var appState: AppState
     @State private var showingLogoutConfirmation = false
     @State private var isLoggingOut = false

@@ -255,7 +255,9 @@ struct MealPlanView: View {
                 .padding()
             } else {
                 ForEach(mealPlans) { plan in
-                    NavigationLink(destination: MealPlanDetailView(plan: plan)) {
+                    NavigationLink {
+                        MealPlanDetailView(plan: plan)
+                    } label: {
                         MealPlanRowWithActivate(
                             plan: plan,
                             isActive: plan.id == activePlan?.id

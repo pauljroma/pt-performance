@@ -209,6 +209,7 @@ class CohortAnalyticsViewModel: ObservableObject {
             benchmarks = try await cohortService.fetchCohortBenchmarks(therapistId: therapistId)
         } catch {
             DebugLogger.shared.log("Failed to load benchmarks: \(error.localizedDescription)", level: .error)
+            errorMessage = "Failed to load benchmarks. Pull to refresh to try again."
         }
     }
 
@@ -225,6 +226,7 @@ class CohortAnalyticsViewModel: ObservableObject {
             )
         } catch {
             DebugLogger.shared.log("Failed to load rankings: \(error.localizedDescription)", level: .error)
+            errorMessage = "Failed to load rankings. Pull to refresh to try again."
         }
     }
 
@@ -237,6 +239,7 @@ class CohortAnalyticsViewModel: ObservableObject {
             complianceDistribution = try await cohortService.fetchComplianceDistribution(therapistId: therapistId)
         } catch {
             DebugLogger.shared.log("Failed to load distribution: \(error.localizedDescription)", level: .error)
+            errorMessage = "Failed to load compliance distribution. Pull to refresh to try again."
         }
     }
 
@@ -249,6 +252,7 @@ class CohortAnalyticsViewModel: ObservableObject {
             retentionData = try await cohortService.fetchRetentionCurve(therapistId: therapistId)
         } catch {
             DebugLogger.shared.log("Failed to load retention: \(error.localizedDescription)", level: .error)
+            errorMessage = "Failed to load retention data. Pull to refresh to try again."
         }
     }
 
@@ -261,6 +265,7 @@ class CohortAnalyticsViewModel: ObservableObject {
             programOutcomes = try await cohortService.fetchOutcomesByProgram(therapistId: therapistId)
         } catch {
             DebugLogger.shared.log("Failed to load programs: \(error.localizedDescription)", level: .error)
+            errorMessage = "Failed to load program outcomes. Pull to refresh to try again."
         }
     }
 
@@ -270,6 +275,7 @@ class CohortAnalyticsViewModel: ObservableObject {
             patientsBelowBenchmark = try await cohortService.fetchPatientsBelowBenchmark(therapistId: therapistId)
         } catch {
             DebugLogger.shared.log("Failed to load patients below benchmark: \(error.localizedDescription)", level: .error)
+            errorMessage = "Failed to load patients below benchmark. Pull to refresh to try again."
         }
     }
 

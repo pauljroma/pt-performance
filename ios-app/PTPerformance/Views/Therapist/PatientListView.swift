@@ -207,7 +207,9 @@ struct PatientListView: View {
                         )
                         .id(patient.id)
                     } else {
-                        NavigationLink(destination: PatientDetailView(patient: patient)) {
+                        NavigationLink {
+                            PatientDetailView(patient: patient)
+                        } label: {
                             PatientRowCard(
                                 patient: patient,
                                 coachingAlertCount: alertCountForPatient(patient.id)

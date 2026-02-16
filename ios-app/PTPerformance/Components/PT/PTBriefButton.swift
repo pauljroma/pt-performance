@@ -16,7 +16,9 @@ struct PTBriefButton: View {
     var compact: Bool = false
 
     var body: some View {
-        NavigationLink(destination: PTBriefView(athleteId: athleteId)) {
+        NavigationLink {
+            PTBriefView(athleteId: athleteId)
+        } label: {
             if compact {
                 Image(systemName: "doc.text.magnifyingglass")
                     .foregroundColor(.modusTealAccent)

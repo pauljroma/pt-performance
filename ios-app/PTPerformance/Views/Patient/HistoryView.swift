@@ -422,7 +422,9 @@ struct RecentWorkoutsSection: View {
 
             VStack(spacing: 12) {
                 ForEach(Array(workouts.enumerated()), id: \.element.id) { index, workout in
-                    NavigationLink(destination: SessionDetailView(workout: workout, patientId: patientId)) {
+                    NavigationLink {
+                        SessionDetailView(workout: workout, patientId: patientId)
+                    } label: {
                         WorkoutHistoryRow(workout: workout)
                     }
                     .buttonStyle(.plain)

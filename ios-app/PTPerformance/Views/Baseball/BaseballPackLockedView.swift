@@ -109,7 +109,9 @@ struct BaseballPackLockedView: View {
 
     private var ctaSection: some View {
         VStack(spacing: 12) {
-            NavigationLink(destination: BaseballPackView()) {
+            NavigationLink {
+                BaseballPackView()
+            } label: {
                 HStack {
                     Image(systemName: "lock.open.fill")
                     Text("View Baseball Pack")
@@ -159,7 +161,9 @@ struct BaseballPackLockedBanner: View {
 
             Spacer()
 
-            NavigationLink(destination: BaseballPackView()) {
+            NavigationLink {
+                BaseballPackView()
+            } label: {
                 Text("View")
                     .font(.subheadline)
                     .fontWeight(.medium)

@@ -483,6 +483,12 @@ class OptimisticUpdateManager: ObservableObject {
     }
 
     /// Sync all pending updates to the server
+    ///
+    /// ACP-516 optimization: Updates are grouped by type and batched where possible
+    /// to minimize database roundtrips (N+1 query fix). Exercise completions are
+    /// batched into a single INSERT; no-op types are resolved without any API call.
+    /// Workout completions still require individual UPDATE calls (each targets a
+    /// different row by ID).
     func syncPendingUpdates() async {
         guard !pendingUpdates.isEmpty else {
             DebugLogger.shared.log("📤 No pending updates to sync", level: .diagnostic)
@@ -508,33 +514,59 @@ class OptimisticUpdateManager: ObservableObject {
 
         DebugLogger.shared.log("📤 Starting sync of \(updatesToSync.count) updates...", level: .diagnostic)
 
-        for update in updatesToSync {
-            do {
-                try await syncSingleUpdate(update)
+        // Group updates by type to enable batching and minimize DB roundtrips.
+        let grouped = Dictionary(grouping: updatesToSync) { $0.type }
 
-                // Mark as confirmed and remove from queue
+        // 1. No-op types: these are local-only or aggregated into exercise completion.
+        //    Resolve them immediately without any API call.
+        let noOpTypes: Set<OptimisticUpdateType> = [
+            .setCompletion, .weightChange, .repsChange, .rpeChange,
+            .painScoreChange, .sessionStart, .exerciseSkip, .notesUpdate
+        ]
+        for noOpType in noOpTypes {
+            guard let updates = grouped[noOpType] else { continue }
+            for update in updates {
                 if let index = pendingUpdates.firstIndex(where: { $0.id == update.id }) {
                     pendingUpdates.remove(at: index)
                 }
-
-                // Update exercise sync status
                 updateExerciseSyncStatus(for: update, status: .synced)
-
                 successCount += 1
-            } catch {
-                // Mark retry and keep in queue
-                if let index = pendingUpdates.firstIndex(where: { $0.id == update.id }) {
-                    pendingUpdates[index].retryCount += 1
-                    pendingUpdates[index].lastError = error.localizedDescription
+            }
+        }
 
-                    if pendingUpdates[index].retryCount >= maxRetries {
-                        pendingUpdates[index].status = .failed
-                        handleFailedUpdate(update)
+        // 2. Exercise completions: batch INSERT into exercise_logs in a single call.
+        if let exerciseUpdates = grouped[.exerciseCompletion], !exerciseUpdates.isEmpty {
+            let (batchSuccesses, batchFailures) = await syncExerciseCompletionsBatched(exerciseUpdates)
+            successCount += batchSuccesses
+            failCount += batchFailures
+        }
+
+        // 3. Workout completions: each targets a different session row via .eq("id"),
+        //    so these must be synced individually. Typically only 1 per sync cycle.
+        if let workoutUpdates = grouped[.workoutCompletion] {
+            for update in workoutUpdates {
+                do {
+                    let payload = try JSONDecoder().decode(WorkoutCompletionPayload.self, from: update.payload)
+                    try await syncWorkoutCompletion(payload)
+
+                    if let index = pendingUpdates.firstIndex(where: { $0.id == update.id }) {
+                        pendingUpdates.remove(at: index)
                     }
-                }
+                    updateExerciseSyncStatus(for: update, status: .synced)
+                    successCount += 1
+                } catch {
+                    if let index = pendingUpdates.firstIndex(where: { $0.id == update.id }) {
+                        pendingUpdates[index].retryCount += 1
+                        pendingUpdates[index].lastError = error.localizedDescription
 
-                failCount += 1
-                DebugLogger.shared.log("❌ Failed to sync update \(update.id): \(error.localizedDescription)", level: .error)
+                        if pendingUpdates[index].retryCount >= maxRetries {
+                            pendingUpdates[index].status = .failed
+                            handleFailedUpdate(update)
+                        }
+                    }
+                    failCount += 1
+                    DebugLogger.shared.log("❌ Failed to sync workout update \(update.id): \(error.localizedDescription)", level: .error)
+                }
             }
         }
 
@@ -556,32 +588,103 @@ class OptimisticUpdateManager: ObservableObject {
         DebugLogger.shared.log("📤 Sync complete: \(successCount) success, \(failCount) failed", level: .success)
     }
 
-    /// Sync a single update to the server
-    private func syncSingleUpdate(_ update: PendingOptimisticUpdate) async throws {
-        switch update.type {
-        case .setCompletion:
-            // Set completions are aggregated into exercise completion, no direct API call needed
-            _ = try JSONDecoder().decode(SetCompletionPayload.self, from: update.payload)
+    /// Batch-sync exercise completions into a single INSERT to exercise_logs.
+    ///
+    /// On batch failure, falls back to individual inserts so that one bad payload
+    /// doesn't block the entire batch. Returns (successCount, failCount).
+    private func syncExerciseCompletionsBatched(_ updates: [PendingOptimisticUpdate]) async -> (Int, Int) {
+        var successCount = 0
+        var failCount = 0
 
-        case .exerciseCompletion:
-            let payload = try JSONDecoder().decode(ExerciseCompletionPayload.self, from: update.payload)
-            try await syncExerciseCompletion(payload)
-
-        case .weightChange:
-            // Weight changes are included in exercise completion, no direct API call needed
-            break
-
-        case .workoutCompletion:
-            let payload = try JSONDecoder().decode(WorkoutCompletionPayload.self, from: update.payload)
-            try await syncWorkoutCompletion(payload)
-
-        case .repsChange, .rpeChange, .painScoreChange, .sessionStart, .exerciseSkip, .notesUpdate:
-            // These are either local-only or included in exercise completion
-            break
+        // Decode all payloads, tracking which updates decoded successfully
+        var decodedPairs: [(update: PendingOptimisticUpdate, payload: ExerciseCompletionPayload)] = []
+        for update in updates {
+            do {
+                let payload = try JSONDecoder().decode(ExerciseCompletionPayload.self, from: update.payload)
+                decodedPairs.append((update, payload))
+            } catch {
+                // Decode failure is not retryable — mark as failed immediately
+                if let index = pendingUpdates.firstIndex(where: { $0.id == update.id }) {
+                    pendingUpdates[index].retryCount = maxRetries
+                    pendingUpdates[index].status = .failed
+                    pendingUpdates[index].lastError = "Payload decode error: \(error.localizedDescription)"
+                    handleFailedUpdate(update)
+                }
+                failCount += 1
+                DebugLogger.shared.log("❌ Failed to decode exercise completion \(update.id): \(error.localizedDescription)", level: .error)
+            }
         }
+
+        guard !decodedPairs.isEmpty else {
+            return (successCount, failCount)
+        }
+
+        // Attempt batch insert (single DB roundtrip for all exercise completions)
+        let inputs = decodedPairs.map { pair in
+            CreateExerciseLogInput(
+                sessionExerciseId: pair.payload.sessionExerciseId,
+                patientId: pair.payload.patientId,
+                actualSets: pair.payload.actualSets,
+                actualReps: pair.payload.actualReps,
+                actualLoad: pair.payload.actualLoad,
+                loadUnit: pair.payload.loadUnit,
+                rpe: pair.payload.rpe,
+                painScore: pair.payload.painScore,
+                notes: pair.payload.notes,
+                completed: true
+            )
+        }
+
+        do {
+            _ = try await supabase.client
+                .from("exercise_logs")
+                .insert(inputs)
+                .execute()
+
+            // Batch succeeded — mark all as confirmed
+            for (update, _) in decodedPairs {
+                if let index = pendingUpdates.firstIndex(where: { $0.id == update.id }) {
+                    pendingUpdates.remove(at: index)
+                }
+                updateExerciseSyncStatus(for: update, status: .synced)
+                successCount += 1
+            }
+
+            DebugLogger.shared.log("📤 Batch inserted \(decodedPairs.count) exercise logs in single roundtrip", level: .diagnostic)
+        } catch {
+            // Batch insert failed — fall back to individual inserts so one bad row
+            // doesn't block the rest. This preserves the original per-item error handling.
+            DebugLogger.shared.log("⚠️ Batch insert failed, falling back to individual inserts: \(error.localizedDescription)", level: .warning)
+
+            for (update, payload) in decodedPairs {
+                do {
+                    try await syncExerciseCompletion(payload)
+
+                    if let index = pendingUpdates.firstIndex(where: { $0.id == update.id }) {
+                        pendingUpdates.remove(at: index)
+                    }
+                    updateExerciseSyncStatus(for: update, status: .synced)
+                    successCount += 1
+                } catch {
+                    if let index = pendingUpdates.firstIndex(where: { $0.id == update.id }) {
+                        pendingUpdates[index].retryCount += 1
+                        pendingUpdates[index].lastError = error.localizedDescription
+
+                        if pendingUpdates[index].retryCount >= maxRetries {
+                            pendingUpdates[index].status = .failed
+                            handleFailedUpdate(update)
+                        }
+                    }
+                    failCount += 1
+                    DebugLogger.shared.log("❌ Failed to sync exercise update \(update.id): \(error.localizedDescription)", level: .error)
+                }
+            }
+        }
+
+        return (successCount, failCount)
     }
 
-    /// Sync exercise completion to Supabase
+    /// Sync a single exercise completion to Supabase
     private func syncExerciseCompletion(_ payload: ExerciseCompletionPayload) async throws {
         let input = CreateExerciseLogInput(
             sessionExerciseId: payload.sessionExerciseId,
@@ -603,6 +706,9 @@ class OptimisticUpdateManager: ObservableObject {
     }
 
     /// Sync workout completion to Supabase
+    ///
+    /// Note: Workout completions cannot be batched because each targets a different
+    /// session row via `.eq("id", ...)`. This is typically 1 update per sync cycle.
     private func syncWorkoutCompletion(_ payload: WorkoutCompletionPayload) async throws {
         let updateData = SessionUpdateData(
             completed: true,

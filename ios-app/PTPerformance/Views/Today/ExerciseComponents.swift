@@ -144,11 +144,13 @@ struct ExerciseDetailView: View {
 
                 // Log exercise button - navigates to exercise logging form
                 if let patientId = appState.userId {
-                    NavigationLink(destination: ExerciseLogView(
-                        exercise: exercise,
-                        sessionExerciseId: exercise.id.uuidString,
-                        patientId: patientId
-                    )) {
+                    NavigationLink {
+                        ExerciseLogView(
+                            exercise: exercise,
+                            sessionExerciseId: exercise.id.uuidString,
+                            patientId: patientId
+                        )
+                    } label: {
                         Text("Log This Exercise")
                             .frame(maxWidth: .infinity)
                             .padding()

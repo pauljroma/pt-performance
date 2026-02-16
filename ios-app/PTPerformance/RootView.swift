@@ -8,6 +8,7 @@ struct RootView: View {
     @EnvironmentObject var asoService: ASOService
     @StateObject private var onboardingCoordinator = OnboardingCoordinator.shared
     @StateObject private var modeService = ModeService.shared
+    @StateObject private var badgeManager = TabBarBadgeManager.shared
     @StateObject private var consentManager = ConsentManager.shared
     @StateObject private var sessionManager = SessionManager.shared
     // ACP-1005: Re-engagement campaign service
@@ -111,6 +112,9 @@ struct RootView: View {
         }
         .animation(.easeInOut(duration: AnimationDuration.standard), value: isCheckingSession)
         .animation(.easeInOut(duration: AnimationDuration.standard), value: appState.isAuthenticated)
+        .environmentObject(modeService)
+        .environmentObject(onboardingCoordinator)
+        .environmentObject(badgeManager)
         // ACP-1049: Re-consent prompt when consent version changes
         // Priority 1 (highest) — HIPAA requirement: consent always wins, ungated.
         .sheet(isPresented: Binding(
