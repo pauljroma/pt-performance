@@ -462,11 +462,15 @@ final class RecoveryTrackingViewModel: ObservableObject {
 
             // Record streak activity
             if let patientId = await getPatientId() {
-                try? await streakService.recordActivity(
-                    for: patientId,
-                    workoutCompleted: false,
-                    armCareCompleted: false // Recovery sessions tracked separately
-                )
+                do {
+                    try await streakService.recordActivity(
+                        for: patientId,
+                        workoutCompleted: false,
+                        armCareCompleted: false
+                    )
+                } catch {
+                    ErrorLogger.shared.logError(error, context: "RecoveryTrackingViewModel.recordStreakActivity")
+                }
             }
 
             await loadData()

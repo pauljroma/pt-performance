@@ -13,6 +13,7 @@ import Combine
 /// HIPAA Technical Safeguard: Automatic Logoff (§164.312(a)(2)(iii))
 /// ACP-1040: Session security hardening
 
+@MainActor
 final class SessionManager: ObservableObject {
 
     // MARK: - Properties
@@ -151,11 +152,8 @@ final class SessionManager: ObservableObject {
 
         stopMonitoring()
 
-        // Trigger logout on main thread
-        Task { @MainActor [weak self] in
-            self?.logoutReason = reason
-            self?.shouldLogout = true
-        }
+        logoutReason = reason
+        shouldLogout = true
     }
 
     /// Called when the user's password is changed to force re-authentication.
@@ -208,10 +206,8 @@ final class SessionManager: ObservableObject {
 
                 let refreshedSession = try await PTSupabaseClient.shared.client.auth.refreshSession()
 
-                await MainActor.run {
-                    PTSupabaseClient.shared.currentSession = refreshedSession
-                    PTSupabaseClient.shared.currentUser = refreshedSession.user
-                }
+                PTSupabaseClient.shared.currentSession = refreshedSession
+                PTSupabaseClient.shared.currentUser = refreshedSession.user
 
                 let newExpiresAt = Date(timeIntervalSince1970: TimeInterval(refreshedSession.expiresAt))
                 debugLogger.log("[SessionManager] Token refreshed successfully, new expiry: \(newExpiresAt)", level: .success)

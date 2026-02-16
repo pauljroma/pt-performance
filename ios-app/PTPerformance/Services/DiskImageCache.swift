@@ -308,8 +308,12 @@ actor DiskImageCache {
         let entries = Array(manifest.values)
         guard let data = try? JSONEncoder().encode(entries) else { return }
 
-        try? data.write(to: manifestURL, options: .atomic)
-        manifestDirty = false
+        do {
+            try data.write(to: manifestURL, options: .atomic)
+            manifestDirty = false
+        } catch {
+            ErrorLogger.shared.logError(error, context: "DiskImageCache.saveManifest")
+        }
     }
 
     // MARK: - Key Hashing

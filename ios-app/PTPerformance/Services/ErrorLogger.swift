@@ -22,6 +22,7 @@ class ErrorLogger {
     // MARK: - Properties
 
     private let logger = Logger(subsystem: "com.getmodus.app", category: "ErrorLogger")
+    private let userLock = NSLock()
     private var currentUserId: String?
     private var currentUserType: String?
     private var sessionStartTime: Date
@@ -37,8 +38,10 @@ class ErrorLogger {
 
     /// Set user context for error tracking
     func setUser(userId: String, email: String?, userType: String) {
-        self.currentUserId = userId
-        self.currentUserType = userType
+        userLock.withLock {
+            self.currentUserId = userId
+            self.currentUserType = userType
+        }
 
         logger.info("User context set: userId=\(userId), userType=\(userType)")
 
@@ -54,10 +57,13 @@ class ErrorLogger {
 
     /// Clear user context (e.g., on logout)
     func clearUser() {
-        logger.info("User context cleared: userId=\(self.currentUserId ?? "none")")
+        let previousUserId = userLock.withLock { self.currentUserId }
+        logger.info("User context cleared: userId=\(previousUserId ?? "none")")
 
-        self.currentUserId = nil
-        self.currentUserType = nil
+        userLock.withLock {
+            self.currentUserId = nil
+            self.currentUserType = nil
+        }
 
         #if canImport(Sentry)
         SentrySDK.configureScope { scope in
@@ -70,13 +76,15 @@ class ErrorLogger {
 
     /// Log a user action for analytics and debugging
     func logUserAction(action: String, properties: [String: Any] = [:]) {
+        let (userId, userType) = userLock.withLock { (self.currentUserId, self.currentUserType) }
+
         var logMessage = "User action: \(action)"
 
-        if let userId = currentUserId {
+        if let userId = userId {
             logMessage += " | userId=\(userId)"
         }
 
-        if let userType = currentUserType {
+        if let userType = userType {
             logMessage += " | userType=\(userType)"
         }
 
@@ -111,7 +119,7 @@ class ErrorLogger {
             logMessage += " | Metadata: \(metadataStr)"
         }
 
-        if let userId = currentUserId {
+        if let userId = userLock.withLock({ self.currentUserId }) {
             logMessage += " | userId=\(userId)"
         }
 
@@ -230,9 +238,10 @@ class ErrorLogger {
         let duration = sessionDuration
         logger.info("Session ended after \(Int(duration)) seconds")
 
+        let userId = userLock.withLock { self.currentUserId }
         logUserAction(action: "session_ended", properties: [
             "duration_seconds": Int(duration),
-            "user_id": currentUserId ?? "unknown"
+            "user_id": userId ?? "unknown"
         ])
     }
 

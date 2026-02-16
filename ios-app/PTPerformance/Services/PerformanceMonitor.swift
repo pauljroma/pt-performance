@@ -83,15 +83,16 @@ class PerformanceMonitor {
     }
 
     @objc private func handleMemoryWarning() {
-        lock.lock()
-        memoryWarningCount += 1
-        lastMemoryWarning = Date()
-        lock.unlock()
+        let warningCount = lock.withLock {
+            memoryWarningCount += 1
+            lastMemoryWarning = Date()
+            return memoryWarningCount
+        }
 
         let memoryUsage = memoryUsageMB
         logger.warning("Memory warning received! Current usage: \(String(format: "%.1f", memoryUsage)) MB")
 
-        ErrorLogger.shared.logWarning("Memory warning #\(memoryWarningCount): \(String(format: "%.1f", memoryUsage)) MB")
+        ErrorLogger.shared.logWarning("Memory warning #\(warningCount): \(String(format: "%.1f", memoryUsage)) MB")
 
         // Add Sentry breadcrumb
         addBreadcrumb(
@@ -99,7 +100,7 @@ class PerformanceMonitor {
             message: "Memory warning received",
             data: [
                 "memory_mb": String(format: "%.1f", memoryUsage),
-                "warning_count": String(memoryWarningCount)
+                "warning_count": String(warningCount)
             ],
             level: .warning
         )
@@ -109,7 +110,7 @@ class PerformanceMonitor {
 
     /// Track app launch start (call in app init)
     func trackAppLaunch() {
-        appLaunchStartTime = Date()
+        lock.withLock { appLaunchStartTime = Date() }
         // ACP-932: Record cold start milestone
         recordColdStartMilestone("app_init")
         logger.info("App launch started")
@@ -117,16 +118,18 @@ class PerformanceMonitor {
 
     /// Finish app launch tracking (call when first view appears)
     func finishAppLaunch() {
-        guard let startTime = appLaunchStartTime else {
+        let (startTime, endTime) = lock.withLock { () -> (Date?, Date) in
+            let start = appLaunchStartTime
+            let end = Date()
+            appLaunchEndTime = end
+            return (start, end)
+        }
+
+        guard let startTime = startTime else {
             logger.warning("finishAppLaunch called but no start time recorded")
             return
         }
 
-        appLaunchEndTime = Date()
-        guard let endTime = appLaunchEndTime else {
-            logger.error("Failed to record app launch end time")
-            return
-        }
         let launchDuration = endTime.timeIntervalSince(startTime)
 
         // ACP-932: Record final cold start milestone
@@ -160,28 +163,25 @@ class PerformanceMonitor {
 
     /// Record a cold start milestone for performance analysis
     func recordColdStartMilestone(_ milestone: String) {
-        lock.lock()
-        coldStartMilestones[milestone] = CFAbsoluteTimeGetCurrent()
-        lock.unlock()
+        lock.withLock { coldStartMilestones[milestone] = CFAbsoluteTimeGetCurrent() }
     }
 
     /// Get time elapsed from cold start to a milestone in milliseconds
     func getColdStartMilestoneMs(_ milestone: String) -> Double? {
-        lock.lock()
-        defer { lock.unlock() }
-        guard let time = coldStartMilestones[milestone] else { return nil }
-        return (time - coldStartBegin) * 1000
+        lock.withLock {
+            guard let time = coldStartMilestones[milestone] else { return nil }
+            return (time - coldStartBegin) * 1000
+        }
     }
 
     /// Get cold start report for debugging
     func getColdStartReport() -> String {
-        lock.lock()
-        defer { lock.unlock() }
+        let milestones = lock.withLock { coldStartMilestones }
 
         var report = "=== Cold Start Report ===\n"
         report += "Target: <\(Int(Thresholds.coldStartTargetMs))ms\n\n"
 
-        let sortedMilestones = coldStartMilestones.sorted { $0.value < $1.value }
+        let sortedMilestones = milestones.sorted { $0.value < $1.value }
 
         var previousTime = coldStartBegin
         for (milestone, time) in sortedMilestones {
@@ -203,30 +203,36 @@ class PerformanceMonitor {
 
     /// Get app launch duration in milliseconds
     var appLaunchDuration: TimeInterval? {
-        guard let start = appLaunchStartTime, let end = appLaunchEndTime else {
-            return nil
+        lock.withLock {
+            guard let start = appLaunchStartTime, let end = appLaunchEndTime else {
+                return nil
+            }
+            return end.timeIntervalSince(start) * 1000
         }
-        return end.timeIntervalSince(start) * 1000
     }
 
     // MARK: - View Load Tracking
 
     /// Start tracking view load time
     func startViewLoad(_ viewName: String) {
-        ongoingOperations[viewName] = Date()
+        lock.withLock { ongoingOperations[viewName] = Date() }
         logger.debug("Started loading view: \(viewName)")
     }
 
     /// Finish tracking view load time
     func finishViewLoad(_ viewName: String) {
-        guard let startTime = ongoingOperations[viewName] else {
+        let startTime: Date? = lock.withLock { ongoingOperations[viewName] }
+
+        guard let startTime = startTime else {
             logger.warning("finishViewLoad called for \(viewName) but no start time found")
             return
         }
 
         let duration = Date().timeIntervalSince(startTime)
-        viewLoadTimes[viewName] = duration
-        ongoingOperations.removeValue(forKey: viewName)
+        lock.withLock {
+            viewLoadTimes[viewName] = duration
+            ongoingOperations.removeValue(forKey: viewName)
+        }
 
         logger.info("View \(viewName) loaded in \(String(format: "%.2f", duration * 1000))ms")
 
@@ -243,7 +249,7 @@ class PerformanceMonitor {
 
     /// Get view load duration in milliseconds
     func getViewLoadDuration(_ viewName: String) -> TimeInterval? {
-        return viewLoadTimes[viewName].map { $0 * 1000 }
+        return lock.withLock { viewLoadTimes[viewName] }.map { $0 * 1000 }
     }
 
     // MARK: - Database Query Tracking
@@ -251,20 +257,22 @@ class PerformanceMonitor {
     /// Start tracking a database query
     func startDatabaseQuery(_ queryName: String) {
         let key = "db_\(queryName)"
-        ongoingOperations[key] = Date()
+        lock.withLock { ongoingOperations[key] = Date() }
         logger.debug("Started database query: \(queryName)")
     }
 
     /// Finish tracking a database query
     func finishDatabaseQuery(_ queryName: String, recordCount: Int? = nil) {
         let key = "db_\(queryName)"
-        guard let startTime = ongoingOperations[key] else {
+        let startTime: Date? = lock.withLock { ongoingOperations[key] }
+
+        guard let startTime = startTime else {
             logger.warning("finishDatabaseQuery called for \(queryName) but no start time found")
             return
         }
 
         let duration = Date().timeIntervalSince(startTime)
-        ongoingOperations.removeValue(forKey: key)
+        lock.withLock { ongoingOperations.removeValue(forKey: key) }
 
         var logMessage = "Database query \(queryName) completed in \(String(format: "%.2f", duration * 1000))ms"
         if let count = recordCount {
@@ -299,7 +307,7 @@ class PerformanceMonitor {
     /// Start tracking a network request
     func startNetworkRequest(_ requestName: String, url: URL? = nil) {
         let key = "net_\(requestName)"
-        ongoingOperations[key] = Date()
+        lock.withLock { ongoingOperations[key] = Date() }
 
         var logMessage = "Started network request: \(requestName)"
         if let url = url {
@@ -312,13 +320,15 @@ class PerformanceMonitor {
     /// Finish tracking a network request
     func finishNetworkRequest(_ requestName: String, statusCode: Int? = nil, bytesSent: Int? = nil, bytesReceived: Int? = nil) {
         let key = "net_\(requestName)"
-        guard let startTime = ongoingOperations[key] else {
+        let startTime: Date? = lock.withLock { ongoingOperations[key] }
+
+        guard let startTime = startTime else {
             logger.warning("finishNetworkRequest called for \(requestName) but no start time found")
             return
         }
 
         let duration = Date().timeIntervalSince(startTime)
-        ongoingOperations.removeValue(forKey: key)
+        lock.withLock { ongoingOperations.removeValue(forKey: key) }
 
         var logMessage = "Network request \(requestName) completed in \(String(format: "%.2f", duration * 1000))ms"
         if let status = statusCode {
@@ -359,20 +369,22 @@ class PerformanceMonitor {
     /// Start tracking a custom operation
     func startOperation(_ operationName: String) {
         let key = "op_\(operationName)"
-        ongoingOperations[key] = Date()
+        lock.withLock { ongoingOperations[key] = Date() }
         logger.debug("Started operation: \(operationName)")
     }
 
     /// Finish tracking a custom operation
     func finishOperation(_ operationName: String) {
         let key = "op_\(operationName)"
-        guard let startTime = ongoingOperations[key] else {
+        let startTime: Date? = lock.withLock { ongoingOperations[key] }
+
+        guard let startTime = startTime else {
             logger.warning("finishOperation called for \(operationName) but no start time found")
             return
         }
 
         let duration = Date().timeIntervalSince(startTime)
-        ongoingOperations.removeValue(forKey: key)
+        lock.withLock { ongoingOperations.removeValue(forKey: key) }
 
         logger.info("Operation \(operationName) completed in \(String(format: "%.2f", duration * 1000))ms")
 
@@ -428,9 +440,11 @@ class PerformanceMonitor {
             summary += "App Launch: \(String(format: "%.0f", launchDuration))ms\n"
         }
 
-        if !viewLoadTimes.isEmpty {
+        let loadTimes = lock.withLock { viewLoadTimes }
+
+        if !loadTimes.isEmpty {
             summary += "View Load Times:\n"
-            for (view, duration) in viewLoadTimes.sorted(by: { $0.value > $1.value }) {
+            for (view, duration) in loadTimes.sorted(by: { $0.value > $1.value }) {
                 summary += "  - \(view): \(String(format: "%.0f", duration * 1000))ms\n"
             }
         }
@@ -468,19 +482,18 @@ class PerformanceMonitor {
 
     /// Track API response time for an endpoint
     func trackAPIResponse(endpoint: String, durationMs: Double, statusCode: Int? = nil, success: Bool = true) {
-        lock.lock()
+        lock.withLock {
+            // Store response time
+            if apiResponseTimes[endpoint] == nil {
+                apiResponseTimes[endpoint] = []
+            }
+            apiResponseTimes[endpoint]?.append(durationMs)
 
-        // Store response time
-        if apiResponseTimes[endpoint] == nil {
-            apiResponseTimes[endpoint] = []
+            // Maintain rolling buffer
+            if let count = apiResponseTimes[endpoint]?.count, count > maxStoredResponseTimes {
+                apiResponseTimes[endpoint]?.removeFirst(count - maxStoredResponseTimes)
+            }
         }
-        apiResponseTimes[endpoint]?.append(durationMs)
-
-        // Maintain rolling buffer
-        if let count = apiResponseTimes[endpoint]?.count, count > maxStoredResponseTimes {
-            apiResponseTimes[endpoint]?.removeFirst(count - maxStoredResponseTimes)
-        }
-        lock.unlock()
 
         // Log slow responses
         if durationMs > Thresholds.slowNetworkMs {
@@ -516,27 +529,25 @@ class PerformanceMonitor {
 
     /// Get average response time for an endpoint
     func getAverageResponseTime(endpoint: String) -> Double? {
-        lock.lock()
-        defer { lock.unlock() }
-
-        guard let times = apiResponseTimes[endpoint], !times.isEmpty else {
-            return nil
+        lock.withLock {
+            guard let times = apiResponseTimes[endpoint], !times.isEmpty else {
+                return nil
+            }
+            return times.reduce(0, +) / Double(times.count)
         }
-        return times.reduce(0, +) / Double(times.count)
     }
 
     /// Get P95 response time for an endpoint
     func getP95ResponseTime(endpoint: String) -> Double? {
-        lock.lock()
-        defer { lock.unlock() }
+        lock.withLock {
+            guard let times = apiResponseTimes[endpoint], !times.isEmpty else {
+                return nil
+            }
 
-        guard let times = apiResponseTimes[endpoint], !times.isEmpty else {
-            return nil
+            let sorted = times.sorted()
+            let index = Int(Double(sorted.count - 1) * 0.95)
+            return sorted[min(index, sorted.count - 1)]
         }
-
-        let sorted = times.sorted()
-        let index = Int(Double(sorted.count - 1) * 0.95)
-        return sorted[min(index, sorted.count - 1)]
     }
 
     /// Track a user navigation event
@@ -597,19 +608,16 @@ class PerformanceMonitor {
 
     /// Get memory warning statistics
     var memoryWarningStats: (count: Int, lastWarning: Date?) {
-        lock.lock()
-        defer { lock.unlock() }
-        return (memoryWarningCount, lastMemoryWarning)
+        lock.withLock { (memoryWarningCount, lastMemoryWarning) }
     }
 
     /// Get API performance report
     func getAPIPerformanceReport() -> String {
-        lock.lock()
-        defer { lock.unlock() }
+        let responseTimes = lock.withLock { apiResponseTimes }
 
         var report = "=== API Performance Report ===\n"
 
-        for (endpoint, times) in apiResponseTimes.sorted(by: { $0.key < $1.key }) {
+        for (endpoint, times) in responseTimes.sorted(by: { $0.key < $1.key }) {
             guard !times.isEmpty else { continue }
 
             let sorted = times.sorted()

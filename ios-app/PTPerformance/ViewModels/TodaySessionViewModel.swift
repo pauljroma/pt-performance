@@ -937,10 +937,14 @@ class TodaySessionViewModel: ObservableObject {
             // ACP-841: Record workout completion for smart notification pattern learning
             if let patientUUID = UUID(uuidString: patientId) {
                 Task {
-                    try? await SmartNotificationService.shared.recordWorkoutCompletion(
-                        for: patientUUID,
-                        completionTime: now
-                    )
+                    do {
+                        try await SmartNotificationService.shared.recordWorkoutCompletion(
+                            for: patientUUID,
+                            completionTime: now
+                        )
+                    } catch {
+                        ErrorLogger.shared.logError(error, context: "TodaySessionViewModel.recordWorkoutCompletion")
+                    }
                 }
             }
 

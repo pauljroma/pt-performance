@@ -131,6 +131,7 @@ class WeeklySummarySharedViewModel: ObservableObject {
             do {
                 preferences = try await WeeklySummaryService.shared.fetchPreferences(for: patientId)
             } catch {
+                ErrorLogger.shared.logError(error, context: "WeeklySummaryViewModel.scheduleNotificationsIfNeeded")
                 return
             }
         }

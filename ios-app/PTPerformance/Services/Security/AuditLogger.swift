@@ -437,7 +437,12 @@ actor AuditLogger {
         }
 
         let content = lines.joined(separator: "\n") + (lines.isEmpty ? "" : "\n")
-        try? content.write(to: currentLogFile, atomically: true, encoding: .utf8)
+        do {
+            try content.write(to: currentLogFile, atomically: true, encoding: .utf8)
+        } catch {
+            // Use print here since ErrorLogger might cause recursion
+            print("[AuditLogger] Failed to write audit log: \(error.localizedDescription)")
+        }
     }
 
     /// Remove rotated log files older than the specified date.
