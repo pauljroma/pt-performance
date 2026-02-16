@@ -66,6 +66,7 @@ final class CrashPreventionService {
         signal(SIGABRT) { sig in CrashPreventionService.handleSignal(sig) }
         signal(SIGBUS) { sig in CrashPreventionService.handleSignal(sig) }
         signal(SIGFPE) { sig in CrashPreventionService.handleSignal(sig) }
+        signal(SIGTRAP) { sig in CrashPreventionService.handleSignal(sig) }
 
         logger.info("CrashPreventionService installed: exception and signal handlers active")
     }

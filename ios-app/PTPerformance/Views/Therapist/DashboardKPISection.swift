@@ -470,11 +470,13 @@ struct StatusBadge: View {
 
 // MARK: - TherapistSessionItem Sample Data Extension
 
+#if DEBUG
 extension TherapistSessionItem {
     /// Sample data for previews
     static var sampleForKPI: TherapistSessionItem {
+        // samplePatients is a hardcoded non-empty array; guard is purely defensive
         guard let firstPatient = Patient.samplePatients.first else {
-            fatalError("samplePatients must not be empty")
+            return TherapistSessionItem(session: .sample, patient: Patient.samplePatients[0])
         }
         return TherapistSessionItem(
             session: .sample,
@@ -541,6 +543,7 @@ extension TherapistSessionItem {
         ]
     }
 }
+#endif
 
 // MARK: - Preview
 

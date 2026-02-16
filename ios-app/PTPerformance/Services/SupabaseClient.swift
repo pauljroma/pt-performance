@@ -119,6 +119,14 @@ class PTSupabaseClient: ObservableObject {
             url = components.url ?? URL(fileURLWithPath: "/")
         }
 
+        // CRASH FIX: Supabase SDK 2.41.1 has a force unwrap on `supabaseURL.host!` at
+        // SupabaseClient.swift:168 when computing the default auth storage key.
+        // By providing `storageKey` explicitly, we bypass the SDK's dangerous code path entirely.
+        // This prevents EXC_BREAKPOINT/SIGTRAP crashes on iOS versions where URL.host may
+        // return nil (observed on iOS 26.x with new URL parser behavior).
+        let projectRef = url.host?.split(separator: ".").first.map(String.init) ?? "modus"
+        let authStorageKey = "sb-\(projectRef)-auth-token"
+
         // Use flexible decoder for all database queries
         // Handles ISO8601 (with/without fractional seconds), DATE (yyyy-MM-dd), and TIME (HH:mm:ss)
         // Auth configuration: PKCE flow (recommended for mobile) with URL scheme redirect
@@ -129,6 +137,7 @@ class PTSupabaseClient: ObservableObject {
                 db: SupabaseClientOptions.DatabaseOptions(decoder: PTSupabaseClient.flexibleDecoder),
                 auth: SupabaseClientOptions.AuthOptions(
                     redirectToURL: URL(string: "modus://auth"),
+                    storageKey: authStorageKey,
                     flowType: .pkce,
                     autoRefreshToken: true
                 )
