@@ -19,6 +19,7 @@
 //
 
 import SwiftUI
+import Supabase
 
 struct PTBriefView: View {
     let athleteId: UUID
@@ -97,11 +98,17 @@ struct PTBriefView: View {
                 PTBriefAddNoteSheet(athleteId: athleteId)
             }
             .sheet(isPresented: $showProtocolBuilder) {
-                ProtocolBuilderSheet(athleteId: athleteId)
+                ProtocolBuilderSheet(
+                    athleteId: athleteId,
+                    athleteName: viewModel.athlete?.fullName ?? "Athlete"
+                )
             }
             .sheet(isPresented: $showScoreBreakdown) {
                 if let readiness = viewModel.readinessScore {
-                    ScoreBreakdownSheet(readiness: readiness)
+                    ScoreBreakdownSheet(
+                        readiness: readiness,
+                        dailyReadiness: viewModel.latestDailyReadiness
+                    )
                 }
             }
             .sheet(item: $selectedDelta) { delta in
@@ -371,73 +378,119 @@ struct PTBriefView: View {
 
 // MARK: - Placeholder Sheet Views
 
-/// Placeholder for Add Note Sheet
+/// Add Note Sheet — allows PT to create categorized notes for an athlete
 private struct PTBriefAddNoteSheet: View {
     let athleteId: UUID
     @Environment(\.dismiss) private var dismiss
+    @State private var noteText = ""
+    @State private var noteCategory: NoteCategory = .clinical
+    @State private var isSaving = false
+    @State private var saveError: String?
+
+    enum NoteCategory: String, CaseIterable {
+        case clinical = "Clinical"
+        case progress = "Progress"
+        case communication = "Communication"
+        case general = "General"
+    }
 
     var body: some View {
         NavigationStack {
-            VStack(spacing: Spacing.lg) {
-                Image(systemName: "note.text.badge.plus")
-                    .font(.system(size: 64))
-                    .foregroundColor(.modusCyan)
+            Form {
+                Section("Category") {
+                    Picker("Category", selection: $noteCategory) {
+                        ForEach(NoteCategory.allCases, id: \.self) { category in
+                            Text(category.rawValue).tag(category)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                }
 
-                Text("Add Note")
-                    .font(.title2)
-                    .fontWeight(.bold)
+                Section("Note") {
+                    TextEditor(text: $noteText)
+                        .frame(minHeight: 120)
+                }
 
-                Text("Note editor coming soon")
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
+                if let error = saveError {
+                    Section {
+                        Text(error)
+                            .foregroundStyle(.red)
+                            .font(.caption)
+                    }
+                }
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
             .navigationTitle("Add Note")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
+                ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { dismiss() }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Save") {
+                        Task { await saveNote() }
+                    }
+                    .disabled(noteText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || isSaving)
                 }
             }
         }
     }
+
+    private func saveNote() async {
+        isSaving = true
+        saveError = nil
+        do {
+            let note = TherapistNoteInsert(
+                id: UUID().uuidString,
+                athleteId: athleteId.uuidString,
+                content: noteText.trimmingCharacters(in: .whitespacesAndNewlines),
+                category: noteCategory.rawValue.lowercased(),
+                createdAt: ISO8601DateFormatter().string(from: Date())
+            )
+            try await PTSupabaseClient.shared.client
+                .from("therapist_notes")
+                .insert(note)
+                .execute()
+            DebugLogger.shared.log("[PTBrief] Note saved for athlete \(athleteId)", level: .info)
+            dismiss()
+        } catch {
+            saveError = "Failed to save note. Please try again."
+            DebugLogger.shared.log("[PTBrief] Failed to save note: \(error)", level: .error)
+        }
+        isSaving = false
+    }
 }
 
-/// Placeholder for Protocol Builder Sheet
+/// Codable struct for inserting therapist notes into Supabase
+private struct TherapistNoteInsert: Encodable {
+    let id: String
+    let athleteId: String
+    let content: String
+    let category: String
+    let createdAt: String
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case athleteId = "athlete_id"
+        case content
+        case category
+        case createdAt = "created_at"
+    }
+}
+
+/// Protocol Builder Sheet - wraps the full ProtocolBuilderView for plan assignment
 private struct ProtocolBuilderSheet: View {
     let athleteId: UUID
-    @Environment(\.dismiss) private var dismiss
+    let athleteName: String
 
     var body: some View {
-        NavigationStack {
-            VStack(spacing: Spacing.lg) {
-                Image(systemName: "slider.horizontal.3")
-                    .font(.system(size: 64))
-                    .foregroundColor(.modusCyan)
-
-                Text("Protocol Builder")
-                    .font(.title2)
-                    .fontWeight(.bold)
-
-                Text("Full protocol customization coming soon")
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
-            }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .navigationTitle("Protocol Builder")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Cancel") { dismiss() }
-                }
-            }
-        }
+        ProtocolBuilderView(athleteId: athleteId, athleteName: athleteName)
     }
 }
 
-/// Score Breakdown Sheet
+/// Score Breakdown Sheet - displays dynamic readiness component data
 private struct ScoreBreakdownSheet: View {
     let readiness: PTBriefReadiness
+    let dailyReadiness: DailyReadiness?
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
@@ -467,6 +520,8 @@ private struct ScoreBreakdownSheet: View {
                         }
                     }
                     .padding()
+                    .accessibilityElement(children: .combine)
+                    .accessibilityLabel("Readiness score \(Int(readiness.score)), \(readiness.scoreLabel)")
 
                     // Breakdown details
                     VStack(alignment: .leading, spacing: Spacing.md) {
@@ -474,12 +529,52 @@ private struct ScoreBreakdownSheet: View {
                             .font(.headline)
                             .foregroundColor(.modusDeepTeal)
 
-                        // Placeholder breakdown items
-                        BreakdownRow(label: "Sleep Quality", value: "75%", weight: "30%")
-                        BreakdownRow(label: "HRV Status", value: "Good", weight: "25%")
-                        BreakdownRow(label: "Subjective Readiness", value: "7/10", weight: "20%")
-                        BreakdownRow(label: "Recovery Status", value: "Moderate", weight: "15%")
-                        BreakdownRow(label: "Training Load", value: "Optimal", weight: "10%")
+                        if let daily = dailyReadiness {
+                            BreakdownRow(
+                                icon: "bed.double.fill",
+                                label: "Sleep",
+                                value: formatSleepHours(daily.sleepHours),
+                                weight: "30%",
+                                barProgress: sleepProgress(daily.sleepHours),
+                                barColor: sleepColor(daily.sleepHours)
+                            )
+
+                            BreakdownRow(
+                                icon: "bolt.fill",
+                                label: "Energy",
+                                value: formatLevel(daily.energyLevel, max: 10),
+                                weight: "25%",
+                                barProgress: levelProgress(daily.energyLevel, max: 10),
+                                barColor: levelColor(daily.energyLevel, max: 10, inverted: false)
+                            )
+
+                            BreakdownRow(
+                                icon: "figure.walk",
+                                label: "Soreness",
+                                value: formatLevel(daily.sorenessLevel, max: 10),
+                                weight: "25%",
+                                barProgress: levelProgress(daily.sorenessLevel, max: 10),
+                                barColor: levelColor(daily.sorenessLevel, max: 10, inverted: true)
+                            )
+
+                            BreakdownRow(
+                                icon: "brain.head.profile",
+                                label: "Stress",
+                                value: formatLevel(daily.stressLevel, max: 10),
+                                weight: "20%",
+                                barProgress: levelProgress(daily.stressLevel, max: 10),
+                                barColor: levelColor(daily.stressLevel, max: 10, inverted: true)
+                            )
+                        } else {
+                            // Fallback when no component data is available
+                            HStack {
+                                Image(systemName: "info.circle")
+                                    .foregroundColor(.secondary)
+                                Text("Detailed component data is not available for this readiness entry.")
+                                    .font(.subheadline)
+                                    .foregroundColor(.secondary)
+                            }
+                        }
                     }
                     .padding()
                     .background(Color(.secondarySystemGroupedBackground))
@@ -510,6 +605,33 @@ private struct ScoreBreakdownSheet: View {
                     .padding()
                     .background(Color(.secondarySystemGroupedBackground))
                     .cornerRadius(CornerRadius.lg)
+
+                    // Trend section
+                    VStack(alignment: .leading, spacing: Spacing.sm) {
+                        HStack {
+                            Text("Trend")
+                                .font(.headline)
+                                .foregroundColor(.modusDeepTeal)
+
+                            Spacer()
+
+                            HStack(spacing: 4) {
+                                Image(systemName: readiness.trend.icon)
+                                Text(readiness.trend.displayName)
+                            }
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                            .foregroundColor(readiness.trend.color)
+                        }
+
+                        let formatter = RelativeDateTimeFormatter()
+                        Text("Last updated \(formatter.localizedString(for: readiness.lastUpdated, relativeTo: Date()))")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    .padding()
+                    .background(Color(.secondarySystemGroupedBackground))
+                    .cornerRadius(CornerRadius.lg)
                 }
                 .padding()
             }
@@ -523,31 +645,105 @@ private struct ScoreBreakdownSheet: View {
             }
         }
     }
+
+    // MARK: - Formatting Helpers
+
+    private func formatSleepHours(_ hours: Double?) -> String {
+        guard let hours = hours else { return "--" }
+        return String(format: "%.1fh", hours)
+    }
+
+    private func formatLevel(_ level: Int?, max: Int) -> String {
+        guard let level = level else { return "--" }
+        return "\(level)/\(max)"
+    }
+
+    private func sleepProgress(_ hours: Double?) -> Double {
+        guard let hours = hours else { return 0 }
+        // 8 hours is considered optimal
+        return min(hours / 8.0, 1.0)
+    }
+
+    private func sleepColor(_ hours: Double?) -> Color {
+        guard let hours = hours else { return .gray }
+        if hours >= 7.0 { return .green }
+        if hours >= 5.5 { return .yellow }
+        return .orange
+    }
+
+    private func levelProgress(_ level: Int?, max: Int) -> Double {
+        guard let level = level else { return 0 }
+        return Double(level) / Double(max)
+    }
+
+    /// Returns a color for the level bar. When `inverted` is true, higher values
+    /// are worse (e.g. soreness, stress) so high = red. When false, higher is
+    /// better (e.g. energy) so high = green.
+    private func levelColor(_ level: Int?, max: Int, inverted: Bool) -> Color {
+        guard let level = level else { return .gray }
+        let ratio = Double(level) / Double(max)
+        if inverted {
+            if ratio <= 0.3 { return .green }
+            if ratio <= 0.6 { return .yellow }
+            return .orange
+        } else {
+            if ratio >= 0.7 { return .green }
+            if ratio >= 0.4 { return .yellow }
+            return .orange
+        }
+    }
 }
 
+/// A single row in the score breakdown showing icon, label, value, weight, and a progress bar
 private struct BreakdownRow: View {
+    let icon: String
     let label: String
     let value: String
     let weight: String
+    let barProgress: Double
+    let barColor: Color
 
     var body: some View {
-        HStack {
-            Text(label)
-                .font(.subheadline)
-                .foregroundColor(.primary)
+        VStack(spacing: 6) {
+            HStack {
+                Image(systemName: icon)
+                    .font(.subheadline)
+                    .foregroundColor(barColor)
+                    .frame(width: 24)
 
-            Spacer()
+                Text(label)
+                    .font(.subheadline)
+                    .foregroundColor(.primary)
 
-            Text(value)
-                .font(.subheadline)
-                .fontWeight(.medium)
-                .foregroundColor(.primary)
+                Spacer()
 
-            Text("(\(weight))")
-                .font(.caption)
-                .foregroundColor(.secondary)
+                Text(value)
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+                    .foregroundColor(.primary)
+
+                Text("(\(weight))")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+
+            // Progress bar
+            GeometryReader { geometry in
+                ZStack(alignment: .leading) {
+                    RoundedRectangle(cornerRadius: 3)
+                        .fill(Color.gray.opacity(0.15))
+                        .frame(height: 6)
+
+                    RoundedRectangle(cornerRadius: 3)
+                        .fill(barColor)
+                        .frame(width: geometry.size.width * barProgress, height: 6)
+                }
+            }
+            .frame(height: 6)
         }
         .padding(.vertical, Spacing.xxs)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(label): \(value), weight \(weight)")
     }
 }
 
@@ -617,7 +813,7 @@ private struct DeltaEvidenceSheet: View {
                     .background(Color(.secondarySystemGroupedBackground))
                     .cornerRadius(CornerRadius.lg)
 
-                    // Citation placeholder
+                    // Evidence Citations
                     VStack(alignment: .leading, spacing: Spacing.sm) {
                         HStack {
                             Text("Evidence Citations")
@@ -631,9 +827,62 @@ private struct DeltaEvidenceSheet: View {
                                 .foregroundColor(.modusCyan)
                         }
 
-                        Text("Detailed citation view coming soon. Evidence includes raw data points, timestamps, and source reliability metrics.")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
+                        // Source citation
+                        HStack(spacing: Spacing.xs) {
+                            Image(systemName: delta.sourceType.icon)
+                                .font(.caption2)
+                                .foregroundColor(.modusCyan)
+
+                            Text(delta.source)
+                                .font(.caption)
+                                .foregroundColor(.primary)
+
+                            Spacer()
+
+                            Text(delta.sourceType.rawValue)
+                                .font(.caption2)
+                                .foregroundColor(.secondary)
+                                .padding(.horizontal, 6)
+                                .padding(.vertical, 2)
+                                .background(Color(.tertiarySystemGroupedBackground))
+                                .cornerRadius(CornerRadius.xs)
+                        }
+                        .padding(Spacing.xs)
+                        .background(Color(.tertiarySystemGroupedBackground).opacity(0.5))
+                        .cornerRadius(CornerRadius.xs)
+
+                        // Data point details
+                        VStack(alignment: .leading, spacing: 4) {
+                            HStack(spacing: Spacing.xs) {
+                                Image(systemName: "chart.line.uptrend.xyaxis")
+                                    .font(.caption2)
+                                    .foregroundColor(.secondary)
+
+                                Text("Metric: \(delta.metricName)")
+                                    .font(.caption2)
+                                    .foregroundColor(.secondary)
+                            }
+
+                            HStack(spacing: Spacing.xs) {
+                                Image(systemName: "arrow.left.arrow.right")
+                                    .font(.caption2)
+                                    .foregroundColor(.secondary)
+
+                                Text("Change: \(delta.previousValue) \u{2192} \(delta.currentValue) (\(delta.magnitude))")
+                                    .font(.caption2)
+                                    .foregroundColor(.secondary)
+                            }
+
+                            HStack(spacing: Spacing.xs) {
+                                Image(systemName: "clock")
+                                    .font(.caption2)
+                                    .foregroundColor(.secondary)
+
+                                Text("Recorded: \(delta.timestamp.formatted(date: .abbreviated, time: .shortened))")
+                                    .font(.caption2)
+                                    .foregroundColor(.secondary)
+                            }
+                        }
                     }
                     .padding()
                     .background(Color(.secondarySystemGroupedBackground))
@@ -751,7 +1000,7 @@ private struct RiskDetailSheet: View {
                     .background(Color(.secondarySystemGroupedBackground))
                     .cornerRadius(CornerRadius.lg)
 
-                    // Citations
+                    // Evidence Citations
                     VStack(alignment: .leading, spacing: Spacing.sm) {
                         HStack {
                             Text("Evidence Citations")
@@ -765,9 +1014,63 @@ private struct RiskDetailSheet: View {
                                 .foregroundColor(.modusCyan)
                         }
 
-                        Text("Full evidence chain and clinical guidelines reference coming soon.")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
+                        // Source citation
+                        HStack(spacing: Spacing.xs) {
+                            Image(systemName: "exclamationmark.shield")
+                                .font(.caption2)
+                                .foregroundColor(risk.severity.color)
+
+                            Text(risk.source)
+                                .font(.caption)
+                                .foregroundColor(.primary)
+
+                            Spacer()
+
+                            Text(risk.severity.displayName)
+                                .font(.caption2)
+                                .fontWeight(.medium)
+                                .foregroundColor(risk.severity.color)
+                                .padding(.horizontal, 6)
+                                .padding(.vertical, 2)
+                                .background(risk.severity.color.opacity(0.1))
+                                .cornerRadius(CornerRadius.xs)
+                        }
+                        .padding(Spacing.xs)
+                        .background(Color(.tertiarySystemGroupedBackground).opacity(0.5))
+                        .cornerRadius(CornerRadius.xs)
+
+                        // Threshold evidence
+                        VStack(alignment: .leading, spacing: 4) {
+                            HStack(spacing: Spacing.xs) {
+                                Image(systemName: "gauge.with.needle")
+                                    .font(.caption2)
+                                    .foregroundColor(.secondary)
+
+                                Text("Threshold: \(risk.thresholdValue)")
+                                    .font(.caption2)
+                                    .foregroundColor(.secondary)
+                            }
+
+                            HStack(spacing: Spacing.xs) {
+                                Image(systemName: "chart.bar")
+                                    .font(.caption2)
+                                    .foregroundColor(.secondary)
+
+                                Text("Current value: \(risk.currentValue)")
+                                    .font(.caption2)
+                                    .foregroundColor(risk.severity.color)
+                            }
+
+                            HStack(spacing: Spacing.xs) {
+                                Image(systemName: "clock")
+                                    .font(.caption2)
+                                    .foregroundColor(.secondary)
+
+                                Text("Detected: \(risk.timestamp.formatted(date: .abbreviated, time: .shortened))")
+                                    .font(.caption2)
+                                    .foregroundColor(.secondary)
+                            }
+                        }
                     }
                     .padding()
                     .background(Color(.secondarySystemGroupedBackground))

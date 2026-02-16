@@ -224,6 +224,7 @@ struct TherapistProgramsView: View {
 struct ProgramListCard: View {
     let program: ProgramListItem
     var onAnalytics: (() -> Void)? = nil
+    @State private var effectivenessScore: Double?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -235,8 +236,7 @@ struct ProgramListCard: View {
 
                 Spacer()
 
-                // Effectiveness score badge (placeholder - would be fetched from analytics)
-                ProgramEffectivenessIndicator()
+                ProgramEffectivenessIndicator(score: effectivenessScore)
             }
 
             // Program type badge
@@ -305,6 +305,18 @@ struct ProgramListCard: View {
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(program.programName), \(program.resolvedProgramType.displayName) program for \(program.patientName), \(program.durationWeeks) weeks, \(program.targetLevel) level")
         .accessibilityHint("Double tap to view program details, swipe left to edit")
+        .task {
+            guard let programUUID = UUID(uuidString: program.id) else { return }
+            do {
+                let service = ProgramEffectivenessService()
+                let metrics = try await service.fetchProgramComparison(programIds: [programUUID])
+                if let programMetrics = metrics.programs.first {
+                    effectivenessScore = programMetrics.effectivenessScore
+                }
+            } catch {
+                DebugLogger.shared.log("Failed to fetch effectiveness score for program \(program.id): \(error)", level: .error)
+            }
+        }
     }
 }
 

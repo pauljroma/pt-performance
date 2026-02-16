@@ -603,9 +603,46 @@ final class CohortAnalyticsService {
                 painReduction = 0
             }
 
-            // Strength gains would require additional exercise log queries
-            // Simplified for now
-            let strengthGains = Double.random(in: 10...35) // Placeholder
+            // Query exercise_logs for strength progression
+            let strengthGains: Double
+            do {
+                let logsResponse = try await supabase.client
+                    .from("exercise_logs")
+                    .select("id, patient_id, actual_load, logged_at")
+                    .eq("patient_id", value: patientId)
+                    .not("actual_load", operator: .is, value: "null")
+                    .order("logged_at", ascending: true)
+                    .execute()
+
+                struct StrengthRow: Codable {
+                    let id: String
+                    let patientId: String
+                    let actualLoad: Double?
+                    let loggedAt: Date?
+
+                    enum CodingKeys: String, CodingKey {
+                        case id
+                        case patientId = "patient_id"
+                        case actualLoad = "actual_load"
+                        case loggedAt = "logged_at"
+                    }
+                }
+
+                let logsDecoder = JSONDecoder()
+                logsDecoder.dateDecodingStrategy = .iso8601
+                let exerciseLogs = try logsDecoder.decode([StrengthRow].self, from: logsResponse.data)
+
+                if let firstWeight = exerciseLogs.first?.actualLoad,
+                   let lastWeight = exerciseLogs.last?.actualLoad,
+                   firstWeight > 0 {
+                    strengthGains = max(0, (lastWeight - firstWeight) / firstWeight * 100)
+                } else {
+                    strengthGains = 0
+                }
+            } catch {
+                DebugLogger.shared.log("Failed to fetch strength data for patient \(patientId): \(error)", level: .error)
+                strengthGains = 0
+            }
 
             return (max(0, painReduction), strengthGains)
         } catch {

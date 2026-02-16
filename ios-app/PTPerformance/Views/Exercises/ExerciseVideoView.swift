@@ -74,21 +74,18 @@ struct ExerciseVideoView: View {
     // MARK: - No Video View
 
     private var noVideoView: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: 12) {
             Image(systemName: "video.slash")
-                .font(.system(size: 64))
-                .foregroundColor(.secondary)
-
-            Text("No Video Available")
-                .font(.headline)
-
-            Text("Video demonstration coming soon")
+                .font(.system(size: 40))
+                .foregroundStyle(.secondary)
+            Text("No video available")
                 .font(.subheadline)
-                .foregroundColor(.secondary)
+                .foregroundStyle(.secondary)
         }
-        .frame(height: 300)
+        .frame(height: 180)
         .frame(maxWidth: .infinity)
-        .background(Color(.secondarySystemGroupedBackground))
+        .background(Color(.systemGray6))
+        .clipShape(RoundedRectangle(cornerRadius: 12))
     }
 
     // MARK: - Form Cues Section

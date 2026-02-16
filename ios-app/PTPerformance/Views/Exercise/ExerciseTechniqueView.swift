@@ -7,6 +7,7 @@
 //
 
 import SwiftUI
+import AVKit
 
 /// Full-screen technique guide for exercises with video support
 struct ExerciseTechniqueView: View {
@@ -131,26 +132,18 @@ struct VideoPlaceholderView: View {
     let exerciseName: String
 
     var body: some View {
-        ZStack {
-            RoundedRectangle(cornerRadius: 12)
-                .fill(Color.gray.opacity(0.1))
-
-            VStack(spacing: 16) {
-                Image(systemName: "play.rectangle.fill")
-                    .font(.system(size: 60))
-                    .foregroundColor(.gray)
-
-                Text("No video available")
-                    .font(.headline)
-                    .foregroundColor(.secondary)
-
-                Text("Video coming soon for \(exerciseName)")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, 40)
-            }
+        VStack(spacing: 12) {
+            Image(systemName: "video.slash")
+                .font(.system(size: 40))
+                .foregroundStyle(.secondary)
+            Text("No video available")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
         }
+        .frame(maxWidth: .infinity)
+        .frame(height: 180)
+        .background(Color(.systemGray6))
+        .clipShape(RoundedRectangle(cornerRadius: 12))
     }
 }
 

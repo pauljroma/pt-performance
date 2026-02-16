@@ -231,6 +231,7 @@ final class PTBriefViewModel: ObservableObject {
 
     @Published var athlete: Patient?
     @Published var readinessScore: PTBriefReadiness?
+    @Published var latestDailyReadiness: DailyReadiness?
     @Published var keyChanges: [PTBriefDelta] = []
     @Published var riskAlerts: [PTBriefRiskAlert] = []
     @Published var suggestedActions: [PTBriefAction] = []
@@ -370,8 +371,35 @@ final class PTBriefViewModel: ObservableObject {
             }
         }
 
-        // TODO: Persist approval to backend
+        // Persist approval to backend (optimistic update — UI already updated above)
         DebugLogger.shared.log("[PTBrief] Plan approved with \(suggestedActions.filter { $0.status == .approved }.count) actions", level: .success)
+
+        let athleteId = athlete?.id
+        let therapistId = athlete?.therapistId
+        Task {
+            do {
+                guard let athleteId = athleteId, let therapistId = therapistId else {
+                    DebugLogger.shared.log("[PTBrief] Missing athlete/therapist ID for plan approval persistence", level: .warning)
+                    return
+                }
+                let approval: [String: AnyEncodable] = [
+                    "id": AnyEncodable(UUID().uuidString),
+                    "athlete_id": AnyEncodable(athleteId.uuidString),
+                    "therapist_id": AnyEncodable(therapistId.uuidString),
+                    "decision": AnyEncodable("approved"),
+                    "notes": AnyEncodable(""),
+                    "decided_at": AnyEncodable(ISO8601DateFormatter().string(from: Date())),
+                    "created_at": AnyEncodable(ISO8601DateFormatter().string(from: Date()))
+                ]
+                try await PTSupabaseClient.shared.client
+                    .from("plan_approvals")
+                    .insert(approval)
+                    .execute()
+                DebugLogger.shared.log("[PTBrief] Plan approval persisted", level: .info)
+            } catch {
+                DebugLogger.shared.log("[PTBrief] Failed to persist plan approval: \(error)", level: .error)
+            }
+        }
     }
 
     /// Open the protocol builder for plan adjustment
@@ -385,6 +413,34 @@ final class PTBriefViewModel: ObservableObject {
         if let index = suggestedActions.firstIndex(where: { $0.id == action.id }) {
             suggestedActions[index].status = .approved
             HapticFeedback.light()
+
+            // Persist approval to backend (optimistic update — UI already updated above)
+            let athleteId = athlete?.id
+            let therapistId = athlete?.therapistId
+            Task {
+                do {
+                    guard let athleteId = athleteId, let therapistId = therapistId else {
+                        DebugLogger.shared.log("[PTBrief] Missing athlete/therapist ID for action approval persistence", level: .warning)
+                        return
+                    }
+                    let approval: [String: AnyEncodable] = [
+                        "id": AnyEncodable(UUID().uuidString),
+                        "athlete_id": AnyEncodable(athleteId.uuidString),
+                        "therapist_id": AnyEncodable(therapistId.uuidString),
+                        "decision": AnyEncodable("approved"),
+                        "notes": AnyEncodable("Action: \(action.title)"),
+                        "decided_at": AnyEncodable(ISO8601DateFormatter().string(from: Date())),
+                        "created_at": AnyEncodable(ISO8601DateFormatter().string(from: Date()))
+                    ]
+                    try await PTSupabaseClient.shared.client
+                        .from("plan_approvals")
+                        .insert(approval)
+                        .execute()
+                    DebugLogger.shared.log("[PTBrief] Action approval persisted: \(action.title)", level: .info)
+                } catch {
+                    DebugLogger.shared.log("[PTBrief] Failed to persist action approval: \(error)", level: .error)
+                }
+            }
         }
     }
 
@@ -393,14 +449,69 @@ final class PTBriefViewModel: ObservableObject {
         if let index = suggestedActions.firstIndex(where: { $0.id == action.id }) {
             suggestedActions[index].status = .rejected
             HapticFeedback.light()
+
+            // Persist rejection to backend (optimistic update — UI already updated above)
+            let athleteId = athlete?.id
+            let therapistId = athlete?.therapistId
+            Task {
+                do {
+                    guard let athleteId = athleteId, let therapistId = therapistId else {
+                        DebugLogger.shared.log("[PTBrief] Missing athlete/therapist ID for action rejection persistence", level: .warning)
+                        return
+                    }
+                    let rejection: [String: AnyEncodable] = [
+                        "id": AnyEncodable(UUID().uuidString),
+                        "athlete_id": AnyEncodable(athleteId.uuidString),
+                        "therapist_id": AnyEncodable(therapistId.uuidString),
+                        "decision": AnyEncodable("rejected"),
+                        "notes": AnyEncodable("Rejected action: \(action.title)"),
+                        "decided_at": AnyEncodable(ISO8601DateFormatter().string(from: Date())),
+                        "created_at": AnyEncodable(ISO8601DateFormatter().string(from: Date()))
+                    ]
+                    try await PTSupabaseClient.shared.client
+                        .from("plan_approvals")
+                        .insert(rejection)
+                        .execute()
+                    DebugLogger.shared.log("[PTBrief] Action rejection persisted: \(action.title)", level: .info)
+                } catch {
+                    DebugLogger.shared.log("[PTBrief] Failed to persist action rejection: \(error)", level: .error)
+                }
+            }
         }
     }
 
     /// Acknowledge a critical risk
     func acknowledgeRisk(_ risk: PTBriefRiskAlert) {
-        // In production, this would record the acknowledgment
         DebugLogger.shared.log("[PTBrief] Risk acknowledged: \(risk.title)", level: .diagnostic)
         HapticFeedback.medium()
+
+        // Persist risk acknowledgment to backend (optimistic update — UI already updated above)
+        let athleteId = athlete?.id
+        let therapistId = athlete?.therapistId
+        Task {
+            do {
+                guard let athleteId = athleteId, let therapistId = therapistId else {
+                    DebugLogger.shared.log("[PTBrief] Missing athlete/therapist ID for risk acknowledgment persistence", level: .warning)
+                    return
+                }
+                let acknowledgment: [String: AnyEncodable] = [
+                    "id": AnyEncodable(UUID().uuidString),
+                    "athlete_id": AnyEncodable(athleteId.uuidString),
+                    "therapist_id": AnyEncodable(therapistId.uuidString),
+                    "decision": AnyEncodable("acknowledged_risk"),
+                    "notes": AnyEncodable("Risk acknowledged: \(risk.title) (Severity: \(risk.severity.displayName))"),
+                    "decided_at": AnyEncodable(ISO8601DateFormatter().string(from: Date())),
+                    "created_at": AnyEncodable(ISO8601DateFormatter().string(from: Date()))
+                ]
+                try await PTSupabaseClient.shared.client
+                    .from("plan_approvals")
+                    .insert(acknowledgment)
+                    .execute()
+                DebugLogger.shared.log("[PTBrief] Risk acknowledgment persisted: \(risk.title)", level: .info)
+            } catch {
+                DebugLogger.shared.log("[PTBrief] Failed to persist risk acknowledgment: \(error)", level: .error)
+            }
+        }
     }
 
     // MARK: - Private Section Loaders
@@ -496,6 +607,9 @@ final class PTBriefViewModel: ObservableObject {
             DebugLogger.shared.log("[PTBrief] No readiness data found for athlete", level: .warning)
             throw PTBriefError.noReadinessData
         }
+
+        // Store the raw DailyReadiness for score breakdown display
+        latestDailyReadiness = latestReadiness
 
         // Fetch previous entry to determine trend
         let trendResponse = try await supabase.client
@@ -923,6 +1037,19 @@ extension PTBriefViewModel {
             confidenceReason: "5 data sources, high consistency",
             lastUpdated: Date().addingTimeInterval(-3600),
             citationCount: 6
+        )
+        vm.latestDailyReadiness = DailyReadiness(
+            id: UUID(),
+            patientId: UUID(),
+            date: Date(),
+            sleepHours: 7.2,
+            sorenessLevel: 3,
+            energyLevel: 7,
+            stressLevel: 4,
+            readinessScore: 78,
+            notes: nil,
+            createdAt: Date().addingTimeInterval(-3600),
+            updatedAt: Date().addingTimeInterval(-3600)
         )
         vm.keyChanges = [
             PTBriefDelta(

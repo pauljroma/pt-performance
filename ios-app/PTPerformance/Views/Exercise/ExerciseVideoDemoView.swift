@@ -8,6 +8,7 @@
 //
 
 import SwiftUI
+import AVKit
 
 /// Main view for exercise video demonstrations with multi-angle support
 struct ExerciseVideoDemoView: View {
@@ -141,26 +142,30 @@ struct ExerciseVideoDemoView: View {
 
     // MARK: - No Video Section
 
+    @ViewBuilder
     private var noVideoSection: some View {
-        VStack(spacing: 16) {
-            Image(systemName: "video.slash")
-                .font(.system(size: 48))
-                .foregroundColor(.secondary)
-
-            Text("No Video Available")
-                .font(.headline)
-
-            Text("Video demonstration coming soon for this exercise")
-                .font(.subheadline)
-                .foregroundColor(.secondary)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, Spacing.xl)
+        if let videoUrlString = exercise.exercise_templates?.videoUrl,
+           !videoUrlString.isEmpty,
+           let videoUrl = URL(string: videoUrlString) {
+            VideoPlayer(player: AVPlayer(url: videoUrl))
+                .frame(height: 220)
+                .clipShape(RoundedRectangle(cornerRadius: 12))
+                .padding(.horizontal)
+        } else {
+            VStack(spacing: 12) {
+                Image(systemName: "video.slash")
+                    .font(.system(size: 40))
+                    .foregroundStyle(.secondary)
+                Text("No video available")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+            }
+            .frame(height: 180)
+            .frame(maxWidth: .infinity)
+            .background(Color(.systemGray6))
+            .clipShape(RoundedRectangle(cornerRadius: 12))
+            .padding(.horizontal)
         }
-        .frame(height: 200)
-        .frame(maxWidth: .infinity)
-        .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(CornerRadius.md)
-        .padding(.horizontal)
     }
 
     // MARK: - Video Section

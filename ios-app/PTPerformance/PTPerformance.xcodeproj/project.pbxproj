@@ -761,6 +761,7 @@
 		A0C6F716E92A8FB8BD44EF29 /* FatigueAccumulationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FAFB0A43F9440047E4D4ECD /* FatigueAccumulationTests.swift */; };
 		A0F15D243C66FC008986AB8D /* CitationSourceCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 56F7ADA4A6EF5E6649CE032E /* CitationSourceCard.swift */; };
 		A10990315DE16BD5A09B3EC8 /* SmartSchedulingHomeCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = BCDA3A875EE53ABCCF4B3411 /* SmartSchedulingHomeCard.swift */; };
+		A13EE32AF1C5EAD270A52B96 /* PainTrackingService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BB4325E04917C3F1FF5AD7F /* PainTrackingService.swift */; };
 		A167EBBCF6CD43519F4D963A /* UCLHealthAssessment.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE6C4B258A6A267F827FFCE0 /* UCLHealthAssessment.swift */; };
 		A1B4B18DE137A1019808FE42 /* X2CommandCenterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 480967E5F31EDCF254B70DE6 /* X2CommandCenterView.swift */; };
 		A1B831613AC2225821E5D3B9 /* AudioRecordingService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20C3B9ED3C07346A50C0C3C2 /* AudioRecordingService.swift */; };
@@ -1703,6 +1704,7 @@
 		6B4603A2662C791728E82BFE /* WorkoutModificationCard.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Views/Components/WorkoutModificationCard.swift; sourceTree = SOURCE_ROOT; };
 		6B5AF855D38BECDD72A6712A /* FastingServiceTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = FastingServiceTests.swift; path = PTPerformanceTests/Services/FastingServiceTests.swift; sourceTree = "<group>"; };
 		6B8C310CF4E7D836728016BE /* NutritionService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = NutritionService.swift; path = Services/NutritionService.swift; sourceTree = "<group>"; };
+		6BB4325E04917C3F1FF5AD7F /* PainTrackingService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = PainTrackingService.swift; path = Services/PainTrackingService.swift; sourceTree = "<group>"; };
 		6BBA96C2A50E4AB4CBD6754E /* RootView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
 		6BE2DAC631ABFF3D6016AC77 /* ANRDetector.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ANRDetector.swift; path = Services/ANRDetector.swift; sourceTree = "<group>"; };
 		6BECEB2077BF0D51F4366AFE /* QuickSetupViewModel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = QuickSetupViewModel.swift; path = ViewModels/QuickSetupViewModel.swift; sourceTree = "<group>"; };
@@ -3206,6 +3208,7 @@
 				0371BB610E06C746A1158335 /* ABTestingService.swift */,
 				497E77C8ABA24FBEFDB515C3 /* PaywallExperimentService.swift */,
 				A021306B88E82177EA33E9BF /* MemoryBudgetManager.swift */,
+				6BB4325E04917C3F1FF5AD7F /* PainTrackingService.swift */,
 			);
 			name = Services;
 			sourceTree = "<group>";
@@ -6025,6 +6028,7 @@
 				A8107BAE4DE2CF6457A989F4 /* DynamicTypeKit.swift in Sources */,
 				98AF7E840C09F2CB576656C3 /* MemoryEfficientCollections.swift in Sources */,
 				F0907A000AC058C2FB3B0811 /* DynamicTypeModifiers.swift in Sources */,
+				A13EE32AF1C5EAD270A52B96 /* PainTrackingService.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -6207,7 +6211,7 @@
 				CODE_SIGN_ENTITLEMENTS = PTPerformance/PTPerformance.entitlements;
 				CODE_SIGN_IDENTITY = "";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 502;
+				CURRENT_PROJECT_VERSION = 503;
 				DEVELOPMENT_TEAM = 5NNLBL74XR;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Info.plist;
@@ -6232,7 +6236,7 @@
 				CODE_SIGN_ENTITLEMENTS = PTPerformance/PTPerformance.entitlements;
 				CODE_SIGN_IDENTITY = "";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 502;
+				CURRENT_PROJECT_VERSION = 503;
 				DEVELOPMENT_TEAM = 5NNLBL74XR;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Info.plist;

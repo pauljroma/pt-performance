@@ -7,6 +7,7 @@
 //
 
 import SwiftUI
+import AVKit
 
 /// Full-screen modal displaying exercise video and detailed instructions
 struct ExerciseDetailSheet: View {
@@ -78,27 +79,18 @@ struct ExerciseDetailSheet: View {
     }
 
     private var videoPlaceholder: some View {
-        ZStack {
-            RoundedRectangle(cornerRadius: CornerRadius.md)
-                .fill(Color.gray.opacity(0.1))
-                .frame(height: 250)
-
-            VStack(spacing: 16) {
-                Image(systemName: "video.badge.plus")
-                    .font(.system(size: 50))
-                    .foregroundColor(.gray.opacity(0.5))
-
-                VStack(spacing: 4) {
-                    Text("Video Coming Soon")
-                        .font(.headline)
-                        .foregroundColor(.gray)
-
-                    Text("Instructional video will be added")
-                        .font(.caption)
-                        .foregroundColor(.gray.opacity(0.7))
-                }
-            }
+        VStack(spacing: 12) {
+            Image(systemName: "video.slash")
+                .font(.system(size: 40))
+                .foregroundStyle(.secondary)
+            Text("No video available")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
         }
+        .frame(height: 180)
+        .frame(maxWidth: .infinity)
+        .background(Color(.systemGray6))
+        .clipShape(RoundedRectangle(cornerRadius: 12))
     }
 
     // MARK: - Overview Section

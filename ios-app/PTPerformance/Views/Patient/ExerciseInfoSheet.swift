@@ -1,4 +1,5 @@
 import SwiftUI
+import AVKit
 
 // MARK: - BUILD 296: Exercise Info Sheet (ACP-587)
 // MARK: - ACP-813: Updated with HD Video Exercise Demos support
@@ -145,21 +146,18 @@ struct ExerciseTemplateInfoSheet: View {
                 .cornerRadius(CornerRadius.md)
                 .adaptiveShadow(Shadow.medium)
         } else {
-            ZStack {
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(Color.gray.opacity(0.1))
-                    .frame(height: 200)
-
-                VStack(spacing: 12) {
-                    Image(systemName: "video.badge.plus")
-                        .font(.system(size: 40))
-                        .foregroundColor(.gray.opacity(0.5))
-
-                    Text("Video Coming Soon")
-                        .font(.subheadline)
-                        .foregroundColor(.gray)
-                }
+            VStack(spacing: 12) {
+                Image(systemName: "video.slash")
+                    .font(.system(size: 40))
+                    .foregroundStyle(.secondary)
+                Text("No video available")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
             }
+            .frame(height: 180)
+            .frame(maxWidth: .infinity)
+            .background(Color(.systemGray6))
+            .clipShape(RoundedRectangle(cornerRadius: 12))
         }
     }
 

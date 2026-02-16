@@ -9,6 +9,7 @@
 //
 
 import SwiftUI
+import AVKit
 
 // MARK: - Exercise Library View
 
@@ -1032,19 +1033,16 @@ struct ExerciseLibraryDetailSheet: View {
     }
 
     private var videoPlaceholder: some View {
-        ZStack {
-            Color.modusLightTeal
-
-            VStack(spacing: Spacing.sm) {
-                Image(systemName: exercise.muscleGroup?.iconName ?? "figure.strengthtraining.traditional")
-                    .font(.system(size: 48))
-                    .foregroundColor(.modusCyan.opacity(0.4))
-
-                Text("Video Coming Soon")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-            }
+        VStack(spacing: 12) {
+            Image(systemName: "video.slash")
+                .font(.system(size: 40))
+                .foregroundStyle(.secondary)
+            Text("No video available")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
         }
+        .frame(maxWidth: .infinity)
+        .background(Color(.systemGray6))
     }
 
     // MARK: - Exercise Info Section

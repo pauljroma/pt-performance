@@ -1076,36 +1076,20 @@ class TodaySessionViewModel: ObservableObject {
     }
 
     /// Notify therapist when patient reports pain > 5 (ACP-597)
-    /// TODO: Create a dedicated `send-pain-alert` edge function for iOS to call.
-    /// The `send-session-reminders` function is designed for cron jobs with x-cron-secret header
-    /// and should not be called directly from the iOS app.
+    /// Inserts a real-time alert into the `therapist_notifications` table via PainTrackingService.
     private func notifyTherapistOfHighPain(exerciseName: String, painLevel: Int) async {
         let logger = DebugLogger.shared
-        guard let patientId = supabase.userId else { return }
+        guard let patientId = supabase.userId,
+              let athleteId = UUID(uuidString: patientId) else { return }
 
-        // TODO: Replace with dedicated pain alert edge function or insert into notification queue table
-        // For now, log the pain alert for debugging - the cron job will pick up high pain from exercise_logs
-        logger.log("⚠️  High pain alert for \(exerciseName): \(painLevel)/10 (patient: \(patientId.prefix(8)))", level: .warning)
-        logger.log("   TODO: Implement send-pain-alert edge function for real-time therapist notification", level: .warning)
+        logger.log("High pain alert for \(exerciseName): \(painLevel)/10 (patient: \(patientId.prefix(8)))", level: .warning)
 
-        // Commented out: send-session-reminders is a cron-only function requiring x-cron-secret header
-        // do {
-        //     let notification: [String: String] = [
-        //         "patient_id": patientId,
-        //         "notification_type": "high_pain",
-        //         "title": "High Pain Alert",
-        //         "message": "Patient reported pain level \(painLevel)/10 during \(exerciseName)",
-        //         "severity": painLevel >= 8 ? "critical" : "warning"
-        //     ]
-        //
-        //     try await supabase.client.functions.invoke(
-        //         "send-session-reminders",
-        //         options: .init(body: notification)
-        //     )
-        //     logger.log("✅ Therapist notified of high pain for \(exerciseName)", level: .success)
-        // } catch {
-        //     logger.log("⚠️  Failed to notify therapist: \(error.localizedDescription)", level: .warning)
-        // }
+        Task {
+            await PainTrackingService.shared.checkAndAlertTherapist(
+                athleteId: athleteId,
+                intensity: painLevel
+            )
+        }
     }
 }
 

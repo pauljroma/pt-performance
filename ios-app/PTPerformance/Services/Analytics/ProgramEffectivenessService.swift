@@ -438,7 +438,7 @@ final class ProgramEffectivenessService {
                 currentPhase: max(1, Int(completionPercentage * 4)), // Approximate phase
                 completionPercentage: completionPercentage,
                 adherenceRate: completionPercentage * 0.95, // Approximate
-                painReduction: completedSessions > 0 ? Double.random(in: 2...5) : nil,
+                painReduction: await fetchPatientPainReduction(patientId: patientId),
                 status: status
             ))
         }
@@ -525,6 +525,13 @@ final class ProgramEffectivenessService {
 
         let avgDurationWeeks = durationCount > 0 ? totalDurationWeeks / Double(durationCount) : 12.0
 
+        // Query vw_pain_trend for actual pain reduction data across all patients in this program
+        let patientIds = Array(patientSessions.keys)
+        let averagePainReduction = await fetchAveragePainReduction(patientIds: patientIds)
+
+        // Query exercise_logs for strength progression across all patients in this program
+        let averageStrengthGain = await fetchAverageStrengthGain(patientIds: patientIds)
+
         return ProgramMetrics(
             id: UUID(),
             programId: programId,
@@ -536,11 +543,139 @@ final class ProgramEffectivenessService {
             droppedEnrollments: droppedEnrollments,
             completionRate: max(0, min(1, overallCompletionRate)),
             averageDurationWeeks: avgDurationWeeks,
-            averagePainReduction: Double.random(in: 2.5...5.5), // Placeholder - would come from pain logs
-            averageStrengthGain: Double.random(in: 0.15...0.45), // Placeholder - would come from exercise logs
+            averagePainReduction: averagePainReduction,
+            averageStrengthGain: averageStrengthGain,
             averageAdherence: max(0, min(1, overallCompletionRate * 0.95)),
             lastUpdated: Date()
         )
+    }
+
+    // MARK: - Pain & Strength Query Helpers
+
+    /// Row struct for decoding vw_pain_trend results
+    private struct PainTrendRow: Codable, Sendable {
+        let id: String
+        let patientId: String
+        let loggedDate: Date
+        let avgPain: Double
+
+        enum CodingKeys: String, CodingKey {
+            case id
+            case patientId = "patient_id"
+            case loggedDate = "logged_date"
+            case avgPain = "avg_pain"
+        }
+    }
+
+    /// Row struct for decoding exercise_logs results
+    private struct ExerciseLogQueryRow: Codable, Sendable {
+        let id: String
+        let patientId: String
+        let actualLoad: Double?
+        let loggedAt: Date?
+
+        enum CodingKeys: String, CodingKey {
+            case id
+            case patientId = "patient_id"
+            case actualLoad = "actual_load"
+            case loggedAt = "logged_at"
+        }
+    }
+
+    /// Fetch pain reduction for a single patient (absolute points reduced)
+    /// Returns nil if insufficient data
+    private func fetchPatientPainReduction(patientId: UUID) async -> Double? {
+        do {
+            let painResponse = try await supabase.client
+                .from("vw_pain_trend")
+                .select("id, patient_id, logged_date, avg_pain")
+                .eq("patient_id", value: patientId.uuidString)
+                .order("logged_date", ascending: true)
+                .execute()
+
+            let decoder = JSONDecoder()
+            decoder.dateDecodingStrategy = .iso8601
+            let painData = try decoder.decode([PainTrendRow].self, from: painResponse.data)
+
+            if painData.count >= 2,
+               let first = painData.first?.avgPain,
+               let last = painData.last?.avgPain,
+               first > 0 {
+                return max(0, first - last)
+            }
+            return nil
+        } catch {
+            DebugLogger.shared.log("Failed to fetch pain reduction for patient \(patientId): \(error)", level: .error)
+            return nil
+        }
+    }
+
+    /// Fetch average pain reduction across a set of patients
+    /// Queries vw_pain_trend and computes (first - last) / first * 100 per patient, then averages
+    private func fetchAveragePainReduction(patientIds: [UUID]) async -> Double {
+        var reductions: [Double] = []
+
+        for patientId in patientIds {
+            do {
+                let painResponse = try await supabase.client
+                    .from("vw_pain_trend")
+                    .select("id, patient_id, logged_date, avg_pain")
+                    .eq("patient_id", value: patientId.uuidString)
+                    .order("logged_date", ascending: true)
+                    .execute()
+
+                let decoder = JSONDecoder()
+                decoder.dateDecodingStrategy = .iso8601
+                let painData = try decoder.decode([PainTrendRow].self, from: painResponse.data)
+
+                if let first = painData.first?.avgPain, let last = painData.last?.avgPain, first > 0 {
+                    let reduction = max(0, (first - last) / first * 100)
+                    // Normalize to 0-10 scale (percentage / 10) to match model expectations
+                    reductions.append(reduction / 10.0)
+                }
+            } catch {
+                DebugLogger.shared.log("Failed to fetch pain data for patient \(patientId): \(error)", level: .error)
+                continue
+            }
+        }
+
+        guard !reductions.isEmpty else { return 0 }
+        return reductions.reduce(0, +) / Double(reductions.count)
+    }
+
+    /// Fetch average strength gain across a set of patients
+    /// Queries exercise_logs and computes (last load - first load) / first load per patient, then averages
+    private func fetchAverageStrengthGain(patientIds: [UUID]) async -> Double {
+        var gains: [Double] = []
+
+        for patientId in patientIds {
+            do {
+                let logsResponse = try await supabase.client
+                    .from("exercise_logs")
+                    .select("id, patient_id, actual_load, logged_at")
+                    .eq("patient_id", value: patientId.uuidString)
+                    .not("actual_load", operator: .is, value: "null")
+                    .order("logged_at", ascending: true)
+                    .execute()
+
+                let decoder = JSONDecoder()
+                decoder.dateDecodingStrategy = .iso8601
+                let exerciseLogs = try decoder.decode([ExerciseLogQueryRow].self, from: logsResponse.data)
+
+                if let firstWeight = exerciseLogs.first?.actualLoad,
+                   let lastWeight = exerciseLogs.last?.actualLoad,
+                   firstWeight > 0 {
+                    let gain = max(0, (lastWeight - firstWeight) / firstWeight)
+                    gains.append(gain)
+                }
+            } catch {
+                DebugLogger.shared.log("Failed to fetch exercise logs for patient \(patientId): \(error)", level: .error)
+                continue
+            }
+        }
+
+        guard !gains.isEmpty else { return 0 }
+        return gains.reduce(0, +) / Double(gains.count)
     }
 
     /// Determine common dropoff reasons based on phase
