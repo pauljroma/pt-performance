@@ -198,6 +198,19 @@ class PaywallService: ObservableObject {
         logger.info("Paywall", "Impression #\(total) recorded — variant: \(impression.variantName), trigger: \(impression.trigger.analyticsName)")
 
         sendAnalyticsEvent(impression)
+
+        // ACP-968: Track paywall impression in conversion funnel
+        let triggerSource = currentTrigger.analyticsName
+        let variantName = currentVariant.variantName
+        Task {
+            await ConversionFunnelTracker.shared.recordStage(
+                .paywallImpression,
+                source: triggerSource,
+                tier: nil,
+                revenue: nil,
+                paywallVariant: variantName
+            )
+        }
     }
 
     /// Records that the user purchased/subscribed from the paywall.
@@ -217,6 +230,19 @@ class PaywallService: ObservableObject {
         logger.success("Paywall", "Conversion #\(total) recorded — variant: \(impression.variantName), trigger: \(impression.trigger.analyticsName)")
 
         sendAnalyticsEvent(impression)
+
+        // ACP-968: Track purchase completion in conversion funnel
+        let triggerSource = currentTrigger.analyticsName
+        let variantName = currentVariant.variantName
+        Task {
+            await ConversionFunnelTracker.shared.recordStage(
+                .purchaseCompleted,
+                source: triggerSource,
+                tier: nil,
+                revenue: nil,
+                paywallVariant: variantName
+            )
+        }
 
         // Dismiss paywall on conversion
         dismissPaywall()
@@ -243,6 +269,19 @@ class PaywallService: ObservableObject {
         logger.info("Paywall", "Dismissal recorded — variant: \(impression.variantName), trigger: \(impression.trigger.analyticsName), viewDuration: \(String(format: "%.1f", viewDuration))s")
 
         sendAnalyticsEvent(impression)
+
+        // ACP-968: Track paywall engagement (viewed but dismissed) in conversion funnel
+        let triggerSource = currentTrigger.analyticsName
+        let variantName = currentVariant.variantName
+        Task {
+            await ConversionFunnelTracker.shared.recordStage(
+                .paywallEngaged,
+                source: triggerSource,
+                tier: nil,
+                revenue: nil,
+                paywallVariant: variantName
+            )
+        }
     }
 
     /// Dismisses the paywall and clears the impression tracking state.

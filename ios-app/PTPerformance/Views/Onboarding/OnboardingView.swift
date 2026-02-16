@@ -63,8 +63,10 @@ struct OnboardingView: View {
                 .tabViewStyle(.page(indexDisplayMode: .always))
                 .indexViewStyle(.page(backgroundDisplayMode: .always))
                 .accessibilityLabel("Onboarding pages. Page \(currentPage + 1) of \(totalPages)")
-                .onChange(of: currentPage) { _, _ in
+                .onChange(of: currentPage) { _, newPage in
                     HapticFeedback.light()
+                    // ACP-967: Track each onboarding page view in the funnel
+                    trackPageView(page: newPage)
                 }
 
                 // Bottom CTA area
@@ -104,6 +106,9 @@ struct OnboardingView: View {
         }
         .onAppear {
             logOnboardingStart()
+            // ACP-967: Record onboarding started and first page view
+            OnboardingFunnelTracker.shared.recordStep(.onboardingStarted)
+            OnboardingFunnelTracker.shared.recordStep(.onboardingPage1Viewed)
         }
     }
 
@@ -112,6 +117,8 @@ struct OnboardingView: View {
     /// Quick start: skip setup entirely, jump straight into the app
     private func handleQuickStart() {
         HapticFeedback.medium()
+        // ACP-967: Record quick start in onboarding funnel
+        OnboardingFunnelTracker.shared.recordStep(.quickStartTapped)
         ErrorLogger.shared.logUserAction(
             action: "onboarding_quick_start",
             properties: ["page_at_skip": currentPage]
@@ -123,6 +130,8 @@ struct OnboardingView: View {
     /// Normal flow: complete onboarding, proceed to setup
     private func handleGetStarted() {
         HapticFeedback.medium()
+        // ACP-967: Record profile setup started in onboarding funnel (user chose "Set Up My Profile")
+        OnboardingFunnelTracker.shared.recordStep(.profileSetupStarted)
         ErrorLogger.shared.logUserAction(
             action: "onboarding_completed",
             properties: ["pages_viewed": totalPages]
@@ -136,6 +145,22 @@ struct OnboardingView: View {
             action: "onboarding_started",
             properties: [:]
         )
+    }
+
+    // MARK: - ACP-967: Funnel Page Tracking
+
+    /// Tracks page views as the user swipes through onboarding pages.
+    private func trackPageView(page: Int) {
+        switch page {
+        case 0:
+            OnboardingFunnelTracker.shared.recordStep(.onboardingPage1Viewed)
+        case 1:
+            OnboardingFunnelTracker.shared.recordStep(.onboardingPage2Viewed)
+        case 2:
+            OnboardingFunnelTracker.shared.recordStep(.onboardingPage3Viewed)
+        default:
+            break
+        }
     }
 }
 

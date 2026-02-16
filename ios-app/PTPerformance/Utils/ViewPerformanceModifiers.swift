@@ -277,6 +277,76 @@ class BatchStateManager: ObservableObject {
     }
 }
 
+// MARK: - Prefetch Modifier (ACP-942)
+
+/// View modifier that triggers a prefetch callback when the view appears
+/// and an optional cancel callback when it disappears. Designed for use on
+/// individual items inside a ForEach or List to enable data/image prefetching.
+///
+/// This is a convenience bridge to ScrollPerformanceKit's PrefetchItemModifier,
+/// providing a consistent API surface in ViewPerformanceModifiers.
+///
+/// Usage:
+/// ```swift
+/// ForEach(exercises) { exercise in
+///     ExerciseRow(exercise: exercise)
+///         .prefetch(distance: 3) {
+///             preloadImage(for: exercise)
+///         }
+/// }
+/// ```
+extension View {
+    /// Attach a prefetch action to this view.
+    ///
+    /// - Parameters:
+    ///   - distance: Reserved for future use with visibility-distance-based triggering.
+    ///   - action: Closure invoked when the view appears, used to preload data or images.
+    ///   - cancel: Optional closure invoked when the view disappears, used to cancel inflight work.
+    func prefetchOnAppear(
+        distance: Int = 0,
+        action: @escaping () -> Void,
+        cancel: (() -> Void)? = nil
+    ) -> some View {
+        self
+            .onAppear { action() }
+            .onDisappear { cancel?() }
+    }
+}
+
+// MARK: - Scroll Optimized Modifier (ACP-942)
+
+/// Convenience modifier that combines lazy loading with drawing group flattening
+/// for cells with complex layouts. This is the single modifier to reach for when
+/// a list cell has gradients, shadows, overlapping views, or other GPU-heavy content.
+///
+/// What it does:
+/// 1. `.lazyLoad()` — defers rendering until the cell scrolls into view
+/// 2. `.drawingGroup()` — flattens the view hierarchy into an offscreen bitmap,
+///    reducing the number of render passes needed by Metal/CoreAnimation
+///
+/// Usage:
+/// ```swift
+/// ForEach(workouts) { workout in
+///     ComplexWorkoutCard(workout: workout)
+///         .scrollOptimized()
+/// }
+/// ```
+struct ScrollOptimizedModifier: ViewModifier {
+    func body(content: Content) -> some View {
+        content
+            .lazyLoad()
+            .drawingGroup()
+    }
+}
+
+extension View {
+    /// Optimize this view for scrolling by combining lazy loading with drawing group.
+    /// Best for cells with complex layouts (gradients, shadows, overlapping views).
+    func scrollOptimized() -> some View {
+        modifier(ScrollOptimizedModifier())
+    }
+}
+
 // MARK: - View Size Preference
 
 /// Efficiently track view size without causing re-layout

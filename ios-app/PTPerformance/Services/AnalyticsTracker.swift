@@ -77,6 +77,11 @@ class AnalyticsTracker {
         // Log to ErrorLogger for persistence
         errorLogger.logUserAction(action: event, properties: properties)
 
+        // Forward to AnalyticsSDK pipeline for batched Supabase ingestion
+        Task {
+            await AnalyticsSDK.shared.track(event, properties: properties)
+        }
+
         // Fire-and-forget backend sync — does not block the UI
         Task {
             await sendToAnalyticsBackend(event: event, properties: properties)
@@ -327,6 +332,11 @@ class AnalyticsTracker {
         }
 
         track(event: "screen_viewed", properties: properties)
+
+        // Also forward to AnalyticsSDK screen tracking for dedicated screen_viewed pipeline
+        Task {
+            await AnalyticsSDK.shared.screen(screenName, properties: properties)
+        }
     }
 
     /// Track slow operation

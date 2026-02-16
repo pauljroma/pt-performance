@@ -114,10 +114,16 @@ actor SubscriptionAnalyticsService {
     /// Events are queued locally and batch-synced to Supabase. If the queue
     /// exceeds the batch size, an immediate sync is triggered.
     ///
+    /// ACP-968: Also forwards purchase, trial, and cancellation events to the
+    /// ConversionFunnelTracker for conversion funnel analytics.
+    ///
     /// - Parameter event: The subscription event to record
     func recordEvent(_ event: SubscriptionEvent) async {
         eventQueue.append(event)
         logger.info("SubscriptionAnalytics", "Recorded event: \(event.type.rawValue) for user \(event.userId), tier: \(event.tier.rawValue)")
+
+        // ACP-968: Forward relevant events to the conversion funnel tracker
+        await forwardToConversionFunnel(event)
 
         // Invalidate cached metrics since data has changed
         metricsLastFetched = nil
@@ -132,6 +138,70 @@ actor SubscriptionAnalyticsService {
         } else if Date().timeIntervalSince(lastSyncTime) >= syncInterval && !eventQueue.isEmpty {
             logger.info("SubscriptionAnalytics", "Sync interval elapsed, triggering sync")
             await syncEventQueue()
+        }
+    }
+
+    // MARK: - ACP-968: Conversion Funnel Integration
+
+    /// Forwards subscription lifecycle events to the ConversionFunnelTracker.
+    ///
+    /// Maps SubscriptionEventType to ConversionFunnelTracker.ConversionStage for
+    /// purchase completions, trial starts, trial conversions, and trial cancellations.
+    private func forwardToConversionFunnel(_ event: SubscriptionEvent) async {
+        let tracker = ConversionFunnelTracker.shared
+        let source = event.metadata?["source"] ?? "subscription_lifecycle"
+        let tier = event.tier.rawValue
+        let paywallVariant = event.metadata?["paywall_variant"]
+
+        switch event.type {
+        case .purchase:
+            await tracker.recordStage(
+                .purchaseCompleted,
+                source: source,
+                tier: tier,
+                revenue: event.revenue,
+                paywallVariant: paywallVariant
+            )
+
+        case .trialStart:
+            await tracker.recordStage(
+                .trialStarted,
+                source: source,
+                tier: tier,
+                revenue: nil,
+                paywallVariant: paywallVariant
+            )
+
+        case .trialConvert:
+            await tracker.recordStage(
+                .trialConverted,
+                source: source,
+                tier: tier,
+                revenue: event.revenue,
+                paywallVariant: paywallVariant
+            )
+
+        case .trialExpire:
+            await tracker.recordStage(
+                .trialCanceled,
+                source: source,
+                tier: tier,
+                revenue: nil,
+                paywallVariant: paywallVariant
+            )
+
+        case .cancellation:
+            await tracker.recordStage(
+                .trialCanceled,
+                source: source,
+                tier: tier,
+                revenue: nil,
+                paywallVariant: paywallVariant
+            )
+
+        case .renewal:
+            // Renewals are not a funnel stage — skip
+            break
         }
     }
 

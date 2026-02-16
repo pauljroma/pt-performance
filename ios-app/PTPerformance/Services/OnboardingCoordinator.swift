@@ -54,6 +54,8 @@ final class OnboardingCoordinator: ObservableObject {
                 action: "first_launch_detected",
                 properties: [:]
             )
+            // ACP-967: Record onboarding funnel start
+            OnboardingFunnelTracker.shared.recordStep(.onboardingStarted)
         }
     }
 
@@ -62,6 +64,9 @@ final class OnboardingCoordinator: ObservableObject {
         hasSeenOnboarding = true
         shouldShowOnboarding = false
         deferredSetupPending = true
+
+        // ACP-967: Record profile setup started in onboarding funnel
+        OnboardingFunnelTracker.shared.recordStep(.profileSetupStarted)
 
         ErrorLogger.shared.logUserAction(
             action: "onboarding_completed",
@@ -79,6 +84,9 @@ final class OnboardingCoordinator: ObservableObject {
 
         // Also mark QuickSetup as "completed" so it doesn't block app entry
         UserDefaults.standard.set(true, forKey: "hasCompletedQuickSetup")
+
+        // ACP-967: Record quick start in onboarding funnel
+        OnboardingFunnelTracker.shared.recordStep(.quickStartTapped)
 
         ErrorLogger.shared.logUserAction(
             action: "onboarding_quick_start",
@@ -112,6 +120,9 @@ final class OnboardingCoordinator: ObservableObject {
     func completeDeferredSetup() {
         deferredSetupPending = false
         quickStarted = false
+
+        // ACP-967: Record profile setup completed in onboarding funnel
+        OnboardingFunnelTracker.shared.recordStep(.profileSetupCompleted)
 
         ErrorLogger.shared.logUserAction(
             action: "deferred_setup_completed",

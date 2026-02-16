@@ -175,23 +175,25 @@ final class CertificatePinningService {
 
         // SPKI SHA-256 hashes for the Supabase domain certificate chain.
         //
-        // Pin 1 (Primary): Current Let's Encrypt / Cloudflare intermediate CA
-        // Pin 2 (Backup):  ISRG Root X1 (Let's Encrypt root)
-        // Pin 3 (Backup):  DigiCert Global Root G2 (alternate trust path)
+        // Pin 1 (Primary): Google Trust Services WE1 intermediate CA (current)
+        // Pin 2 (Primary): GTS Root R4 (current root, cross-signed by GlobalSign)
+        // Pin 3 (Backup):  ISRG Root X1 (previous trust path)
+        // Pin 4 (Backup):  DigiCert Global Root G2 (alternate trust path)
         //
-        // NOTE: These are well-known CA public key hashes. In production, you should
-        // extract the actual SPKI hashes from your server's certificate chain using:
-        //   openssl s_client -connect <host>:443 | openssl x509 -pubkey -noout | \
-        //   openssl pkey -pubin -outform der | openssl dgst -sha256 -binary | base64
+        // Verified 2026-02-15 via:
+        //   openssl s_client -connect rpbxeaxlaoyoqkohytlw.supabase.co:443 -showcerts
+        // Chain: supabase.co -> WE1 -> GTS Root R4 -> GlobalSign Root CA
         let supabaseConfig = PinningConfiguration(
             domain: supabaseHost,
             includeSubdomains: false,
             pinnedHashes: [
-                // Let's Encrypt R3 intermediate (ISRG)
-                "jQJTbIh0grw0/1TkHSumWb+Fs0Ggogr621gT3PvPKG0=",
-                // ISRG Root X1
+                // Google Trust Services WE1 intermediate (current)
+                "kIdp6NNEd8wsugYyyIYFsi1ylMCED3hZbSR8ZFsa/A4=",
+                // GTS Root R4 (current root)
+                "mEflZT5enoR1FuXLgYYGqnVEoZvmf9c2bVBpiOjYQ0c=",
+                // ISRG Root X1 (backup — previous trust path)
                 "C5+lpZ7tcVwmwQIMcRtPbsQtWLABXhQzejna0wHFr8M=",
-                // DigiCert Global Root G2 (backup trust path)
+                // DigiCert Global Root G2 (backup — alternate trust path)
                 "i7WTqTvh0OioIruIfFR4kMPnBqrS2rdiVPl/s2uC/CY="
             ],
             maxAge: 60 * 60 * 24 * 30,  // 30 days
