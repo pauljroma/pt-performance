@@ -519,6 +519,31 @@ enum HistoricalTimeRange: String, CaseIterable, Identifiable {
         case .year: return 365
         }
     }
+
+    /// Maps to the service-layer TrendTimeRange
+    var serviceTimeRange: TrendTimeRange {
+        switch self {
+        case .week: return .thirtyDays
+        case .month: return .thirtyDays
+        case .threeMonths: return .ninetyDays
+        case .year: return .oneYear
+        }
+    }
+}
+
+// MARK: - TrendMetric to TrendMetricType Mapping
+
+extension TrendMetric {
+    /// Maps to the service-layer TrendMetricType
+    var serviceMetricType: TrendMetricType {
+        switch self {
+        case .readiness: return .recoveryScore
+        case .pain: return .painLevel
+        case .adherence: return .sessionAdherence
+        case .volume: return .workloadVolume
+        case .strength: return .strengthProgress
+        }
+    }
 }
 
 // MARK: - Data Point
@@ -537,6 +562,7 @@ final class HistoricalTrendsViewModel: ObservableObject {
     // MARK: - Properties
 
     let patientId: UUID
+    private let trendService = TrendAnalysisService.shared
 
     @Published private(set) var dataPoints: [HistoricalTrendDataPoint] = []
     @Published private(set) var isLoading = false
@@ -590,93 +616,50 @@ final class HistoricalTrendsViewModel: ObservableObject {
 
     func loadMetric(_ metric: TrendMetric, range: HistoricalTimeRange) async {
         isLoading = true
+        defer { isLoading = false }
 
-        // Generate sample data for development
-        await generateSampleData(metric: metric, range: range)
+        do {
+            let analysis = try await trendService.analyzeTrend(
+                patientId: patientId,
+                metric: metric.serviceMetricType,
+                range: range.serviceTimeRange
+            )
 
-        isLoading = false
-    }
-
-    private func generateSampleData(metric: TrendMetric, range: HistoricalTimeRange) async {
-        let calendar = Calendar.current
-        let now = Date()
-        var points: [HistoricalTrendDataPoint] = []
-
-        // Generate data points
-        for i in 0..<range.days {
-            if let date = calendar.date(byAdding: .day, value: -i, to: now) {
-                let baseValue: Double
-                switch metric {
-                case .readiness:
-                    baseValue = Double.random(in: 60...90)
-                case .pain:
-                    baseValue = Double.random(in: 1...6)
-                case .adherence:
-                    baseValue = Double.random(in: 70...100)
-                case .volume:
-                    baseValue = Double.random(in: 5000...15000)
-                case .strength:
-                    baseValue = Double.random(in: 80...120)
-                }
-
-                // Add some trend
-                let trendFactor = Double(range.days - i) / Double(range.days) * 10
-                let value = baseValue + trendFactor + Double.random(in: -5...5)
-
-                points.append(HistoricalTrendDataPoint(date: date, value: max(0, value)))
+            // Convert AnalyticsTrendDataPoints to HistoricalTrendDataPoints
+            dataPoints = analysis.dataPoints.map { point in
+                HistoricalTrendDataPoint(date: point.date, value: point.value)
             }
-        }
 
-        dataPoints = points.reversed()
-
-        // Calculate trend
-        if let first = points.last?.value, let last = points.first?.value {
-            let change = last - first
-            if abs(change) < 3 {
+            // Map TrendDirection to HistoricalTrendDirection
+            switch analysis.summary.direction {
+            case .improving:
+                overallTrend = .improving
+                isImproving = true
+            case .declining:
+                overallTrend = .declining
+                isImproving = false
+            case .stable, .fluctuating:
                 overallTrend = .stable
-            } else if change > 0 {
-                overallTrend = metric == .pain ? .declining : .improving
-                isImproving = metric != .pain
-            } else {
-                overallTrend = metric == .pain ? .improving : .declining
-                isImproving = metric == .pain
+                isImproving = false
             }
 
-            let percentChange = abs(change / first) * 100
-            periodComparison = String(format: "%.1f%%", percentChange) + (change > 0 ? " increase" : " decrease")
-        }
+            // Build period comparison string from summary
+            let percentChange = analysis.summary.percentChange
+            if abs(percentChange) > 0.1 {
+                periodComparison = String(format: "%.1f%%", abs(percentChange)) + (percentChange > 0 ? " increase" : " decrease")
+            } else {
+                periodComparison = nil
+            }
 
-        // Generate insights
-        insights = generateInsights(metric: metric)
-    }
-
-    private func generateInsights(metric: TrendMetric) -> [String] {
-        switch metric {
-        case .readiness:
-            return [
-                "Readiness scores are highest on Mondays after rest days",
-                "Consider reducing intensity when readiness drops below 65"
-            ]
-        case .pain:
-            return [
-                "Pain levels tend to spike after high-volume sessions",
-                "Recovery protocols show 40% improvement in pain management"
-            ]
-        case .adherence:
-            return [
-                "Adherence improves with morning scheduled workouts",
-                "Streak tracking has increased consistency by 25%"
-            ]
-        case .volume:
-            return [
-                "Weekly volume is within optimal range for progression",
-                "Consider a deload if volume continues to increase"
-            ]
-        case .strength:
-            return [
-                "Strength gains are on track with program goals",
-                "Upper body lifts progressing faster than lower body"
-            ]
+            // Use real insights from analysis
+            insights = analysis.summary.insights
+        } catch {
+            // On error, return empty data instead of mock data
+            dataPoints = []
+            overallTrend = nil
+            periodComparison = nil
+            isImproving = false
+            insights = []
         }
     }
 }

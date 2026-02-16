@@ -54,12 +54,15 @@ struct RecoveryDashboardProvider: TimelineProvider {
             let date = calendar.date(byAdding: .day, value: -6 + offset, to: today) ?? today
             let scores = [85, 72, 90, 65, 78, 55, 88]
             let bands = ["green", "yellow", "green", "orange", "yellow", "red", "green"]
+            let hrvValues = [65.0, 58.0, 72.0, 52.0, 60.0, 45.0, 70.0]
+            let sleepValues = [7.5, 6.8, 8.0, 6.2, 7.0, 5.5, 7.8]
+            let hrValues = [62, 58, 55, 65, 60, 68, 56]
             return WidgetReadiness(
                 score: scores[offset],
                 band: bands[offset],
-                hrv: Double.random(in: 50...80),
-                sleepHours: Double.random(in: 6...9),
-                restingHR: Int.random(in: 48...62),
+                hrv: hrvValues[offset],
+                sleepHours: sleepValues[offset],
+                restingHR: hrValues[offset],
                 date: date
             )
         }

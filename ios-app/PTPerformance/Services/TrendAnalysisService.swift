@@ -572,55 +572,6 @@ final class TrendAnalysisService: ObservableObject {
         }
     }
 
-    private func generateMockDataPoints(for metric: TrendMetricType, range: TrendTimeRange) -> [AnalyticsTrendDataPoint] {
-        let days = min(range.days, 180)
-        var points: [AnalyticsTrendDataPoint] = []
-
-        let baseValue: Double
-        let variance: Double
-
-        switch metric {
-        case .sessionAdherence:
-            baseValue = 75
-            variance = 15
-        case .painLevel:
-            baseValue = 3.5
-            variance = 2
-        case .recoveryScore:
-            baseValue = 70
-            variance = 15
-        case .sleepQuality:
-            baseValue = 7
-            variance = 1.5
-        case .workloadVolume:
-            baseValue = 5000
-            variance = 2000
-        case .strengthProgress:
-            baseValue = 150
-            variance = 20
-        case .mobilityScore:
-            baseValue = 65
-            variance = 10
-        }
-
-        for i in 0..<days {
-            guard let date = Calendar.current.date(byAdding: .day, value: -days + i + 1, to: Date()) else {
-                continue
-            }
-            let trendAdjustment = Double(i) * 0.2  // Slight upward trend
-            let value = baseValue + trendAdjustment + Double.random(in: -variance...variance)
-            let clampedValue = max(metric.typicalRange.lowerBound, min(metric.typicalRange.upperBound, value))
-
-            points.append(AnalyticsTrendDataPoint(
-                id: UUID(),
-                date: date,
-                value: clampedValue,
-                movingAverage: nil
-            ))
-        }
-
-        return calculateMovingAverages(for: points)
-    }
 }
 
 // MARK: - Data Transfer Objects
