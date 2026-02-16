@@ -79,7 +79,7 @@ class VideoService {
         let (data, response) = try await urlSession.data(from: url)
 
         guard let httpResponse = response as? HTTPURLResponse,
-              httpResponse.statusCode == 200 else {
+              (200...299).contains(httpResponse.statusCode) else {
             throw VideoError.downloadFailed(
                 NSError(domain: "VideoService", code: -1,
                         userInfo: [NSLocalizedDescriptionKey: "Download returned non-200 status"])

@@ -141,7 +141,7 @@ class ImageCacheService: ObservableObject {
         let (data, response) = try await URLSession.shared.data(from: url)
 
         guard let httpResponse = response as? HTTPURLResponse,
-              httpResponse.statusCode == 200 else {
+              (200...299).contains(httpResponse.statusCode) else {
             throw ImageCacheError.downloadFailed
         }
 

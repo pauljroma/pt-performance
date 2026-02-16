@@ -232,7 +232,7 @@ class TodaySessionViewModel: ObservableObject {
 
         logger.log("📱 Backend response status: \(httpResponse.statusCode)")
 
-        guard httpResponse.statusCode == 200 else {
+        guard (200...299).contains(httpResponse.statusCode) else {
             if let responseString = String(data: data, encoding: .utf8) {
                 logger.log("❌ Backend error response: \(responseString)", level: .error)
             }

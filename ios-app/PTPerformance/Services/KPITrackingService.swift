@@ -508,6 +508,7 @@ final class KPITrackingService: ObservableObject {
                 let streakResponse = try await supabase.client
                     .from("streak_records")
                     .select("current_streak")
+                    .limit(100)
                     .execute()
 
                 struct StreakRow: Codable {
@@ -974,6 +975,7 @@ final class KPITrackingService: ObservableObject {
             let streakResponse = try await supabase.client
                 .from("streak_records")
                 .select("current_streak")
+                .limit(100)
                 .execute()
 
             struct StreakRow: Codable {
