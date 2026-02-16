@@ -302,6 +302,7 @@ class JaegerBandService: ObservableObject {
 
             return streak
         } catch {
+            ErrorLogger.shared.logError(error, context: "JaegerBandService.calculateStreak")
             return 0
         }
     }

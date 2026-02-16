@@ -242,6 +242,7 @@ final class CohortAnalyticsService {
         do {
             enrollments = try decoder.decode([EnrollmentRow].self, from: response.data)
         } catch {
+            ErrorLogger.shared.logError(error, context: "CohortAnalyticsService.fetchOutcomesByProgram")
             // Return empty outcomes if no enrollments
             return ProgramOutcomes(programs: [])
         }
@@ -330,6 +331,7 @@ final class CohortAnalyticsService {
         do {
             enrollments = try decoder.decode([EnrollmentData].self, from: response.data)
         } catch {
+            ErrorLogger.shared.logError(error, context: "CohortAnalyticsService.fetchRetentionCurve")
             // Return empty retention data if no enrollments
             return RetentionData(
                 weeklyData: [],
@@ -677,6 +679,7 @@ final class CohortAnalyticsService {
 
             return sessionsPerPatient / 4.0 // Convert to weekly average
         } catch {
+            ErrorLogger.shared.logError(error, context: "CohortAnalyticsService.fetchAverageSessionsPerWeek")
             return 0
         }
     }
@@ -704,6 +707,7 @@ final class CohortAnalyticsService {
 
             return Double(sessions.count) / 4.0
         } catch {
+            ErrorLogger.shared.logError(error, context: "CohortAnalyticsService.fetchPatientSessionsPerWeek")
             return 0
         }
     }
@@ -729,6 +733,7 @@ final class CohortAnalyticsService {
             let completed = enrollments.filter { $0.status == "completed" }.count
             return Double(completed) / Double(enrollments.count) * 100
         } catch {
+            ErrorLogger.shared.logError(error, context: "CohortAnalyticsService.fetchAverageProgramCompletion")
             return 0
         }
     }

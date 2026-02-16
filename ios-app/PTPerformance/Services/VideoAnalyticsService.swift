@@ -377,6 +377,7 @@ class VideoAnalyticsService: ObservableObject {
 
             return count > 0
         } catch {
+            ErrorLogger.shared.logError(error, context: "VideoAnalyticsService.hasWatched")
             return false
         }
     }
@@ -399,6 +400,7 @@ class VideoAnalyticsService: ObservableObject {
 
             return result / 60  // Convert seconds to minutes
         } catch {
+            ErrorLogger.shared.logError(error, context: "VideoAnalyticsService.getTotalWatchTime")
             return 0
         }
     }

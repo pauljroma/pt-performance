@@ -85,6 +85,7 @@ final class ConflictResolutionService: ObservableObject {
                 .select()
                 .eq("status", value: "pending")
                 .order("conflict_date", ascending: false)
+                .limit(100)
                 .execute()
 
             let decoder = PTSupabaseClient.flexibleDecoder
@@ -111,6 +112,7 @@ final class ConflictResolutionService: ObservableObject {
                 .eq("patient_id", value: patientId.uuidString)
                 .eq("status", value: "pending")
                 .order("conflict_date", ascending: false)
+                .limit(100)
                 .execute()
 
             let decoder = PTSupabaseClient.flexibleDecoder
@@ -164,6 +166,7 @@ final class ConflictResolutionService: ObservableObject {
                 .select()
                 .eq("conflict_id", value: conflictId.uuidString)
                 .order("created_at", ascending: false)
+                .limit(100)
                 .execute()
 
             let decoder = PTSupabaseClient.flexibleDecoder
@@ -452,6 +455,7 @@ final class ConflictResolutionService: ObservableObject {
                 .from("data_conflicts")
                 .select()
                 .eq("patient_id", value: patientId.uuidString)
+                .limit(500)
                 .execute()
 
             let decoder = PTSupabaseClient.flexibleDecoder

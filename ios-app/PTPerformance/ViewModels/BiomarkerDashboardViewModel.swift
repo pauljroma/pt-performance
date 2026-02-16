@@ -525,6 +525,7 @@ final class BiomarkerDashboardViewModel: ObservableObject {
         guard !hasLoadedInitialData else { return }
 
         isLoading = true
+        defer { isLoading = false }
         error = nil
         hasLoadedInitialData = true
 
@@ -533,7 +534,6 @@ final class BiomarkerDashboardViewModel: ObservableObject {
 
         if let serviceError = labService.error {
             error = serviceError.localizedDescription
-            isLoading = false
             return
         }
 
@@ -545,8 +545,6 @@ final class BiomarkerDashboardViewModel: ObservableObject {
 
         // Calculate category statuses
         calculateCategoryStatuses()
-
-        isLoading = false
     }
 
     /// Force refresh the dashboard

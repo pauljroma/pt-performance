@@ -85,6 +85,7 @@ class ProgramLibraryService: ObservableObject {
         do {
             let response = try await query
                 .order("title", ascending: true)
+                .limit(200)
                 .execute()
 
             let decoder = JSONDecoder()
@@ -110,6 +111,7 @@ class ProgramLibraryService: ObservableObject {
                 .select()
                 .eq("is_featured", value: true)
                 .order("title", ascending: true)
+                .limit(100)
                 .execute()
 
             let decoder = JSONDecoder()
@@ -135,6 +137,7 @@ class ProgramLibraryService: ObservableObject {
                 .select()
                 .eq("category", value: category)
                 .order("title", ascending: true)
+                .limit(200)
                 .execute()
 
             let decoder = JSONDecoder()
@@ -215,6 +218,7 @@ class ProgramLibraryService: ObservableObject {
         do {
             let response = try await query
                 .order("enrolled_at", ascending: false)
+                .limit(100)
                 .execute()
 
             let decoder = JSONDecoder()

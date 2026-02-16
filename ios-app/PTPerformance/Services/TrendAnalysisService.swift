@@ -305,6 +305,7 @@ final class TrendAnalysisService: ObservableObject {
                     "p_start_date": ISO8601DateFormatter().string(from: startDate),
                     "p_aggregation": aggregation.rawValue
                 ])
+                .limit(500)
                 .execute()
 
             let rawData = try PTSupabaseClient.flexibleDecoder.decode(
@@ -340,6 +341,7 @@ final class TrendAnalysisService: ObservableObject {
                     "p_start_date": ISO8601DateFormatter().string(from: interval.start),
                     "p_end_date": ISO8601DateFormatter().string(from: interval.end)
                 ])
+                .limit(500)
                 .execute()
 
             let rawData = try PTSupabaseClient.flexibleDecoder.decode(

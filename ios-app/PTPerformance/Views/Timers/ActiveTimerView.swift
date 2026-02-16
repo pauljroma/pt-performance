@@ -78,6 +78,7 @@ struct ActiveTimerView: View {
         }
         .onDisappear {
             keepScreenAwake(false)
+            timerPublisher.upstream.connect().cancel()
         }
         .onChange(of: viewModel.state) { oldState, newState in
             // Haptic feedback for timer completion
