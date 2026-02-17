@@ -98,6 +98,7 @@ private struct ProgramInsert: Encodable {
     let description: String?
     let status: String
     let patientId: UUID?
+    let therapistId: String?
     let metadata: [String: AnyCodable]
 
     enum CodingKeys: String, CodingKey {
@@ -105,6 +106,7 @@ private struct ProgramInsert: Encodable {
         case description
         case status
         case patientId = "patient_id"
+        case therapistId = "therapist_id"
         case metadata
     }
 }
@@ -180,6 +182,7 @@ private struct ProgramLibraryInsert: Encodable {
     let difficultyLevel: String
     let equipmentRequired: [String]
     let programId: UUID
+    let therapistId: String?
     let isFeatured: Bool
     let tags: [String]
     let author: String?
@@ -192,6 +195,7 @@ private struct ProgramLibraryInsert: Encodable {
         case difficultyLevel = "difficulty_level"
         case equipmentRequired = "equipment_required"
         case programId = "program_id"
+        case therapistId = "therapist_id"
         case isFeatured = "is_featured"
         case tags
         case author
@@ -391,6 +395,7 @@ class ProgramBuilderService: ObservableObject {
             description: description,
             status: "draft",
             patientId: nil,  // System template, not patient-specific
+            therapistId: supabase.userId,
             metadata: metadata
         )
 
@@ -770,6 +775,7 @@ class ProgramBuilderService: ObservableObject {
             difficultyLevel: difficultyLevel,
             equipmentRequired: equipmentRequired,
             programId: programId,
+            therapistId: supabase.userId,
             isFeatured: isFeatured,
             tags: tags,
             author: "Modus"

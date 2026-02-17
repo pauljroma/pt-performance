@@ -187,19 +187,19 @@ struct SecurityLogView: View {
     private func auditEntryRow(_ entry: AuditEntry) -> some View {
         VStack(alignment: .leading, spacing: Spacing.xxs) {
             HStack {
-                eventTypeBadge(entry.eventType)
+                eventTypeBadge(entry.operation)
                 Spacer()
                 Text(formatTimestamp(entry.timestamp))
                     .font(.caption2)
                     .foregroundStyle(.secondary)
             }
 
-            Text(entry.action)
+            Text(entry.actionType)
                 .font(.system(size: 12, weight: .medium, design: .monospaced))
                 .foregroundStyle(.primary)
 
             HStack(spacing: Spacing.xs) {
-                Label(entry.resource, systemImage: "doc")
+                Label(entry.resourceType, systemImage: "doc")
                     .font(.caption2)
                     .foregroundStyle(.secondary)
 
@@ -316,10 +316,10 @@ struct SecurityLogView: View {
         }
 
         return auditEntries.filter { entry in
-            entry.action.localizedCaseInsensitiveContains(searchText) ||
-            entry.resource.localizedCaseInsensitiveContains(searchText) ||
+            entry.actionType.localizedCaseInsensitiveContains(searchText) ||
+            entry.resourceType.localizedCaseInsensitiveContains(searchText) ||
             (entry.details?.localizedCaseInsensitiveContains(searchText) ?? false) ||
-            entry.eventType.displayName.localizedCaseInsensitiveContains(searchText)
+            entry.operation.displayName.localizedCaseInsensitiveContains(searchText)
         }
     }
 

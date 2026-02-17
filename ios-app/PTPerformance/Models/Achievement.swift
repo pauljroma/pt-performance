@@ -209,9 +209,9 @@ struct UnlockedAchievement: Codable, Identifiable, Hashable {
 
     enum CodingKeys: String, CodingKey {
         case id
-        case achievementId = "achievement_id"
+        case achievementId = "achievement_type"
         case patientId = "patient_id"
-        case unlockedAt = "unlocked_at"
+        case unlockedAt = "earned_at"
         case currentValue = "current_value"
     }
 

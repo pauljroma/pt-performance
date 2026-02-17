@@ -259,7 +259,7 @@ actor AuditLogger {
         var entries = loadEntriesFromFile()
 
         if let eventType = eventType {
-            entries = entries.filter { $0.eventType == eventType }
+            entries = entries.filter { $0.operation == eventType }
         }
 
         // Return newest first, limited
@@ -312,9 +312,9 @@ actor AuditLogger {
             id: UUID(),
             timestamp: Self.iso8601Formatter.string(from: Date()),
             userId: userId,
-            eventType: eventType,
-            resource: resource,
-            action: action,
+            actionType: action,
+            resourceType: resource,
+            operation: eventType,
             details: details,
             deviceId: deviceId,
             appVersion: appVersion

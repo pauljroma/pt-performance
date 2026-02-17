@@ -63,8 +63,8 @@ struct AchievementLeaderboardEntry: Identifiable, Equatable {
 
 private struct LeaderboardAchievementRecord: Decodable {
     let patient_id: String
-    let achievement_id: String
-    let unlocked_at: String?
+    let achievement_type: String
+    let earned_at: String?
 }
 
 // MARK: - Leaderboard View Model
@@ -99,7 +99,7 @@ class LeaderboardViewModel: ObservableObject {
             // In a real implementation, this would be a server-side aggregation
             let response = try await client.client
                 .from("patient_achievements")
-                .select("patient_id, achievement_id, unlocked_at")
+                .select("patient_id, achievement_type, earned_at")
                 .execute()
 
             // Process and aggregate the data
@@ -115,7 +115,7 @@ class LeaderboardViewModel: ObservableObject {
             var patientStats: [String: (points: Int, count: Int)] = [:]
 
             for record in filteredRecords {
-                let points = AchievementCatalog.get(record.achievement_id)?.tier.points ?? 0
+                let points = AchievementCatalog.get(record.achievement_type)?.tier.points ?? 0
                 let current = patientStats[record.patient_id] ?? (points: 0, count: 0)
                 patientStats[record.patient_id] = (points: current.points + points, count: current.count + 1)
             }
@@ -187,7 +187,7 @@ class LeaderboardViewModel: ObservableObject {
     }
 
     private func filterRecordsByTime(_ records: [LeaderboardAchievementRecord]) -> [LeaderboardAchievementRecord] {
-        // In a real implementation, filter by unlocked_at date based on selectedFilter
+        // In a real implementation, filter by earned_at date based on selectedFilter
         // For now, return all records
         return records
     }

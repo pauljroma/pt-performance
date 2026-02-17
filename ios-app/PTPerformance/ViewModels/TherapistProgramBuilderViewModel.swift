@@ -684,7 +684,8 @@ class TherapistProgramBuilderViewModel: ObservableObject {
                 name: programName.trimmingCharacters(in: .whitespacesAndNewlines),
                 targetLevel: difficultyLevel.capitalized,
                 durationWeeks: totalPhaseDuration > 0 ? totalPhaseDuration : durationWeeks,
-                programType: "training"
+                programType: "training",
+                therapistId: supabase.userId
             )
 
             let programResponse = try await supabase.client
@@ -808,6 +809,7 @@ class TherapistProgramBuilderViewModel: ObservableObject {
                 difficultyLevel: difficultyLevel,
                 equipmentRequired: equipmentRequired,
                 programId: programId.uuidString,
+                therapistId: supabase.userId,
                 isFeatured: false,
                 tags: tags,
                 author: await getCurrentTherapistName()
@@ -942,12 +944,14 @@ private struct TherapistCreateProgramInput: Codable {
     let targetLevel: String
     let durationWeeks: Int
     let programType: String
+    let therapistId: String?
 
     enum CodingKeys: String, CodingKey {
         case name
         case targetLevel = "target_level"
         case durationWeeks = "duration_weeks"
         case programType = "program_type"
+        case therapistId = "therapist_id"
     }
 }
 
@@ -991,6 +995,7 @@ private struct TherapistCreateLibraryEntryInput: Codable {
     let difficultyLevel: String
     let equipmentRequired: [String]
     let programId: String
+    let therapistId: String?
     let isFeatured: Bool
     let tags: [String]
     let author: String?
@@ -1003,6 +1008,7 @@ private struct TherapistCreateLibraryEntryInput: Codable {
         case difficultyLevel = "difficulty_level"
         case equipmentRequired = "equipment_required"
         case programId = "program_id"
+        case therapistId = "therapist_id"
         case isFeatured = "is_featured"
         case tags
         case author

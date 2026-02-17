@@ -60,14 +60,14 @@ struct AuditEntry: Codable, Identifiable {
     /// ID of the user who performed the action (may be nil for system events)
     let userId: String?
 
-    /// Category of the event
-    let eventType: AuditEventType
+    /// The action performed (e.g., "read", "sync", "export", "delete")
+    let actionType: String
 
     /// The resource that was accessed (e.g., "health_kit_data", "patient_record")
-    let resource: String
+    let resourceType: String
 
-    /// The action performed (e.g., "read", "sync", "export", "delete")
-    let action: String
+    /// Category of the event (maps to `operation` in the DB)
+    let operation: AuditEventType
 
     /// Additional context about the event (never contains PHI)
     let details: String?
@@ -82,9 +82,9 @@ struct AuditEntry: Codable, Identifiable {
         case id
         case timestamp
         case userId = "user_id"
-        case eventType = "event_type"
-        case resource
-        case action
+        case actionType = "action_type"
+        case resourceType = "resource_type"
+        case operation
         case details
         case deviceId = "device_id"
         case appVersion = "app_version"
@@ -98,34 +98,31 @@ struct AuditEntryInsert: Encodable {
     let id: String
     let timestamp: String
     let userId: String?
-    let eventType: String
-    let resource: String
-    let action: String
+    let actionType: String
+    let resourceType: String
+    let operation: String
     let details: String?
     let deviceId: String
-    let appVersion: String
 
     enum CodingKeys: String, CodingKey {
         case id
         case timestamp
         case userId = "user_id"
-        case eventType = "event_type"
-        case resource
-        case action
+        case actionType = "action_type"
+        case resourceType = "resource_type"
+        case operation
         case details
         case deviceId = "device_id"
-        case appVersion = "app_version"
     }
 
     init(from entry: AuditEntry) {
         self.id = entry.id.uuidString
         self.timestamp = entry.timestamp
         self.userId = entry.userId
-        self.eventType = entry.eventType.rawValue
-        self.resource = entry.resource
-        self.action = entry.action
+        self.actionType = entry.actionType
+        self.resourceType = entry.resourceType
+        self.operation = entry.operation.rawValue
         self.details = entry.details
         self.deviceId = entry.deviceId
-        self.appVersion = entry.appVersion
     }
 }

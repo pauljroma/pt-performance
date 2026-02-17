@@ -36,14 +36,19 @@ class ModeService: ObservableObject {
     private let debugLogger = DebugLogger.shared
     private var cancellables = Set<AnyCancellable>()
     private var loadTask: Task<Void, Never>?
+    private var lastUserId: String?
 
     private init() {
         // Load mode when user ID changes
         supabase.$userId
             .sink { [weak self] userId in
+                guard let self else { return }
+                // Only cancel/restart if the userId actually changed
+                guard userId != self.lastUserId else { return }
+                self.lastUserId = userId
                 if userId != nil {
-                    self?.loadTask?.cancel()
-                    self?.loadTask = Task { [weak self] in await self?.loadPatientMode() }
+                    self.loadTask?.cancel()
+                    self.loadTask = Task { [weak self] in await self?.loadPatientMode() }
                 }
             }
             .store(in: &cancellables)
@@ -53,6 +58,16 @@ class ModeService: ObservableObject {
     func loadPatientMode() async {
         guard let userId = supabase.userId else {
             debugLogger.log("[ModeService] No user ID, cannot load mode", level: .warning)
+            return
+        }
+
+        // Therapists don't have a record in the patients table — skip the query
+        // and default to performance mode (broadest feature set for clinical use).
+        if supabase.userRole == .therapist {
+            currentMode = .performance
+            loadError = nil
+            await loadModeFeatures(for: .performance)
+            debugLogger.log("[ModeService] Therapist user, defaulting to performance mode", level: .success)
             return
         }
 
