@@ -279,11 +279,9 @@ struct ConflictsSummarySection: View {
 #Preview("ConflictCard") {
     VStack(spacing: 16) {
         ConflictCard(conflict: .sample) {
-            print("Resolve tapped")
         }
 
         ConflictCard(conflict: .sampleResolved) {
-            print("Resolve tapped")
         }
     }
     .padding()

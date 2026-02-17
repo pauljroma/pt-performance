@@ -252,7 +252,7 @@ class TodaySessionViewModel: ObservableObject {
         // First check scheduled_sessions for today
         let today: String = {
             let components = Calendar.current.dateComponents([.year, .month, .day], from: Date())
-            return String(format: "%04d-%02d-%02d", components.year!, components.month!, components.day!)
+            return String(format: "%04d-%02d-%02d", components.year ?? 2024, components.month ?? 1, components.day ?? 1)
         }()
         logger.log("📱 Checking scheduled_sessions for today: \(today)")
 

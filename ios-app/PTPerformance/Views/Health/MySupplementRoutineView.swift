@@ -1,18 +1,61 @@
 // DARK MODE: See ModeThemeModifier.swift for central theme control
 import SwiftUI
 
+// MARK: - Consolidated View State
+
+@MainActor
+class SupplementRoutineViewState: ObservableObject {
+    // MySupplementRoutineView state
+    @Published var showingAddSupplement = false
+    @Published var showingEditMode = false
+    @Published var supplementToEdit: RoutineSupplement?
+    @Published var showingInteractionView = false
+
+    // SupplementRoutineAddSheet state
+    @Published var selectedSupplement: Supplement?
+    @Published var selectedTiming: SupplementTiming = .morning
+    @Published var dosageAmount: String = ""
+    @Published var dosageUnit: DosageUnit = .mg
+    @Published var withFood = false
+    @Published var selectedDays: Set<Weekday> = Set(Weekday.allCases)
+    @Published var searchText = ""
+
+    // SupplementRoutineEditSheet state
+    @Published var editSelectedTiming: SupplementTiming = .morning
+    @Published var editDosageAmount: String = ""
+    @Published var editDosageUnit: DosageUnit = .mg
+    @Published var editWithFood: Bool = false
+    @Published var editSelectedDays: Set<Weekday> = Set(Weekday.allCases)
+    @Published var editReminderEnabled: Bool = true
+
+    func configureForEdit(_ routineSupplement: RoutineSupplement) {
+        editSelectedTiming = routineSupplement.timing ?? .morning
+        editDosageAmount = String(format: "%.0f", routineSupplement.dosage?.amount ?? 0)
+        editDosageUnit = routineSupplement.dosage?.unit ?? .mg
+        editWithFood = routineSupplement.withFood
+        editSelectedDays = Set(routineSupplement.days ?? Weekday.allCases)
+        editReminderEnabled = routineSupplement.reminderEnabled
+    }
+
+    func resetAddSheet() {
+        selectedSupplement = nil
+        selectedTiming = .morning
+        dosageAmount = ""
+        dosageUnit = .mg
+        withFood = false
+        selectedDays = Set(Weekday.allCases)
+        searchText = ""
+    }
+}
+
 /// My Supplement Routine View
 /// User's routine grouped by timing (morning, pre-workout, etc.)
 struct MySupplementRoutineView: View {
     @StateObject private var viewModel = MySupplementRoutineViewModel()
     @StateObject private var interactionService = SupplementInteractionService.shared
+    @StateObject private var state = SupplementRoutineViewState()
     @Environment(\.dismiss) private var dismiss
     @Environment(\.colorScheme) private var colorScheme
-
-    @State private var showingAddSupplement = false
-    @State private var showingEditMode = false
-    @State private var supplementToEdit: RoutineSupplement?
-    @State private var showingInteractionView = false
 
     var body: some View {
         NavigationStack {
@@ -29,7 +72,7 @@ struct MySupplementRoutineView: View {
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
                     Button {
-                        showingAddSupplement = true
+                        state.showingAddSupplement = true
                     } label: {
                         Image(systemName: "plus")
                             .foregroundColor(.modusCyan)
@@ -43,15 +86,16 @@ struct MySupplementRoutineView: View {
                     }
                 }
             }
-            .sheet(isPresented: $showingAddSupplement) {
-                SupplementRoutineAddSheet(onAdd: { routineSupplement in
+            .sheet(isPresented: $state.showingAddSupplement) {
+                SupplementRoutineAddSheet(state: state, onAdd: { routineSupplement in
                     Task {
                         await viewModel.addToRoutine(routineSupplement)
                     }
                 })
             }
-            .sheet(item: $supplementToEdit) { supplement in
+            .sheet(item: $state.supplementToEdit) { supplement in
                 SupplementRoutineEditSheet(
+                    state: state,
                     routineSupplement: supplement,
                     onSave: { updated in
                         Task {
@@ -60,22 +104,28 @@ struct MySupplementRoutineView: View {
                     }
                 )
             }
-            .sheet(isPresented: $showingInteractionView) {
+            .sheet(isPresented: $state.showingInteractionView) {
                 NavigationStack {
                     SupplementInteractionView()
                 }
             }
             .task {
-                await viewModel.loadRoutine()
-                if let userId = PTSupabaseClient.shared.userId, let patientId = UUID(uuidString: userId) {
-                    try? await interactionService.checkCurrentRoutine(patientId: patientId)
-                }
+                async let routine: () = viewModel.loadRoutine()
+                async let check: () = {
+                    if let userId = PTSupabaseClient.shared.userId, let patientId = UUID(uuidString: userId) {
+                        try? await interactionService.checkCurrentRoutine(patientId: patientId)
+                    }
+                }()
+                _ = await (routine, check)
             }
             .refreshable {
-                await viewModel.loadRoutine()
-                if let userId = PTSupabaseClient.shared.userId, let patientId = UUID(uuidString: userId) {
-                    try? await interactionService.checkCurrentRoutine(patientId: patientId)
-                }
+                async let routine: () = viewModel.loadRoutine()
+                async let check: () = {
+                    if let userId = PTSupabaseClient.shared.userId, let patientId = UUID(uuidString: userId) {
+                        try? await interactionService.checkCurrentRoutine(patientId: patientId)
+                    }
+                }()
+                _ = await (routine, check)
             }
         }
     }
@@ -130,7 +180,7 @@ struct MySupplementRoutineView: View {
 
             VStack(spacing: Spacing.md) {
                 Button {
-                    showingAddSupplement = true
+                    state.showingAddSupplement = true
                 } label: {
                     HStack {
                         Image(systemName: "plus.circle.fill")
@@ -185,7 +235,7 @@ struct MySupplementRoutineView: View {
                         interactionCount: interactionService.interactions.count,
                         mostCriticalMessage: interactionService.interactions.max(by: { $0.severity < $1.severity })?.description,
                         onTap: {
-                            showingInteractionView = true
+                            state.showingInteractionView = true
                         }
                     )
                 }
@@ -203,7 +253,7 @@ struct MySupplementRoutineView: View {
                                 item: item,
                                 interactionSeverity: worstSeverity(for: item.name),
                                 onTap: {
-                                    supplementToEdit = item
+                                    state.supplementToEdit = item
                                 }
                             )
                         }
@@ -455,27 +505,20 @@ private struct SupplementDaysIndicator: View {
 private struct SupplementRoutineAddSheet: View {
     @Environment(\.dismiss) private var dismiss
     @StateObject private var viewModel = SupplementPickerViewModel()
+    @ObservedObject var state: SupplementRoutineViewState
 
     let onAdd: (RoutineSupplement) -> Void
-
-    @State private var selectedSupplement: Supplement?
-    @State private var selectedTiming: SupplementTiming = .morning
-    @State private var dosageAmount: String = ""
-    @State private var dosageUnit: DosageUnit = .mg
-    @State private var withFood = false
-    @State private var selectedDays: Set<Weekday> = Set(Weekday.allCases)
-    @State private var searchText = ""
 
     var body: some View {
         NavigationStack {
             Group {
-                if selectedSupplement == nil {
+                if state.selectedSupplement == nil {
                     supplementSelectionView
                 } else {
                     configurationView
                 }
             }
-            .navigationTitle(selectedSupplement == nil ? "Add Supplement" : "Configure")
+            .navigationTitle(state.selectedSupplement == nil ? "Add Supplement" : "Configure")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -484,7 +527,7 @@ private struct SupplementRoutineAddSheet: View {
                     }
                 }
 
-                if selectedSupplement != nil {
+                if state.selectedSupplement != nil {
                     ToolbarItem(placement: .confirmationAction) {
                         Button("Add") {
                             saveAndDismiss()
@@ -504,15 +547,15 @@ private struct SupplementRoutineAddSheet: View {
         List(filteredSupplements) { supplement in
             Button {
                 HapticFeedback.light()
-                selectedSupplement = supplement
+                state.selectedSupplement = supplement
                 // Parse dosage string for default values
-                dosageAmount = extractDosageAmount(from: supplement.dosage)
-                dosageUnit = extractDosageUnit(from: supplement.dosage)
+                state.dosageAmount = extractDosageAmount(from: supplement.dosage)
+                state.dosageUnit = extractDosageUnit(from: supplement.dosage)
                 // Set default timing based on timeOfDay
                 if let firstTime = supplement.timeOfDay.first {
-                    selectedTiming = mapTimeOfDayToTiming(firstTime)
+                    state.selectedTiming = mapTimeOfDayToTiming(firstTime)
                 }
-                withFood = supplement.withFood
+                state.withFood = supplement.withFood
             } label: {
                 HStack(spacing: Spacing.sm) {
                     ZStack {
@@ -542,21 +585,21 @@ private struct SupplementRoutineAddSheet: View {
                 }
             }
         }
-        .searchable(text: $searchText, prompt: "Search supplements")
+        .searchable(text: $state.searchText, prompt: "Search supplements")
     }
 
     private var filteredSupplements: [Supplement] {
-        if searchText.isEmpty {
+        if state.searchText.isEmpty {
             return viewModel.supplements
         }
         return viewModel.supplements.filter {
-            $0.name.localizedCaseInsensitiveContains(searchText)
+            $0.name.localizedCaseInsensitiveContains(state.searchText)
         }
     }
 
     private var configurationView: some View {
         Form {
-            if let supplement = selectedSupplement {
+            if let supplement = state.selectedSupplement {
                 Section {
                     HStack {
                         ZStack {
@@ -579,7 +622,7 @@ private struct SupplementRoutineAddSheet: View {
                         Spacer()
 
                         Button("Change") {
-                            selectedSupplement = nil
+                            state.selectedSupplement = nil
                         }
                         .font(.caption)
                         .foregroundColor(.modusCyan)
@@ -588,10 +631,10 @@ private struct SupplementRoutineAddSheet: View {
 
                 Section("Dosage") {
                     HStack {
-                        TextField("Amount", text: $dosageAmount)
+                        TextField("Amount", text: $state.dosageAmount)
                             .keyboardType(.decimalPad)
 
-                        Picker("Unit", selection: $dosageUnit) {
+                        Picker("Unit", selection: $state.dosageUnit) {
                             ForEach(DosageUnit.allCases, id: \.self) { unit in
                                 Text(unit.abbreviation).tag(unit)
                             }
@@ -601,14 +644,14 @@ private struct SupplementRoutineAddSheet: View {
                 }
 
                 Section("Timing") {
-                    Picker("When to Take", selection: $selectedTiming) {
+                    Picker("When to Take", selection: $state.selectedTiming) {
                         ForEach(SupplementTiming.allCases, id: \.self) { timing in
                             Label(timing.displayName, systemImage: timing.icon)
                                 .tag(timing)
                         }
                     }
 
-                    Toggle(isOn: $withFood) {
+                    Toggle(isOn: $state.withFood) {
                         Label("Take with Food", systemImage: "fork.knife")
                     }
                     .tint(.modusTealAccent)
@@ -617,12 +660,12 @@ private struct SupplementRoutineAddSheet: View {
                 Section("Days") {
                     ForEach(Weekday.allCases, id: \.self) { day in
                         Toggle(day.displayName, isOn: Binding(
-                            get: { selectedDays.contains(day) },
+                            get: { state.selectedDays.contains(day) },
                             set: { isOn in
                                 if isOn {
-                                    selectedDays.insert(day)
+                                    state.selectedDays.insert(day)
                                 } else {
-                                    selectedDays.remove(day)
+                                    state.selectedDays.remove(day)
                                 }
                             }
                         ))
@@ -634,12 +677,12 @@ private struct SupplementRoutineAddSheet: View {
     }
 
     private var isValid: Bool {
-        selectedSupplement != nil && !dosageAmount.isEmpty && Double(dosageAmount) != nil && !selectedDays.isEmpty
+        state.selectedSupplement != nil && !state.dosageAmount.isEmpty && Double(state.dosageAmount) != nil && !state.selectedDays.isEmpty
     }
 
     private func saveAndDismiss() {
-        guard let supplement = selectedSupplement,
-              let amount = Double(dosageAmount) else { return }
+        guard let supplement = state.selectedSupplement,
+              let amount = Double(state.dosageAmount) else { return }
 
         HapticFeedback.success()
 
@@ -648,10 +691,10 @@ private struct SupplementRoutineAddSheet: View {
             name: supplement.name,
             brand: supplement.brand,
             category: mapSupplementCategoryToCatalog(supplement.category),
-            dosage: Dosage(amount: amount, unit: dosageUnit),
-            timing: selectedTiming,
-            days: Array(selectedDays),
-            withFood: withFood,
+            dosage: Dosage(amount: amount, unit: state.dosageUnit),
+            timing: state.selectedTiming,
+            days: Array(state.selectedDays),
+            withFood: state.withFood,
             reminderEnabled: true
         )
 
@@ -717,26 +760,16 @@ private struct SupplementRoutineAddSheet: View {
 
 private struct SupplementRoutineEditSheet: View {
     @Environment(\.dismiss) private var dismiss
+    @ObservedObject var state: SupplementRoutineViewState
 
     let routineSupplement: RoutineSupplement
     let onSave: (RoutineSupplement) -> Void
 
-    @State private var selectedTiming: SupplementTiming
-    @State private var dosageAmount: String
-    @State private var dosageUnit: DosageUnit
-    @State private var withFood: Bool
-    @State private var selectedDays: Set<Weekday>
-    @State private var reminderEnabled: Bool
-
-    init(routineSupplement: RoutineSupplement, onSave: @escaping (RoutineSupplement) -> Void) {
+    init(state: SupplementRoutineViewState, routineSupplement: RoutineSupplement, onSave: @escaping (RoutineSupplement) -> Void) {
+        self.state = state
         self.routineSupplement = routineSupplement
         self.onSave = onSave
-        _selectedTiming = State(initialValue: routineSupplement.timing ?? .morning)
-        _dosageAmount = State(initialValue: String(format: "%.0f", routineSupplement.dosage?.amount ?? 0))
-        _dosageUnit = State(initialValue: routineSupplement.dosage?.unit ?? .mg)
-        _withFood = State(initialValue: routineSupplement.withFood)
-        _selectedDays = State(initialValue: Set(routineSupplement.days ?? Weekday.allCases))
-        _reminderEnabled = State(initialValue: routineSupplement.reminderEnabled)
+        state.configureForEdit(routineSupplement)
     }
 
     var body: some View {
@@ -765,10 +798,10 @@ private struct SupplementRoutineEditSheet: View {
 
                 Section("Dosage") {
                     HStack {
-                        TextField("Amount", text: $dosageAmount)
+                        TextField("Amount", text: $state.editDosageAmount)
                             .keyboardType(.decimalPad)
 
-                        Picker("Unit", selection: $dosageUnit) {
+                        Picker("Unit", selection: $state.editDosageUnit) {
                             ForEach(DosageUnit.allCases, id: \.self) { unit in
                                 Text(unit.abbreviation).tag(unit)
                             }
@@ -778,19 +811,19 @@ private struct SupplementRoutineEditSheet: View {
                 }
 
                 Section("Timing") {
-                    Picker("When to Take", selection: $selectedTiming) {
+                    Picker("When to Take", selection: $state.editSelectedTiming) {
                         ForEach(SupplementTiming.allCases, id: \.self) { timing in
                             Label(timing.displayName, systemImage: timing.icon)
                                 .tag(timing)
                         }
                     }
 
-                    Toggle(isOn: $withFood) {
+                    Toggle(isOn: $state.editWithFood) {
                         Label("Take with Food", systemImage: "fork.knife")
                     }
                     .tint(.modusTealAccent)
 
-                    Toggle(isOn: $reminderEnabled) {
+                    Toggle(isOn: $state.editReminderEnabled) {
                         Label("Reminder", systemImage: "bell")
                     }
                     .tint(.modusTealAccent)
@@ -799,12 +832,12 @@ private struct SupplementRoutineEditSheet: View {
                 Section("Days") {
                     ForEach(Weekday.allCases, id: \.self) { day in
                         Toggle(day.displayName, isOn: Binding(
-                            get: { selectedDays.contains(day) },
+                            get: { state.editSelectedDays.contains(day) },
                             set: { isOn in
                                 if isOn {
-                                    selectedDays.insert(day)
+                                    state.editSelectedDays.insert(day)
                                 } else {
-                                    selectedDays.remove(day)
+                                    state.editSelectedDays.remove(day)
                                 }
                             }
                         ))
@@ -832,20 +865,20 @@ private struct SupplementRoutineEditSheet: View {
     }
 
     private var isValid: Bool {
-        !dosageAmount.isEmpty && Double(dosageAmount) != nil && !selectedDays.isEmpty
+        !state.editDosageAmount.isEmpty && Double(state.editDosageAmount) != nil && !state.editSelectedDays.isEmpty
     }
 
     private func saveAndDismiss() {
-        guard let amount = Double(dosageAmount) else { return }
+        guard let amount = Double(state.editDosageAmount) else { return }
 
         HapticFeedback.success()
 
         var updated = routineSupplement
-        updated.dosage = Dosage(amount: amount, unit: dosageUnit)
-        updated.timing = selectedTiming
-        updated.days = Array(selectedDays)
-        updated.withFood = withFood
-        updated.reminderEnabled = reminderEnabled
+        updated.dosage = Dosage(amount: amount, unit: state.editDosageUnit)
+        updated.timing = state.editSelectedTiming
+        updated.days = Array(state.editSelectedDays)
+        updated.withFood = state.editWithFood
+        updated.reminderEnabled = state.editReminderEnabled
 
         onSave(updated)
         dismiss()

@@ -19,88 +19,345 @@ enum CalendarViewMode: String, CaseIterable, Identifiable {
     var id: String { rawValue }
 }
 
-// MARK: - CalendarView
+// MARK: - CalendarViewState
 
-struct CalendarView: View {
+/// Dedicated state object for CalendarView, consolidating all @State properties
+/// and helper methods that operate on them.
+@MainActor
+class CalendarViewState: ObservableObject {
 
-    @State private var selectedDate = Date()
-    @State private var currentMonth = Date()
-    @State private var viewMode: CalendarViewMode = .month
-    @State private var scheduledSessions: [ScheduledSession] = [] {
+    // MARK: - Published State
+
+    @Published var selectedDate = Date()
+    @Published var currentMonth = Date()
+    @Published var viewMode: CalendarViewMode = .month
+    @Published var scheduledSessions: [ScheduledSession] = [] {
         didSet { rebuildSessionsByDate() }
     }
     /// Cached dictionary mapping date strings ("yyyy-MM-dd") to sessions (Fix 4)
-    @State private var sessionsByDate: [String: [ScheduledSession]] = [:]
-    @State private var isLoading = false
-    @State private var showScheduleSheet = false
-    @State private var showDayDetailSheet = false
-    @State private var quickAddDate: Date?
+    @Published var sessionsByDate: [String: [ScheduledSession]] = [:]
+    @Published var isLoading = false
+    @Published var showScheduleSheet = false
+    @Published var showDayDetailSheet = false
+    @Published var quickAddDate: Date?
     /// Cached month dates grid, recalculated only when currentMonth changes (Fix 6)
-    @State private var cachedMonthDates: [Date?] = []
+    @Published var cachedMonthDates: [Date?] = []
 
     // ACP-1034: Smart Scheduling Suggestions
-    @StateObject private var smartSchedulingService = SmartSchedulingService.shared
-    @State private var todaySuggestion: SchedulingSuggestion?
-    @State private var allSuggestions: [SchedulingSuggestion] = []
-    @State private var bestTrainingTimes: [TrainingTimeWindow] = []
-    @State private var missedWorkoutProposals: [ReschedulingProposal] = []
-    @State private var calendarConflicts: [Date: [CalendarConflictInfo]] = [:]
-    @State private var showBestTimesWidget = false
-    @State private var showConflictDetails = false
-    @State private var selectedConflictDate: Date?
+    @Published var todaySuggestion: SchedulingSuggestion?
+    @Published var allSuggestions: [SchedulingSuggestion] = []
+    @Published var bestTrainingTimes: [TrainingTimeWindow] = []
+    @Published var missedWorkoutProposals: [ReschedulingProposal] = []
+    @Published var calendarConflicts: [Date: [CalendarConflictInfo]] = [:]
+    @Published var showBestTimesWidget = false
+    @Published var showConflictDetails = false
+    @Published var selectedConflictDate: Date?
 
-    let onDateSelected: ((Date) -> Void)?
+    // MARK: - Constants
 
-    private let calendar = Calendar.current
-    private let columns = Array(repeating: GridItem(.flexible()), count: 7)
+    let calendar = Calendar.current
+    let columns = Array(repeating: GridItem(.flexible()), count: 7)
 
-    // Fix 5: Static DateFormatters to avoid repeated allocations
-    private static let monthYearFormatter: DateFormatter = {
+    // MARK: - Services
+
+    let smartSchedulingService = SmartSchedulingService.shared
+
+    // MARK: - Static DateFormatters (Fix 5: avoid repeated allocations)
+
+    static let monthYearFormatter: DateFormatter = {
         let f = DateFormatter()
         f.dateFormat = "MMMM yyyy"
         return f
     }()
-    private static let dayOfWeekFormatter: DateFormatter = {
+    static let dayOfWeekFormatter: DateFormatter = {
         let f = DateFormatter()
         f.dateFormat = "EEEE"
         return f
     }()
-    private static let daySubtitleFormatter: DateFormatter = {
+    static let daySubtitleFormatter: DateFormatter = {
         let f = DateFormatter()
         f.dateFormat = "MMMM d, yyyy"
         return f
     }()
-    private static let fullDateFormatter: DateFormatter = {
+    static let fullDateFormatter: DateFormatter = {
         let f = DateFormatter()
         f.dateStyle = .full
         f.timeStyle = .none
         return f
     }()
-    private static let weekRangeFormatter: DateFormatter = {
+    static let weekRangeFormatter: DateFormatter = {
         let f = DateFormatter()
         f.dateFormat = "MMM d"
         return f
     }()
-    private static let dayNumberFormatter: DateFormatter = {
+    static let dayNumberFormatter: DateFormatter = {
         let f = DateFormatter()
         f.dateFormat = "d"
         return f
     }()
-    private static let sessionDateKeyFormatter: DateFormatter = {
+    static let sessionDateKeyFormatter: DateFormatter = {
         let f = DateFormatter()
         f.dateFormat = "yyyy-MM-dd"
         return f
     }()
-    private static let mediumDateFormatter: DateFormatter = {
+    static let mediumDateFormatter: DateFormatter = {
         let f = DateFormatter()
         f.dateStyle = .medium
         return f
     }()
-    private static let accessibilityDateFormatter: DateFormatter = {
+    static let accessibilityDateFormatter: DateFormatter = {
         let f = DateFormatter()
         f.dateStyle = .full
         return f
     }()
+
+    // MARK: - Computed Properties
+
+    var headerTitle: String {
+        if viewMode == .day {
+            return Self.dayOfWeekFormatter.string(from: selectedDate)
+        }
+        return Self.monthYearFormatter.string(from: currentMonth)
+    }
+
+    var daySubtitle: String {
+        Self.daySubtitleFormatter.string(from: selectedDate)
+    }
+
+    var dayFullDateString: String {
+        Self.fullDateFormatter.string(from: selectedDate)
+    }
+
+    var weekRangeString: String {
+        guard let weekInterval = calendar.dateInterval(of: .weekOfYear, for: currentMonth) else {
+            return ""
+        }
+        let start = Self.weekRangeFormatter.string(from: weekInterval.start)
+        let end = Self.weekRangeFormatter.string(from: weekInterval.end)
+        return "\(start) - \(end)"
+    }
+
+    var weekdaySymbols: [String] {
+        let symbols = calendar.shortWeekdaySymbols
+        return Array(symbols.suffix(1) + symbols.prefix(6))
+    }
+
+    /// Computes month dates for the calendar grid
+    var monthDates: [Date?] {
+        cachedMonthDates
+    }
+
+    var currentWeekDates: [Date] {
+        guard let weekInterval = calendar.dateInterval(of: .weekOfYear, for: currentMonth) else {
+            return []
+        }
+
+        var dates: [Date] = []
+        var currentDate = weekInterval.start
+
+        for _ in 0..<7 {
+            dates.append(currentDate)
+            guard let nextDate = calendar.date(byAdding: .day, value: 1, to: currentDate) else {
+                break
+            }
+            currentDate = nextDate
+        }
+
+        return dates
+    }
+
+    var sessionsForSelectedDate: [ScheduledSession] {
+        sessionsForDate(selectedDate)
+    }
+
+    // MARK: - Session Lookup
+
+    /// Looks up sessions by date string key (Fix 4: O(1) dictionary lookup instead of O(N) filter)
+    func sessionsForDate(_ date: Date) -> [ScheduledSession] {
+        let key = Self.sessionDateKeyFormatter.string(from: date)
+        return sessionsByDate[key] ?? []
+    }
+
+    /// Rebuilds the sessionsByDate dictionary when scheduledSessions changes (Fix 4)
+    func rebuildSessionsByDate() {
+        var dict: [String: [ScheduledSession]] = [:]
+        for session in scheduledSessions {
+            let key = Self.sessionDateKeyFormatter.string(from: session.scheduledDate)
+            dict[key, default: []].append(session)
+        }
+        sessionsByDate = dict
+    }
+
+    // MARK: - Month Dates Computation
+
+    /// Recomputes month dates when currentMonth changes (Fix 6)
+    static func computeMonthDates(for month: Date, calendar: Calendar) -> [Date?] {
+        guard let monthInterval = calendar.dateInterval(of: .month, for: month),
+              let monthFirstWeek = calendar.dateInterval(of: .weekOfMonth, for: monthInterval.start) else {
+            return []
+        }
+
+        var dates: [Date?] = []
+        var currentDate = monthFirstWeek.start
+
+        for _ in 0..<42 {
+            dates.append(currentDate)
+            guard let nextDate = calendar.date(byAdding: .day, value: 1, to: currentDate) else {
+                break
+            }
+            currentDate = nextDate
+        }
+
+        return dates
+    }
+
+    // MARK: - Training Load
+
+    /// Compute a 0.0...1.0 training load for a date based on session count and status.
+    /// 0 = rest day, 1.0 = heavy training day
+    func trainingLoadForDate(_ date: Date) -> Double {
+        let sessions = sessionsForDate(date)
+        if sessions.isEmpty { return 0.0 }
+
+        let activeSessions = sessions.filter { $0.status != .cancelled }
+        if activeSessions.isEmpty { return 0.0 }
+
+        // Scale: 1 session = 0.35, 2 = 0.65, 3+ = 0.9+
+        let count = Double(activeSessions.count)
+        return min(1.0, 0.15 + count * 0.25)
+    }
+
+    func trainingLoadColor(_ load: Double) -> Color {
+        if load == 0 { return .modusCyan.opacity(0.08) }
+        return .modusCyan.opacity(max(0.15, load))
+    }
+
+    func trainingLoadLabel(_ load: Double) -> String {
+        switch load {
+        case 0: return "Rest Day"
+        case 0.01..<0.35: return "Light Training"
+        case 0.35..<0.65: return "Moderate Training"
+        default: return "Heavy Training"
+        }
+    }
+
+    // MARK: - Navigation
+
+    func previousPeriod() {
+        switch viewMode {
+        case .month:
+            currentMonth = calendar.date(byAdding: .month, value: -1, to: currentMonth) ?? currentMonth
+        case .week:
+            currentMonth = calendar.date(byAdding: .weekOfYear, value: -1, to: currentMonth) ?? currentMonth
+        case .day:
+            selectedDate = calendar.date(byAdding: .day, value: -1, to: selectedDate) ?? selectedDate
+        }
+    }
+
+    func nextPeriod() {
+        switch viewMode {
+        case .month:
+            currentMonth = calendar.date(byAdding: .month, value: 1, to: currentMonth) ?? currentMonth
+        case .week:
+            currentMonth = calendar.date(byAdding: .weekOfYear, value: 1, to: currentMonth) ?? currentMonth
+        case .day:
+            selectedDate = calendar.date(byAdding: .day, value: 1, to: selectedDate) ?? selectedDate
+        }
+    }
+
+    // MARK: - Data Loading
+
+    func loadScheduledSessions() {
+        isLoading = true
+
+        Task {
+            do {
+                guard let patientId = PTSupabaseClient.shared.userId else {
+                    isLoading = false
+                    return
+                }
+                let sessions = try await SchedulingService.shared.fetchScheduledSessions(for: patientId)
+                scheduledSessions = sessions
+                isLoading = false
+            } catch {
+                isLoading = false
+            }
+        }
+    }
+
+    // ACP-1034: Load smart scheduling suggestions
+    func loadSmartSuggestions() {
+        Task {
+            guard let patientIdString = PTSupabaseClient.shared.userId,
+                  let patientId = UUID(uuidString: patientIdString) else {
+                return
+            }
+
+            do {
+                // Load suggestions concurrently
+                async let todaySuggestionTask = smartSchedulingService.getTodaySuggestion(for: patientId)
+                async let allSuggestionsTask = smartSchedulingService.generateSuggestions(for: patientId, days: 7)
+                async let bestTimesTask = smartSchedulingService.analyzeBestTrainingTimes(for: patientId)
+                async let missedWorkoutsTask = smartSchedulingService.autoAdjustMissedWorkouts(for: patientId, autoApply: false)
+
+                let (today, all, times, missed) = try await (todaySuggestionTask, allSuggestionsTask, bestTimesTask, missedWorkoutsTask)
+
+                todaySuggestion = today
+                allSuggestions = all
+                bestTrainingTimes = times
+                missedWorkoutProposals = missed
+
+                // Load calendar conflicts for suggested dates
+                for suggestion in all {
+                    let conflicts = await smartSchedulingService.getCalendarConflicts(on: suggestion.date)
+                    calendarConflicts[suggestion.date] = conflicts
+                }
+            } catch {
+                // Silently fail - suggestions are optional
+            }
+        }
+    }
+
+    // MARK: - Actions
+
+    func rescheduleWorkout(proposal: ReschedulingProposal) {
+        Task {
+            do {
+                let newDate = Calendar.current.date(
+                    bySettingHour: proposal.suggestedTime.hour,
+                    minute: proposal.suggestedTime.minute,
+                    second: 0,
+                    of: proposal.suggestedDate
+                ) ?? proposal.suggestedDate
+
+                _ = try await SchedulingService.shared.rescheduleSession(
+                    scheduledSessionId: proposal.originalSession.id,
+                    newDate: proposal.suggestedDate,
+                    newTime: newDate
+                )
+
+                HapticFeedback.success()
+
+                loadScheduledSessions()
+                loadSmartSuggestions()
+            } catch {
+                HapticFeedback.error()
+            }
+        }
+    }
+
+    func dismissProposal(_ proposal: ReschedulingProposal) {
+        missedWorkoutProposals.removeAll { $0.id == proposal.id }
+    }
+}
+
+// MARK: - CalendarView
+
+struct CalendarView: View {
+
+    @StateObject private var state = CalendarViewState()
+
+    let onDateSelected: ((Date) -> Void)?
 
     init(onDateSelected: ((Date) -> Void)? = nil) {
         self.onDateSelected = onDateSelected
@@ -115,12 +372,12 @@ struct CalendarView: View {
             viewModeSegment
 
             // ACP-1034: Smart Scheduling Suggestions
-            if viewMode == .month {
+            if state.viewMode == .month {
                 smartSuggestionsSection
             }
 
             // Calendar content
-            switch viewMode {
+            switch state.viewMode {
             case .month:
                 monthView
             case .week:
@@ -133,50 +390,50 @@ struct CalendarView: View {
             trainingLoadLegend
         }
         .onAppear {
-            cachedMonthDates = Self.computeMonthDates(for: currentMonth, calendar: calendar)
-            loadScheduledSessions()
-            loadSmartSuggestions()
+            state.cachedMonthDates = CalendarViewState.computeMonthDates(for: state.currentMonth, calendar: state.calendar)
+            state.loadScheduledSessions()
+            state.loadSmartSuggestions()
         }
-        .onChange(of: currentMonth) { _, newMonth in
-            cachedMonthDates = Self.computeMonthDates(for: newMonth, calendar: calendar)
+        .onChange(of: state.currentMonth) { _, newMonth in
+            state.cachedMonthDates = CalendarViewState.computeMonthDates(for: newMonth, calendar: state.calendar)
         }
-        .sheet(isPresented: $showScheduleSheet) {
-            if let date = quickAddDate {
+        .sheet(isPresented: $state.showScheduleSheet) {
+            if let date = state.quickAddDate {
                 ScheduleSessionView(selectedDate: date)
             } else {
-                ScheduleSessionView(selectedDate: selectedDate)
+                ScheduleSessionView(selectedDate: state.selectedDate)
             }
         }
-        .sheet(isPresented: $showDayDetailSheet) {
+        .sheet(isPresented: $state.showDayDetailSheet) {
             DayDetailSheet(
-                date: selectedDate,
-                sessions: sessionsForSelectedDate,
-                conflicts: calendarConflicts[selectedDate] ?? [],
+                date: state.selectedDate,
+                sessions: state.sessionsForSelectedDate,
+                conflicts: state.calendarConflicts[state.selectedDate] ?? [],
                 onSchedule: {
-                    quickAddDate = selectedDate
-                    showDayDetailSheet = false
+                    state.quickAddDate = state.selectedDate
+                    state.showDayDetailSheet = false
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                        showScheduleSheet = true
+                        state.showScheduleSheet = true
                     }
                 }
             )
         }
-        .sheet(isPresented: $showBestTimesWidget) {
+        .sheet(isPresented: $state.showBestTimesWidget) {
             NavigationStack {
                 bestTimesView
             }
         }
-        .sheet(isPresented: $showConflictDetails) {
-            if let conflictDate = selectedConflictDate,
-               let conflicts = calendarConflicts[conflictDate] {
+        .sheet(isPresented: $state.showConflictDetails) {
+            if let conflictDate = state.selectedConflictDate,
+               let conflicts = state.calendarConflicts[conflictDate] {
                 ConflictDetailsSheet(date: conflictDate, conflicts: conflicts)
             }
         }
-        .onChange(of: showScheduleSheet) { _, isPresented in
+        .onChange(of: state.showScheduleSheet) { _, isPresented in
             if !isPresented {
-                quickAddDate = nil
-                loadScheduledSessions()
-                loadSmartSuggestions()
+                state.quickAddDate = nil
+                state.loadScheduledSessions()
+                state.loadSmartSuggestions()
             }
         }
     }
@@ -187,27 +444,27 @@ struct CalendarView: View {
         HStack {
             Button(action: {
                 HapticFeedback.light()
-                previousPeriod()
+                state.previousPeriod()
             }) {
                 Image(systemName: "chevron.left")
                     .font(.title3)
                     .foregroundColor(.modusCyan)
             }
-            .accessibilityLabel("Previous \(viewMode.rawValue.lowercased())")
+            .accessibilityLabel("Previous \(state.viewMode.rawValue.lowercased())")
 
             Spacer()
 
             VStack(spacing: 4) {
-                Text(headerTitle)
+                Text(state.headerTitle)
                     .font(.headline)
                     .foregroundColor(.modusDeepTeal)
 
-                if viewMode == .week {
-                    Text(weekRangeString)
+                if state.viewMode == .week {
+                    Text(state.weekRangeString)
                         .font(.caption)
                         .foregroundColor(.secondary)
-                } else if viewMode == .day {
-                    Text(daySubtitle)
+                } else if state.viewMode == .day {
+                    Text(state.daySubtitle)
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
@@ -217,13 +474,13 @@ struct CalendarView: View {
 
             Button(action: {
                 HapticFeedback.light()
-                nextPeriod()
+                state.nextPeriod()
             }) {
                 Image(systemName: "chevron.right")
                     .font(.title3)
                     .foregroundColor(.modusCyan)
             }
-            .accessibilityLabel("Next \(viewMode.rawValue.lowercased())")
+            .accessibilityLabel("Next \(state.viewMode.rawValue.lowercased())")
         }
         .padding()
         .background(Color(.systemBackground))
@@ -232,7 +489,7 @@ struct CalendarView: View {
     // MARK: - View Mode Segment
 
     private var viewModeSegment: some View {
-        Picker("View Mode", selection: $viewMode) {
+        Picker("View Mode", selection: $state.viewMode) {
             ForEach(CalendarViewMode.allCases) { mode in
                 Text(mode.rawValue).tag(mode)
             }
@@ -240,7 +497,7 @@ struct CalendarView: View {
         .pickerStyle(SegmentedPickerStyle())
         .padding(.horizontal)
         .padding(.bottom, Spacing.xs)
-        .onChange(of: viewMode) { _, _ in
+        .onChange(of: state.viewMode) { _, _ in
             HapticFeedback.selectionChanged()
         }
     }
@@ -250,8 +507,8 @@ struct CalendarView: View {
     private var monthView: some View {
         VStack(spacing: 0) {
             // Day headers
-            LazyVGrid(columns: columns, spacing: 0) {
-                ForEach(weekdaySymbols, id: \.self) { symbol in
+            LazyVGrid(columns: state.columns, spacing: 0) {
+                ForEach(state.weekdaySymbols, id: \.self) { symbol in
                     Text(symbol)
                         .font(.caption)
                         .fontWeight(.semibold)
@@ -264,26 +521,26 @@ struct CalendarView: View {
             Divider()
 
             // Calendar dates
-            LazyVGrid(columns: columns, spacing: 0) {
-                ForEach(monthDates, id: \.self) { date in
+            LazyVGrid(columns: state.columns, spacing: 0) {
+                ForEach(state.monthDates, id: \.self) { date in
                     if let date = date {
                         EnhancedCalendarDateCell(
                             date: date,
-                            isSelected: calendar.isDate(date, inSameDayAs: selectedDate),
-                            isToday: calendar.isDateInToday(date),
-                            isCurrentMonth: calendar.isDate(date, equalTo: currentMonth, toGranularity: .month),
-                            sessions: sessionsForDate(date),
-                            trainingLoad: trainingLoadForDate(date),
+                            isSelected: state.calendar.isDate(date, inSameDayAs: state.selectedDate),
+                            isToday: state.calendar.isDateInToday(date),
+                            isCurrentMonth: state.calendar.isDate(date, equalTo: state.currentMonth, toGranularity: .month),
+                            sessions: state.sessionsForDate(date),
+                            trainingLoad: state.trainingLoadForDate(date),
                             onTap: {
-                                selectedDate = date
+                                state.selectedDate = date
                                 onDateSelected?(date)
                                 HapticFeedback.light()
-                                showDayDetailSheet = true
+                                state.showDayDetailSheet = true
                             },
                             onQuickAdd: {
-                                quickAddDate = date
+                                state.quickAddDate = date
                                 HapticFeedback.medium()
-                                showScheduleSheet = true
+                                state.showScheduleSheet = true
                             }
                         )
                     } else {
@@ -301,8 +558,8 @@ struct CalendarView: View {
     private var weekView: some View {
         VStack(spacing: 0) {
             // Day headers
-            LazyVGrid(columns: columns, spacing: 0) {
-                ForEach(weekdaySymbols, id: \.self) { symbol in
+            LazyVGrid(columns: state.columns, spacing: 0) {
+                ForEach(state.weekdaySymbols, id: \.self) { symbol in
                     Text(symbol)
                         .font(.caption)
                         .fontWeight(.semibold)
@@ -315,25 +572,25 @@ struct CalendarView: View {
             Divider()
 
             // Current week dates with expanded detail
-            LazyVGrid(columns: columns, spacing: 0) {
-                ForEach(currentWeekDates, id: \.self) { date in
+            LazyVGrid(columns: state.columns, spacing: 0) {
+                ForEach(state.currentWeekDates, id: \.self) { date in
                     EnhancedCalendarDateCell(
                         date: date,
-                        isSelected: calendar.isDate(date, inSameDayAs: selectedDate),
-                        isToday: calendar.isDateInToday(date),
+                        isSelected: state.calendar.isDate(date, inSameDayAs: state.selectedDate),
+                        isToday: state.calendar.isDateInToday(date),
                         isCurrentMonth: true,
-                        sessions: sessionsForDate(date),
-                        trainingLoad: trainingLoadForDate(date),
+                        sessions: state.sessionsForDate(date),
+                        trainingLoad: state.trainingLoadForDate(date),
                         onTap: {
-                            selectedDate = date
+                            state.selectedDate = date
                             onDateSelected?(date)
                             HapticFeedback.light()
-                            showDayDetailSheet = true
+                            state.showDayDetailSheet = true
                         },
                         onQuickAdd: {
-                            quickAddDate = date
+                            state.quickAddDate = date
                             HapticFeedback.medium()
-                            showScheduleSheet = true
+                            state.showScheduleSheet = true
                         }
                     )
                 }
@@ -354,10 +611,10 @@ struct CalendarView: View {
                 dayHeaderCard
 
                 // Sessions for the day
-                if sessionsForSelectedDate.isEmpty {
+                if state.sessionsForSelectedDate.isEmpty {
                     dayEmptyState
                 } else {
-                    ForEach(sessionsForSelectedDate) { session in
+                    ForEach(state.sessionsForSelectedDate) { session in
                         DaySessionCard(session: session)
                     }
                 }
@@ -369,17 +626,17 @@ struct CalendarView: View {
     private var dayHeaderCard: some View {
         HStack {
             VStack(alignment: .leading, spacing: 4) {
-                Text(dayFullDateString)
+                Text(state.dayFullDateString)
                     .font(.title3)
                     .fontWeight(.bold)
                     .foregroundColor(.modusDeepTeal)
 
-                let load = trainingLoadForDate(selectedDate)
+                let load = state.trainingLoadForDate(state.selectedDate)
                 HStack(spacing: 6) {
                     Circle()
-                        .fill(trainingLoadColor(load))
+                        .fill(state.trainingLoadColor(load))
                         .frame(width: 10, height: 10)
-                    Text(trainingLoadLabel(load))
+                    Text(state.trainingLoadLabel(load))
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
@@ -389,15 +646,15 @@ struct CalendarView: View {
 
             // Quick-add button
             Button(action: {
-                quickAddDate = selectedDate
+                state.quickAddDate = state.selectedDate
                 HapticFeedback.medium()
-                showScheduleSheet = true
+                state.showScheduleSheet = true
             }) {
                 Image(systemName: "plus.circle.fill")
                     .font(.title2)
                     .foregroundColor(.modusCyan)
             }
-            .accessibilityLabel("Add workout for \(dayFullDateString)")
+            .accessibilityLabel("Add workout for \(state.dayFullDateString)")
         }
         .padding()
         .background(Color.modusLightTeal)
@@ -415,9 +672,9 @@ struct CalendarView: View {
                 .foregroundColor(.secondary)
 
             Button(action: {
-                quickAddDate = selectedDate
+                state.quickAddDate = state.selectedDate
                 HapticFeedback.medium()
-                showScheduleSheet = true
+                state.showScheduleSheet = true
             }) {
                 Label("Schedule Workout", systemImage: "plus.circle.fill")
                     .font(.subheadline.weight(.semibold))
@@ -435,7 +692,7 @@ struct CalendarView: View {
     // MARK: - Week Session Summary
 
     private var weekSessionSummary: some View {
-        let weekSessions = currentWeekDates.flatMap { sessionsForDate($0) }
+        let weekSessions = state.currentWeekDates.flatMap { state.sessionsForDate($0) }
         let completed = weekSessions.filter { $0.status == .completed }.count
         let scheduled = weekSessions.filter { $0.status == .scheduled }.count
         let missed = weekSessions.filter { $0.isPastDue }.count
@@ -504,215 +761,6 @@ struct CalendarView: View {
             Text(label)
         }
     }
-
-    // MARK: - Helper Properties
-
-    private var headerTitle: String {
-        if viewMode == .day {
-            return Self.dayOfWeekFormatter.string(from: selectedDate)
-        }
-        return Self.monthYearFormatter.string(from: currentMonth)
-    }
-
-    private var daySubtitle: String {
-        Self.daySubtitleFormatter.string(from: selectedDate)
-    }
-
-    private var dayFullDateString: String {
-        Self.fullDateFormatter.string(from: selectedDate)
-    }
-
-    private var weekRangeString: String {
-        guard let weekInterval = calendar.dateInterval(of: .weekOfYear, for: currentMonth) else {
-            return ""
-        }
-        let start = Self.weekRangeFormatter.string(from: weekInterval.start)
-        let end = Self.weekRangeFormatter.string(from: weekInterval.end)
-        return "\(start) - \(end)"
-    }
-
-    private var weekdaySymbols: [String] {
-        let symbols = calendar.shortWeekdaySymbols
-        return Array(symbols.suffix(1) + symbols.prefix(6))
-    }
-
-    /// Computes month dates for the calendar grid
-    private var monthDates: [Date?] {
-        cachedMonthDates
-    }
-
-    /// Recomputes month dates when currentMonth changes (Fix 6)
-    private static func computeMonthDates(for month: Date, calendar: Calendar) -> [Date?] {
-        guard let monthInterval = calendar.dateInterval(of: .month, for: month),
-              let monthFirstWeek = calendar.dateInterval(of: .weekOfMonth, for: monthInterval.start) else {
-            return []
-        }
-
-        var dates: [Date?] = []
-        var currentDate = monthFirstWeek.start
-
-        for _ in 0..<42 {
-            dates.append(currentDate)
-            guard let nextDate = calendar.date(byAdding: .day, value: 1, to: currentDate) else {
-                break
-            }
-            currentDate = nextDate
-        }
-
-        return dates
-    }
-
-    private var currentWeekDates: [Date] {
-        guard let weekInterval = calendar.dateInterval(of: .weekOfYear, for: currentMonth) else {
-            return []
-        }
-
-        var dates: [Date] = []
-        var currentDate = weekInterval.start
-
-        for _ in 0..<7 {
-            dates.append(currentDate)
-            guard let nextDate = calendar.date(byAdding: .day, value: 1, to: currentDate) else {
-                break
-            }
-            currentDate = nextDate
-        }
-
-        return dates
-    }
-
-    private var sessionsForSelectedDate: [ScheduledSession] {
-        sessionsForDate(selectedDate)
-    }
-
-    /// Looks up sessions by date string key (Fix 4: O(1) dictionary lookup instead of O(N) filter)
-    private func sessionsForDate(_ date: Date) -> [ScheduledSession] {
-        let key = Self.sessionDateKeyFormatter.string(from: date)
-        return sessionsByDate[key] ?? []
-    }
-
-    /// Rebuilds the sessionsByDate dictionary when scheduledSessions changes (Fix 4)
-    private func rebuildSessionsByDate() {
-        var dict: [String: [ScheduledSession]] = [:]
-        for session in scheduledSessions {
-            let key = Self.sessionDateKeyFormatter.string(from: session.scheduledDate)
-            dict[key, default: []].append(session)
-        }
-        sessionsByDate = dict
-    }
-
-    // MARK: - Training Load
-
-    /// Compute a 0.0...1.0 training load for a date based on session count and status.
-    /// 0 = rest day, 1.0 = heavy training day
-    private func trainingLoadForDate(_ date: Date) -> Double {
-        let sessions = sessionsForDate(date)
-        if sessions.isEmpty { return 0.0 }
-
-        let activeSessions = sessions.filter { $0.status != .cancelled }
-        if activeSessions.isEmpty { return 0.0 }
-
-        // Scale: 1 session = 0.35, 2 = 0.65, 3+ = 0.9+
-        let count = Double(activeSessions.count)
-        return min(1.0, 0.15 + count * 0.25)
-    }
-
-    private func trainingLoadColor(_ load: Double) -> Color {
-        if load == 0 { return .modusCyan.opacity(0.08) }
-        return .modusCyan.opacity(max(0.15, load))
-    }
-
-    private func trainingLoadLabel(_ load: Double) -> String {
-        switch load {
-        case 0: return "Rest Day"
-        case 0.01..<0.35: return "Light Training"
-        case 0.35..<0.65: return "Moderate Training"
-        default: return "Heavy Training"
-        }
-    }
-
-    // MARK: - Navigation
-
-    private func previousPeriod() {
-        switch viewMode {
-        case .month:
-            currentMonth = calendar.date(byAdding: .month, value: -1, to: currentMonth) ?? currentMonth
-        case .week:
-            currentMonth = calendar.date(byAdding: .weekOfYear, value: -1, to: currentMonth) ?? currentMonth
-        case .day:
-            selectedDate = calendar.date(byAdding: .day, value: -1, to: selectedDate) ?? selectedDate
-        }
-    }
-
-    private func nextPeriod() {
-        switch viewMode {
-        case .month:
-            currentMonth = calendar.date(byAdding: .month, value: 1, to: currentMonth) ?? currentMonth
-        case .week:
-            currentMonth = calendar.date(byAdding: .weekOfYear, value: 1, to: currentMonth) ?? currentMonth
-        case .day:
-            selectedDate = calendar.date(byAdding: .day, value: 1, to: selectedDate) ?? selectedDate
-        }
-    }
-
-    // MARK: - Data Loading
-
-    private func loadScheduledSessions() {
-        isLoading = true
-
-        Task {
-            do {
-                guard let patientId = PTSupabaseClient.shared.userId else {
-                    await MainActor.run { isLoading = false }
-                    return
-                }
-                let sessions = try await SchedulingService.shared.fetchScheduledSessions(for: patientId)
-                await MainActor.run {
-                    scheduledSessions = sessions
-                    isLoading = false
-                }
-            } catch {
-                await MainActor.run { isLoading = false }
-            }
-        }
-    }
-
-    // ACP-1034: Load smart scheduling suggestions
-    private func loadSmartSuggestions() {
-        Task {
-            guard let patientIdString = PTSupabaseClient.shared.userId,
-                  let patientId = UUID(uuidString: patientIdString) else {
-                return
-            }
-
-            do {
-                // Load suggestions concurrently
-                async let todaySuggestionTask = smartSchedulingService.getTodaySuggestion(for: patientId)
-                async let allSuggestionsTask = smartSchedulingService.generateSuggestions(for: patientId, days: 7)
-                async let bestTimesTask = smartSchedulingService.analyzeBestTrainingTimes(for: patientId)
-                async let missedWorkoutsTask = smartSchedulingService.autoAdjustMissedWorkouts(for: patientId, autoApply: false)
-
-                let (today, all, times, missed) = try await (todaySuggestionTask, allSuggestionsTask, bestTimesTask, missedWorkoutsTask)
-
-                await MainActor.run {
-                    todaySuggestion = today
-                    allSuggestions = all
-                    bestTrainingTimes = times
-                    missedWorkoutProposals = missed
-                }
-
-                // Load calendar conflicts for suggested dates
-                for suggestion in all {
-                    let conflicts = await smartSchedulingService.getCalendarConflicts(on: suggestion.date)
-                    await MainActor.run {
-                        calendarConflicts[suggestion.date] = conflicts
-                    }
-                }
-            } catch {
-                // Silently fail - suggestions are optional
-            }
-        }
-    }
 }
 
 // MARK: - Smart Suggestions Section
@@ -720,37 +768,37 @@ struct CalendarView: View {
 extension CalendarView {
 
     @ViewBuilder
-    private var smartSuggestionsSection: some View {
+    var smartSuggestionsSection: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: Spacing.md) {
                 // Missed workout reschedule cards
-                ForEach(missedWorkoutProposals.prefix(2)) { proposal in
+                ForEach(state.missedWorkoutProposals.prefix(2)) { proposal in
                     MissedWorkoutRescheduleCard(
                         proposal: proposal,
                         onAccept: {
-                            rescheduleWorkout(proposal: proposal)
+                            state.rescheduleWorkout(proposal: proposal)
                         },
                         onDismiss: {
-                            dismissProposal(proposal)
+                            state.dismissProposal(proposal)
                         }
                     )
                     .frame(width: 320)
                 }
 
                 // Today's suggestion
-                if let suggestion = todaySuggestion {
+                if let suggestion = state.todaySuggestion {
                     SmartSchedulingSuggestionCard(
                         suggestion: suggestion,
                         onSchedule: {
-                            quickAddDate = suggestion.date
-                            showScheduleSheet = true
+                            state.quickAddDate = suggestion.date
+                            state.showScheduleSheet = true
                         }
                     )
                     .frame(width: 320)
                 }
 
                 // Best times widget preview
-                if !bestTrainingTimes.isEmpty {
+                if !state.bestTrainingTimes.isEmpty {
                     bestTimesPreviewCard
                         .frame(width: 280)
                 }
@@ -776,7 +824,7 @@ extension CalendarView {
                 Spacer()
             }
 
-            if let firstWindow = bestTrainingTimes.first {
+            if let firstWindow = state.bestTrainingTimes.first {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(firstWindow.timeOfDay)
                         .font(.subheadline)
@@ -797,7 +845,7 @@ extension CalendarView {
 
                 Button(action: {
                     HapticFeedback.light()
-                    showBestTimesWidget = true
+                    state.showBestTimesWidget = true
                 }) {
                     HStack {
                         Text("View All Times")
@@ -819,15 +867,15 @@ extension CalendarView {
     }
 
     private var bestTimesView: some View {
-        BestTimeToTrainWidget(timeWindows: bestTrainingTimes) { window in
+        BestTimeToTrainWidget(timeWindows: state.bestTrainingTimes) { window in
             // Auto-schedule at this time
             let calendar = Calendar.current
             guard let targetDate = calendar.nextDate(after: Date(), matching: DateComponents(hour: window.startHour), matchingPolicy: .nextTime) else {
                 return
             }
-            quickAddDate = targetDate
-            showBestTimesWidget = false
-            showScheduleSheet = true
+            state.quickAddDate = targetDate
+            state.showBestTimesWidget = false
+            state.showScheduleSheet = true
         }
         .padding()
         .navigationTitle("Best Times to Train")
@@ -835,45 +883,11 @@ extension CalendarView {
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button("Done") {
-                    showBestTimesWidget = false
+                    state.showBestTimesWidget = false
                 }
                 .foregroundColor(.modusCyan)
             }
         }
-    }
-
-    // MARK: - Actions
-
-    private func rescheduleWorkout(proposal: ReschedulingProposal) {
-        Task {
-            do {
-                let newDate = Calendar.current.date(
-                    bySettingHour: proposal.suggestedTime.hour,
-                    minute: proposal.suggestedTime.minute,
-                    second: 0,
-                    of: proposal.suggestedDate
-                ) ?? proposal.suggestedDate
-
-                _ = try await SchedulingService.shared.rescheduleSession(
-                    scheduledSessionId: proposal.originalSession.id,
-                    newDate: proposal.suggestedDate,
-                    newTime: newDate
-                )
-
-                HapticFeedback.success()
-
-                await MainActor.run {
-                    loadScheduledSessions()
-                    loadSmartSuggestions()
-                }
-            } catch {
-                HapticFeedback.error()
-            }
-        }
-    }
-
-    private func dismissProposal(_ proposal: ReschedulingProposal) {
-        missedWorkoutProposals.removeAll { $0.id == proposal.id }
     }
 }
 

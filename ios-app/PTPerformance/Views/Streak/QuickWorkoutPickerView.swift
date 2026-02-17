@@ -438,8 +438,7 @@ struct QuickWorkoutDetailSheet: View {
 
 struct QuickWorkoutPickerView_Previews: PreviewProvider {
     static var previews: some View {
-        QuickWorkoutPickerView { workout in
-            print("Selected: \(workout.name)")
+        QuickWorkoutPickerView { _ in
         }
     }
 }

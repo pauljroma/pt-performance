@@ -479,11 +479,9 @@ struct GestureSetLogger_Previews: PreviewProvider {
                 targetReps: 10,
                 targetWeight: 135,
                 weightUnit: "lbs",
-                onSetComplete: { setNumber, reps, weight in
-                    print("Set \(setNumber): \(reps) reps @ \(weight) lbs")
+                onSetComplete: { _, _, _ in
                 },
                 onAllSetsComplete: {
-                    print("All sets complete!")
                 }
             )
             .padding()
@@ -492,8 +490,7 @@ struct GestureSetLogger_Previews: PreviewProvider {
 
         VStack {
             GestureSetLogger(
-                onSetComplete: { setNumber, reps, weight in
-                    print("Set \(setNumber): \(reps) reps @ \(weight) lbs")
+                onSetComplete: { _, _, _ in
                 }
             )
             .padding()

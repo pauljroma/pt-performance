@@ -14,6 +14,32 @@
 
 import SwiftUI
 
+// MARK: - TodayHubViewState
+
+/// Extracted state for TodayHubView - consolidates 14 @State properties into a single ObservableObject
+@MainActor
+class TodayHubViewState: ObservableObject {
+    // Sheet presentation states
+    @Published var showQuickPick = false
+    @Published var showTimers = false
+    @Published var showWeeklySummary = false
+    @Published var showStreakDashboard = false
+    @Published var showArmCareAssessment = false  // ACP-522: Arm Care Assessment
+    @Published var showDailyCheckIn = false       // X2Index: Daily Check-in
+
+    // ACP-MODE: Mode-specific dashboard navigation state
+    @Published var showRehabDashboard = false
+    @Published var showStrengthDashboard = false
+    @Published var showPerformanceDashboard = false
+
+    // ACP-501: Quick Start state
+    @Published var showQuickStartWorkout = false
+    @Published var quickStartSession: Session?
+    @Published var quickStartExercises: [Exercise] = []
+    @Published var quickStartError: String?
+    @Published var showQuickStartError = false
+}
+
 /// Today Hub View - Primary tab for daily workout focus
 /// Combines TodaySessionView with quick access to Quick Pick, Timers, Readiness, and Streaks
 /// ACP-501: Integrates QuickStartService for one-tap workout start
@@ -27,29 +53,14 @@ struct TodayHubView: View {
 
     // MARK: - State
 
-    @State private var showQuickPick = false
-    @State private var showTimers = false
-    @State private var showWeeklySummary = false
-    @State private var showStreakDashboard = false
-    @State private var showArmCareAssessment = false  // ACP-522: Arm Care Assessment
-    @State private var showDailyCheckIn = false       // X2Index: Daily Check-in
+    @StateObject private var state = TodayHubViewState()
     @StateObject private var streakViewModel = StreakIndicatorViewModel()
-
-    // ACP-MODE: Mode-specific dashboard navigation state
-    @State private var showRehabDashboard = false
-    @State private var showStrengthDashboard = false
-    @State private var showPerformanceDashboard = false
 
     // ACP-MODE: Mode-specific status card data
     @StateObject private var modeStatusViewModel = ModeStatusCardViewModel()
 
-    // ACP-501: Quick Start state
+    // ACP-501: Quick Start service
     @StateObject private var quickStartService = QuickStartService.shared
-    @State private var showQuickStartWorkout = false
-    @State private var quickStartSession: Session?
-    @State private var quickStartExercises: [Exercise] = []
-    @State private var quickStartError: String?
-    @State private var showQuickStartError = false
 
     // MARK: - Body
 
@@ -68,11 +79,11 @@ struct TodayHubView: View {
                         quickAccessMenu
                     }
                 }
-                .sheetWithHaptic(isPresented: $showQuickPick) {
+                .sheetWithHaptic(isPresented: $state.showQuickPick) {
                     WorkoutPickerView()
                         .environmentObject(appState)
                 }
-                .sheetWithHaptic(isPresented: $showTimers) {
+                .sheetWithHaptic(isPresented: $state.showTimers) {
                     if let patientIdString = supabase.userId,
                        let patientId = UUID(uuidString: patientIdString) {
                         NavigationStack {
@@ -80,13 +91,13 @@ struct TodayHubView: View {
                         }
                     }
                 }
-                .sheetWithHaptic(isPresented: $showWeeklySummary) {
+                .sheetWithHaptic(isPresented: $state.showWeeklySummary) {
                     if let patientIdString = supabase.userId,
                        let patientId = UUID(uuidString: patientIdString) {
                         WeeklySummaryView(patientId: patientId)
                     }
                 }
-                .sheetWithHaptic(isPresented: $showStreakDashboard) {
+                .sheetWithHaptic(isPresented: $state.showStreakDashboard) {
                     if let patientIdString = supabase.userId,
                        let patientId = UUID(uuidString: patientIdString) {
                         NavigationStack {
@@ -95,35 +106,35 @@ struct TodayHubView: View {
                     }
                 }
                 // ACP-522: Arm Care Assessment sheet
-                .sheetWithHaptic(isPresented: $showArmCareAssessment) {
+                .sheetWithHaptic(isPresented: $state.showArmCareAssessment) {
                     if let patientIdString = supabase.userId,
                        let patientId = UUID(uuidString: patientIdString) {
                         ArmCareAssessmentView(patientId: patientId)
                     }
                 }
                 // X2Index: Daily Check-in - now uses compact ReadinessCheckInView
-                .sheetWithHaptic(isPresented: $showDailyCheckIn) {
+                .sheetWithHaptic(isPresented: $state.showDailyCheckIn) {
                     if let patientIdString = supabase.userId,
                        let patientId = UUID(uuidString: patientIdString) {
                         ReadinessCheckInView(patientId: patientId)
                     }
                 }
                 // ACP-MODE: Rehab Mode Dashboard sheet
-                .sheetWithHaptic(isPresented: $showRehabDashboard) {
+                .sheetWithHaptic(isPresented: $state.showRehabDashboard) {
                     NavigationStack {
                         RehabModeDashboardView()
                             .environmentObject(appState)
                             .toolbar {
                                 ToolbarItem(placement: .navigationBarTrailing) {
                                     Button("Done") {
-                                        showRehabDashboard = false
+                                        state.showRehabDashboard = false
                                     }
                                 }
                             }
                     }
                 }
                 // ACP-MODE: Strength Mode Dashboard sheet
-                .sheetWithHaptic(isPresented: $showStrengthDashboard) {
+                .sheetWithHaptic(isPresented: $state.showStrengthDashboard) {
                     if let patientIdString = supabase.userId,
                        let patientId = UUID(uuidString: patientIdString) {
                         NavigationStack {
@@ -132,7 +143,7 @@ struct TodayHubView: View {
                                 .toolbar {
                                     ToolbarItem(placement: .navigationBarTrailing) {
                                         Button("Done") {
-                                            showStrengthDashboard = false
+                                            state.showStrengthDashboard = false
                                         }
                                     }
                                 }
@@ -140,7 +151,7 @@ struct TodayHubView: View {
                     }
                 }
                 // ACP-MODE: Performance Mode Dashboard sheet
-                .sheetWithHaptic(isPresented: $showPerformanceDashboard) {
+                .sheetWithHaptic(isPresented: $state.showPerformanceDashboard) {
                     if let patientIdString = supabase.userId,
                        let patientId = UUID(uuidString: patientIdString) {
                         NavigationStack {
@@ -149,7 +160,7 @@ struct TodayHubView: View {
                                 .toolbar {
                                     ToolbarItem(placement: .navigationBarTrailing) {
                                         Button("Done") {
-                                            showPerformanceDashboard = false
+                                            state.showPerformanceDashboard = false
                                         }
                                     }
                                 }
@@ -157,18 +168,18 @@ struct TodayHubView: View {
                     }
                 }
                 // ACP-501: Quick Start Workout Full Screen Cover
-                .fullScreenCoverWithHaptic(isPresented: $showQuickStartWorkout) {
-                    if let session = quickStartSession,
+                .fullScreenCoverWithHaptic(isPresented: $state.showQuickStartWorkout) {
+                    if let session = state.quickStartSession,
                        let patientIdString = supabase.userId,
                        let patientId = UUID(uuidString: patientIdString) {
                         ManualWorkoutExecutionView(
                             prescribedSession: session,
-                            exercises: quickStartExercises,
+                            exercises: state.quickStartExercises,
                             patientId: patientId,
                             onComplete: {
-                                showQuickStartWorkout = false
-                                quickStartSession = nil
-                                quickStartExercises = []
+                                state.showQuickStartWorkout = false
+                                state.quickStartSession = nil
+                                state.quickStartExercises = []
                                 // Clear cache after workout completion
                                 quickStartService.clearCache()
                             }
@@ -177,13 +188,13 @@ struct TodayHubView: View {
                     }
                 }
                 // ACP-501: Quick Start Error Alert
-                .alert("Couldn't Start Workout", isPresented: $showQuickStartError) {
+                .alert("Couldn't Start Workout", isPresented: $state.showQuickStartError) {
                     Button("OK", role: .cancel) { }
                 } message: {
-                    Text(quickStartError ?? "An unexpected error occurred.")
+                    Text(state.quickStartError ?? "An unexpected error occurred.")
                 }
                 .onReceive(NotificationCenter.default.publisher(for: .showWeeklySummary)) { _ in
-                    showWeeklySummary = true
+                    state.showWeeklySummary = true
                 }
                 // ACP-501: Listen for quick start deep link
                 .onReceive(NotificationCenter.default.publisher(for: .quickStartWorkout)) { _ in
@@ -216,7 +227,7 @@ struct TodayHubView: View {
 
                     case .streak:
                         appState.pendingDeepLink = nil
-                        showStreakDashboard = true
+                        state.showStreakDashboard = true
 
                     case .today:
                         // Already on Today tab — just consume the deep link
@@ -224,11 +235,11 @@ struct TodayHubView: View {
 
                     case .logExercise:
                         appState.pendingDeepLink = nil
-                        showQuickPick = true
+                        state.showQuickPick = true
 
                     case .restTimer:
                         appState.pendingDeepLink = nil
-                        showTimers = true
+                        state.showTimers = true
 
                     default:
                         // Other deep links handled by PatientTabView
@@ -249,29 +260,29 @@ struct TodayHubView: View {
         switch result {
         case .ready(let session, let exercises):
             // Immediately start the workout - no confirmation needed
-            quickStartSession = session
-            quickStartExercises = exercises
-            showQuickStartWorkout = true
+            state.quickStartSession = session
+            state.quickStartExercises = exercises
+            state.showQuickStartWorkout = true
             DebugLogger.shared.log("🚀 [QuickStart] Starting workout: \(session.name)", level: .success)
 
         case .multipleWorkouts(let session, let exercises, let remainingCount):
             // Start the first uncompleted workout, inform user about remaining
-            quickStartSession = session
-            quickStartExercises = exercises
-            showQuickStartWorkout = true
+            state.quickStartSession = session
+            state.quickStartExercises = exercises
+            state.showQuickStartWorkout = true
             DebugLogger.shared.log("🚀 [QuickStart] Starting first of \(remainingCount + 1) workouts: \(session.name)", level: .success)
 
         case .noWorkoutToday:
-            quickStartError = "No workout scheduled for today. Check your program schedule or start a manual workout."
-            showQuickStartError = true
+            state.quickStartError = "No workout scheduled for today. Check your program schedule or start a manual workout."
+            state.showQuickStartError = true
 
         case .alreadyCompleted(let session):
-            quickStartError = "Great job! You've already completed \(session.name) today. Want to do another workout? Use the workout library."
-            showQuickStartError = true
+            state.quickStartError = "Great job! You've already completed \(session.name) today. Want to do another workout? Use the workout library."
+            state.showQuickStartError = true
 
         case .error(let error):
-            quickStartError = error.recoverySuggestion ?? error.localizedDescription
-            showQuickStartError = true
+            state.quickStartError = error.recoverySuggestion ?? error.localizedDescription
+            state.showQuickStartError = true
         }
     }
 
@@ -280,7 +291,7 @@ struct TodayHubView: View {
     private var streakIndicatorButton: some View {
         Button(action: {
             HapticFeedback.light()
-            showStreakDashboard = true
+            state.showStreakDashboard = true
         }) {
             HStack(spacing: 4) {
                 Image(systemName: "flame.fill")
@@ -308,14 +319,14 @@ struct TodayHubView: View {
         Menu {
             Button(action: {
                 HapticFeedback.light()
-                showQuickPick = true
+                state.showQuickPick = true
             }) {
                 Label("AI Quick Pick", systemImage: "sparkles")
             }
 
             Button(action: {
                 HapticFeedback.light()
-                showTimers = true
+                state.showTimers = true
             }) {
                 Label("Timers", systemImage: "timer")
             }
@@ -325,14 +336,14 @@ struct TodayHubView: View {
             // Daily Check-in - uses compact ReadinessCheckInView
             Button(action: {
                 HapticFeedback.light()
-                showDailyCheckIn = true
+                state.showDailyCheckIn = true
             }) {
                 Label("Daily Check-in", systemImage: "heart.text.square")
             }
 
             Button(action: {
                 HapticFeedback.light()
-                showWeeklySummary = true
+                state.showWeeklySummary = true
             }) {
                 Label("Weekly Summary", systemImage: "chart.bar.fill")
             }
@@ -340,7 +351,7 @@ struct TodayHubView: View {
             // ACP-836: Streak dashboard menu item
             Button(action: {
                 HapticFeedback.light()
-                showStreakDashboard = true
+                state.showStreakDashboard = true
             }) {
                 Label("Streak Dashboard", systemImage: "flame.fill")
             }
@@ -350,7 +361,7 @@ struct TodayHubView: View {
             // ACP-522: Arm Care Assessment menu item - Rehab mode feature
             Button(action: {
                 HapticFeedback.light()
-                showArmCareAssessment = true
+                state.showArmCareAssessment = true
             }) {
                 Label("Arm Care Check", systemImage: "figure.baseball")
             }

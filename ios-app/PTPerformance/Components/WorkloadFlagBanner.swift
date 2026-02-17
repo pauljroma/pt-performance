@@ -117,8 +117,7 @@ struct WorkloadFlagBanner_Previews: PreviewProvider {
     static var previews: some View {
         ScrollView {
             VStack(spacing: 16) {
-                WorkloadFlagsList(flags: WorkloadFlag.sampleFlags) { flag in
-                    print("Tapped: \(flag.message)")
+                WorkloadFlagsList(flags: WorkloadFlag.sampleFlags) { _ in
                 }
             }
             .padding()

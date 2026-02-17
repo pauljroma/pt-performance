@@ -10,6 +10,32 @@
 import SwiftUI
 import UserNotifications
 
+// MARK: - NotificationSettingsViewState
+
+/// Extracted state for NotificationSettingsView - consolidates 14 @State properties into a single ObservableObject
+@MainActor
+class NotificationSettingsViewState: ObservableObject {
+    // Data state
+    @Published var settings: NotificationSettings?
+    @Published var patterns: [TrainingTimePattern] = []
+    @Published var permissionStatus: UNAuthorizationStatus = .notDetermined
+    @Published var isLoading = true
+    @Published var isSaving = false
+    @Published var showError = false
+    @Published var errorMessage = ""
+
+    // Editable settings
+    @Published var smartTimingEnabled = true
+    @Published var fallbackTime = Date()
+    @Published var reminderMinutesBefore = 30
+    @Published var streakAlertsEnabled = true
+    @Published var weeklySummaryEnabled = true
+
+    // Prescription notification settings
+    @Published var prescriptionPreferences = PrescriptionNotificationPreferences.defaults
+    @Published var showPrescriptionSection = true
+}
+
 /// Settings view for managing smart workout and prescription notifications.
 ///
 /// Allows users to:
@@ -33,24 +59,7 @@ struct NotificationSettingsView: View {
 
     // MARK: - State
 
-    @State private var settings: NotificationSettings?
-    @State private var patterns: [TrainingTimePattern] = []
-    @State private var permissionStatus: UNAuthorizationStatus = .notDetermined
-    @State private var isLoading = true
-    @State private var isSaving = false
-    @State private var showError = false
-    @State private var errorMessage = ""
-
-    // Editable settings
-    @State private var smartTimingEnabled = true
-    @State private var fallbackTime = Date()
-    @State private var reminderMinutesBefore = 30
-    @State private var streakAlertsEnabled = true
-    @State private var weeklySummaryEnabled = true
-
-    // Prescription notification settings
-    @State private var prescriptionPreferences = PrescriptionNotificationPreferences.defaults
-    @State private var showPrescriptionSection = true
+    @StateObject private var state = NotificationSettingsViewState()
 
     // MARK: - Computed Properties
 
@@ -60,7 +69,7 @@ struct NotificationSettingsView: View {
     }
 
     private var hasPermission: Bool {
-        permissionStatus == .authorized
+        state.permissionStatus == .authorized
     }
 
     private var reminderLeadTimeOptions: [Int] {
@@ -96,25 +105,25 @@ struct NotificationSettingsView: View {
         .task {
             await loadData()
         }
-        .onChange(of: smartTimingEnabled) { _, _ in
+        .onChange(of: state.smartTimingEnabled) { _, _ in
             HapticFeedback.toggle()
             saveSettings()
         }
-        .onChange(of: streakAlertsEnabled) { _, _ in
+        .onChange(of: state.streakAlertsEnabled) { _, _ in
             HapticFeedback.toggle()
             saveSettings()
         }
-        .onChange(of: weeklySummaryEnabled) { _, _ in
+        .onChange(of: state.weeklySummaryEnabled) { _, _ in
             HapticFeedback.toggle()
             saveSettings()
         }
-        .alert("Error", isPresented: $showError) {
+        .alert("Error", isPresented: $state.showError) {
             Button("OK", role: .cancel) {}
         } message: {
-            Text(errorMessage)
+            Text(state.errorMessage)
         }
         .overlay {
-            if isLoading {
+            if state.isLoading {
                 ProgressView()
                     .scaleEffect(1.5)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -175,7 +184,7 @@ struct NotificationSettingsView: View {
 
     private var smartTimingSection: some View {
         Section {
-            Toggle(isOn: $smartTimingEnabled) {
+            Toggle(isOn: $state.smartTimingEnabled) {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Smart Timing")
                         .font(.body)
@@ -186,10 +195,10 @@ struct NotificationSettingsView: View {
             }
             .toggleStyle(SwitchToggleStyle(tint: .modusCyan))
             .accessibilityLabel("Smart Timing")
-            .accessibilityValue(smartTimingEnabled ? "On" : "Off")
+            .accessibilityValue(state.smartTimingEnabled ? "On" : "Off")
             .accessibilityHint("Toggle to automatically learn your workout schedule")
 
-            if smartTimingEnabled {
+            if state.smartTimingEnabled {
                 HStack {
                     Image(systemName: "brain.head.profile")
                         .foregroundColor(.purple)
@@ -211,7 +220,7 @@ struct NotificationSettingsView: View {
         } header: {
             Text("Smart Timing")
         } footer: {
-            if smartTimingEnabled {
+            if state.smartTimingEnabled {
                 Text("The system learns your patterns over time. More workouts = better predictions.")
             }
         }
@@ -224,26 +233,26 @@ struct NotificationSettingsView: View {
             // Fallback time picker
             DatePicker(
                 "Default Reminder Time",
-                selection: $fallbackTime,
+                selection: $state.fallbackTime,
                 displayedComponents: .hourAndMinute
             )
-            .onChange(of: fallbackTime) { _, _ in
+            .onChange(of: state.fallbackTime) { _, _ in
                 saveSettings()
             }
 
             // Lead time picker
-            Picker("Remind Me", selection: $reminderMinutesBefore) {
+            Picker("Remind Me", selection: $state.reminderMinutesBefore) {
                 ForEach(reminderLeadTimeOptions, id: \.self) { minutes in
                     Text(formatMinutes(minutes)).tag(minutes)
                 }
             }
-            .onChange(of: reminderMinutesBefore) { _, _ in
+            .onChange(of: state.reminderMinutesBefore) { _, _ in
                 saveSettings()
             }
         } header: {
             Text("Reminder Settings")
         } footer: {
-            if smartTimingEnabled {
+            if state.smartTimingEnabled {
                 Text("This time is used when no pattern is detected for a day.")
             } else {
                 Text("Reminders will be sent at this time every day.")
@@ -256,7 +265,7 @@ struct NotificationSettingsView: View {
     private var prescriptionNotificationsSection: some View {
         Section {
             // New prescription assigned
-            Toggle(isOn: $prescriptionPreferences.newPrescriptionEnabled) {
+            Toggle(isOn: $state.prescriptionPreferences.newPrescriptionEnabled) {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("New Prescription Alerts")
                         .font(.body)
@@ -265,29 +274,29 @@ struct NotificationSettingsView: View {
                         .foregroundColor(.secondary)
                 }
             }
-            .onChange(of: prescriptionPreferences.newPrescriptionEnabled) { _, _ in
+            .onChange(of: state.prescriptionPreferences.newPrescriptionEnabled) { _, _ in
                 HapticFeedback.toggle()
                 savePrescriptionPreferences()
             }
             .accessibilityLabel("New Prescription Alerts")
-            .accessibilityValue(prescriptionPreferences.newPrescriptionEnabled ? "On" : "Off")
+            .accessibilityValue(state.prescriptionPreferences.newPrescriptionEnabled ? "On" : "Off")
 
             // Deadline reminders group
             DisclosureGroup {
-                Toggle("24 Hours Before", isOn: $prescriptionPreferences.deadline24hEnabled)
-                    .onChange(of: prescriptionPreferences.deadline24hEnabled) { _, _ in
+                Toggle("24 Hours Before", isOn: $state.prescriptionPreferences.deadline24hEnabled)
+                    .onChange(of: state.prescriptionPreferences.deadline24hEnabled) { _, _ in
                         HapticFeedback.toggle()
                         savePrescriptionPreferences()
                     }
 
-                Toggle("6 Hours Before", isOn: $prescriptionPreferences.deadline6hEnabled)
-                    .onChange(of: prescriptionPreferences.deadline6hEnabled) { _, _ in
+                Toggle("6 Hours Before", isOn: $state.prescriptionPreferences.deadline6hEnabled)
+                    .onChange(of: state.prescriptionPreferences.deadline6hEnabled) { _, _ in
                         HapticFeedback.toggle()
                         savePrescriptionPreferences()
                     }
 
-                Toggle("1 Hour Before", isOn: $prescriptionPreferences.deadline1hEnabled)
-                    .onChange(of: prescriptionPreferences.deadline1hEnabled) { _, _ in
+                Toggle("1 Hour Before", isOn: $state.prescriptionPreferences.deadline1hEnabled)
+                    .onChange(of: state.prescriptionPreferences.deadline1hEnabled) { _, _ in
                         HapticFeedback.toggle()
                         savePrescriptionPreferences()
                     }
@@ -303,7 +312,7 @@ struct NotificationSettingsView: View {
             .accessibilityLabel("Deadline Reminders")
 
             // Overdue alerts
-            Toggle(isOn: $prescriptionPreferences.overdueEnabled) {
+            Toggle(isOn: $state.prescriptionPreferences.overdueEnabled) {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Overdue Alerts")
                         .font(.body)
@@ -312,12 +321,12 @@ struct NotificationSettingsView: View {
                         .foregroundColor(.secondary)
                 }
             }
-            .onChange(of: prescriptionPreferences.overdueEnabled) { _, _ in
+            .onChange(of: state.prescriptionPreferences.overdueEnabled) { _, _ in
                 HapticFeedback.toggle()
                 savePrescriptionPreferences()
             }
             .accessibilityLabel("Overdue Alerts")
-            .accessibilityValue(prescriptionPreferences.overdueEnabled ? "On" : "Off")
+            .accessibilityValue(state.prescriptionPreferences.overdueEnabled ? "On" : "Off")
         } header: {
             HStack {
                 Image(systemName: "doc.text.fill")
@@ -333,7 +342,7 @@ struct NotificationSettingsView: View {
 
     private var patternsSection: some View {
         Section {
-            if patterns.isEmpty {
+            if state.patterns.isEmpty {
                 HStack {
                     Image(systemName: "chart.line.uptrend.xyaxis")
                         .foregroundColor(.secondary)
@@ -352,7 +361,7 @@ struct NotificationSettingsView: View {
                 .accessibilityElement(children: .combine)
                 .accessibilityLabel("No patterns yet. Complete more workouts to see your training patterns")
             } else {
-                ForEach(patterns) { pattern in
+                ForEach(state.patterns) { pattern in
                     patternRow(pattern)
                 }
             }
@@ -374,7 +383,7 @@ struct NotificationSettingsView: View {
         } header: {
             Text("Your Training Patterns")
         } footer: {
-            if !patterns.isEmpty {
+            if !state.patterns.isEmpty {
                 Text("Patterns are based on the last 90 days of workouts.")
             }
         }
@@ -428,7 +437,7 @@ struct NotificationSettingsView: View {
 
     private var otherNotificationsSection: some View {
         Section {
-            Toggle(isOn: $streakAlertsEnabled) {
+            Toggle(isOn: $state.streakAlertsEnabled) {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Streak Alerts")
                         .font(.body)
@@ -438,10 +447,10 @@ struct NotificationSettingsView: View {
                 }
             }
             .accessibilityLabel("Streak Alerts")
-            .accessibilityValue(streakAlertsEnabled ? "On" : "Off")
+            .accessibilityValue(state.streakAlertsEnabled ? "On" : "Off")
             .accessibilityHint("Toggle to get notified about workout milestones")
 
-            Toggle(isOn: $weeklySummaryEnabled) {
+            Toggle(isOn: $state.weeklySummaryEnabled) {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Weekly Summary")
                         .font(.body)
@@ -451,7 +460,7 @@ struct NotificationSettingsView: View {
                 }
             }
             .accessibilityLabel("Weekly Summary")
-            .accessibilityValue(weeklySummaryEnabled ? "On" : "Off")
+            .accessibilityValue(state.weeklySummaryEnabled ? "On" : "Off")
             .accessibilityHint("Toggle to receive a weekly progress report")
         } header: {
             Text("Other Notifications")
@@ -462,48 +471,48 @@ struct NotificationSettingsView: View {
 
     private func loadData() async {
         guard let patientId = patientId else {
-            isLoading = false
+            state.isLoading = false
             return
         }
 
         // Check permission status
         let status = await SmartNotificationService.shared.checkPermissionStatus()
         await MainActor.run {
-            permissionStatus = status
+            state.permissionStatus = status
         }
 
         do {
             // Load settings
             let loadedSettings = try await SmartNotificationService.shared.fetchSettings(for: patientId)
             await MainActor.run {
-                settings = loadedSettings
-                smartTimingEnabled = loadedSettings.smartTimingEnabled
-                fallbackTime = loadedSettings.fallbackReminderTime
-                reminderMinutesBefore = loadedSettings.reminderMinutesBefore
-                streakAlertsEnabled = loadedSettings.streakAlertsEnabled
-                weeklySummaryEnabled = loadedSettings.weeklySummaryEnabled
+                state.settings = loadedSettings
+                state.smartTimingEnabled = loadedSettings.smartTimingEnabled
+                state.fallbackTime = loadedSettings.fallbackReminderTime
+                state.reminderMinutesBefore = loadedSettings.reminderMinutesBefore
+                state.streakAlertsEnabled = loadedSettings.streakAlertsEnabled
+                state.weeklySummaryEnabled = loadedSettings.weeklySummaryEnabled
             }
 
             // Load patterns
             let loadedPatterns = try await SmartNotificationService.shared.fetchPatterns(for: patientId)
             await MainActor.run {
-                patterns = loadedPatterns
+                state.patterns = loadedPatterns
             }
 
             // Load prescription preferences
             let loadedPrescriptionPrefs = try await SmartNotificationService.shared.fetchPrescriptionPreferences(for: patientId)
             await MainActor.run {
-                prescriptionPreferences = loadedPrescriptionPrefs
+                state.prescriptionPreferences = loadedPrescriptionPrefs
             }
         } catch {
             await MainActor.run {
-                errorMessage = error.localizedDescription
-                showError = true
+                state.errorMessage = error.localizedDescription
+                state.showError = true
             }
         }
 
         await MainActor.run {
-            isLoading = false
+            state.isLoading = false
         }
     }
 
@@ -514,7 +523,7 @@ struct NotificationSettingsView: View {
             _ = try await SmartNotificationService.shared.requestPermission()
             let status = await SmartNotificationService.shared.checkPermissionStatus()
             await MainActor.run {
-                permissionStatus = status
+                state.permissionStatus = status
             }
 
             // Also register for push notifications
@@ -523,8 +532,8 @@ struct NotificationSettingsView: View {
             }
         } catch {
             await MainActor.run {
-                errorMessage = "Please enable notifications in Settings."
-                showError = true
+                state.errorMessage = "Please enable notifications in Settings."
+                state.showError = true
             }
         }
     }
@@ -539,28 +548,28 @@ struct NotificationSettingsView: View {
             // Reload patterns
             let loadedPatterns = try await SmartNotificationService.shared.fetchPatterns(for: patientId)
             await MainActor.run {
-                patterns = loadedPatterns
+                state.patterns = loadedPatterns
             }
         } catch {
             await MainActor.run {
-                errorMessage = "Couldn't refresh patterns. Please try again."
-                showError = true
+                state.errorMessage = "Couldn't refresh patterns. Please try again."
+                state.showError = true
             }
         }
     }
 
     private func saveSettings() {
         guard let patientId = patientId else { return }
-        guard !isSaving else { return }
+        guard !state.isSaving else { return }
 
-        isSaving = true
+        state.isSaving = true
 
         let update = NotificationSettingsUpdate(
-            smartTimingEnabled: smartTimingEnabled,
-            fallbackReminderTime: Self.timeWithSecondsFormatter.string(from: fallbackTime),
-            reminderMinutesBefore: reminderMinutesBefore,
-            streakAlertsEnabled: streakAlertsEnabled,
-            weeklySummaryEnabled: weeklySummaryEnabled
+            smartTimingEnabled: state.smartTimingEnabled,
+            fallbackReminderTime: Self.timeWithSecondsFormatter.string(from: state.fallbackTime),
+            reminderMinutesBefore: state.reminderMinutesBefore,
+            streakAlertsEnabled: state.streakAlertsEnabled,
+            weeklySummaryEnabled: state.weeklySummaryEnabled
         )
 
         Task {
@@ -568,38 +577,38 @@ struct NotificationSettingsView: View {
                 try await SmartNotificationService.shared.updateSettings(for: patientId, settings: update)
             } catch {
                 await MainActor.run {
-                    errorMessage = "Couldn't save settings. Please try again."
-                    showError = true
+                    state.errorMessage = "Couldn't save settings. Please try again."
+                    state.showError = true
                 }
             }
 
             await MainActor.run {
-                isSaving = false
+                state.isSaving = false
             }
         }
     }
 
     private func savePrescriptionPreferences() {
         guard let patientId = patientId else { return }
-        guard !isSaving else { return }
+        guard !state.isSaving else { return }
 
-        isSaving = true
+        state.isSaving = true
 
         Task {
             do {
                 try await SmartNotificationService.shared.updatePrescriptionPreferences(
                     for: patientId,
-                    preferences: prescriptionPreferences
+                    preferences: state.prescriptionPreferences
                 )
             } catch {
                 await MainActor.run {
-                    errorMessage = "Couldn't save prescription notification settings. Please try again."
-                    showError = true
+                    state.errorMessage = "Couldn't save prescription notification settings. Please try again."
+                    state.showError = true
                 }
             }
 
             await MainActor.run {
-                isSaving = false
+                state.isSaving = false
             }
         }
     }

@@ -217,8 +217,7 @@ struct NotificationPermissionView: View {
 #if DEBUG
 struct NotificationPermissionView_Previews: PreviewProvider {
     static var previews: some View {
-        NotificationPermissionView { granted in
-            print("Permission result: \(granted)")
+        NotificationPermissionView { _ in
         }
     }
 }
