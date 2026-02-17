@@ -8,31 +8,81 @@
 
 import SwiftUI
 
+// MARK: - Report Builder View State
+
+@MainActor
+class ReportBuilderViewState: ObservableObject {
+    // Configuration state
+    @Published var selectedReportType: ReportType = .progress
+    @Published var selectedPeriod: ReportPeriod = .oneMonth
+    @Published var customStartDate: Date = Calendar.current.date(byAdding: .month, value: -1, to: Date()) ?? Date()
+    @Published var customEndDate: Date = Date()
+    @Published var selectedSections: Set<ReportSection> = []
+    @Published var includeCharts: Bool = true
+    @Published var includeClinicBranding: Bool = true
+
+    // UI state
+    @Published var showPreview = false
+    @Published var showEmailComposer = false
+    @Published var showError = false
+    @Published var showSuccessAlert = false
+    @Published var generatedReport: GeneratedReport?
+
+    // MARK: - Computed Properties
+
+    private static let mediumDateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        return formatter
+    }()
+
+    var dateRangeDisplayText: String {
+        let formatter = Self.mediumDateFormatter
+
+        let startDate: Date
+        let endDate: Date
+
+        if selectedPeriod == .custom {
+            startDate = customStartDate
+            endDate = customEndDate
+        } else {
+            endDate = Date()
+            startDate = Calendar.current.date(byAdding: .day, value: -selectedPeriod.rawValue, to: endDate) ?? endDate
+        }
+
+        return "\(formatter.string(from: startDate)) - \(formatter.string(from: endDate))"
+    }
+
+    // MARK: - Actions
+
+    func applyPreset(_ preset: ReportPreset) {
+        HapticFeedback.selectionChanged()
+        selectedReportType = preset.reportType
+        selectedPeriod = preset.period
+        selectedSections = Set(preset.sections)
+    }
+
+    func resolvedDateRange() -> (start: Date, end: Date) {
+        if selectedPeriod == .custom {
+            return (customStartDate, customEndDate)
+        } else {
+            let endDate = Date()
+            let startDate = Calendar.current.date(byAdding: .day, value: -selectedPeriod.rawValue, to: endDate) ?? endDate
+            return (startDate, endDate)
+        }
+    }
+}
+
 // MARK: - Report Builder View
 
 struct ReportBuilderView: View {
     let patient: Patient
 
+    @StateObject private var state = ReportBuilderViewState()
     @StateObject private var reportService = ReportGenerationService.shared
     @StateObject private var brandingService = TherapistBrandingService.shared
     @EnvironmentObject var appState: AppState
     @Environment(\.dismiss) private var dismiss
-
-    // Configuration state
-    @State private var selectedReportType: ReportType = .progress
-    @State private var selectedPeriod: ReportPeriod = .oneMonth
-    @State private var customStartDate: Date = Calendar.current.date(byAdding: .month, value: -1, to: Date()) ?? Date()
-    @State private var customEndDate: Date = Date()
-    @State private var selectedSections: Set<ReportSection> = []
-    @State private var includeCharts: Bool = true
-    @State private var includeClinicBranding: Bool = true
-
-    // UI state
-    @State private var showPreview = false
-    @State private var showEmailComposer = false
-    @State private var showError = false
-    @State private var showSuccessAlert = false
-    @State private var generatedReport: GeneratedReport?
 
     var body: some View {
         NavigationStack {
@@ -72,19 +122,19 @@ struct ReportBuilderView: View {
             }
             .task {
                 // Initialize selected sections based on report type
-                selectedSections = Set(selectedReportType.defaultSections)
+                state.selectedSections = Set(state.selectedReportType.defaultSections)
 
                 // Load therapist branding
                 if let therapistId = appState.userId {
                     await brandingService.loadBranding(therapistId: therapistId)
                 }
             }
-            .onChange(of: selectedReportType) { _, newType in
+            .onChange(of: state.selectedReportType) { _, newType in
                 // Update sections when report type changes
-                selectedSections = Set(newType.defaultSections)
+                state.selectedSections = Set(newType.defaultSections)
             }
-            .sheet(isPresented: $showPreview) {
-                if let report = generatedReport {
+            .sheet(isPresented: $state.showPreview) {
+                if let report = state.generatedReport {
                     ReportPreviewView(
                         report: report,
                         patient: patient,
@@ -92,8 +142,8 @@ struct ReportBuilderView: View {
                     )
                 }
             }
-            .sheet(isPresented: $showEmailComposer) {
-                if let report = generatedReport {
+            .sheet(isPresented: $state.showEmailComposer) {
+                if let report = state.generatedReport {
                     EmailComposerSheet(
                         report: report,
                         patient: patient,
@@ -104,13 +154,13 @@ struct ReportBuilderView: View {
                     )
                 }
             }
-            .alert("Report Generated", isPresented: $showSuccessAlert) {
+            .alert("Report Generated", isPresented: $state.showSuccessAlert) {
                 Button("Email Report") {
-                    showEmailComposer = true
+                    state.showEmailComposer = true
                 }
                 .keyboardShortcut(.defaultAction)
                 Button("Preview") {
-                    showPreview = true
+                    state.showPreview = true
                 }
                 Button("Done", role: .cancel) {
                     dismiss()
@@ -118,7 +168,7 @@ struct ReportBuilderView: View {
             } message: {
                 Text("Your report has been generated successfully. Would you like to email it to the patient?")
             }
-            .alert("Error", isPresented: $showError) {
+            .alert("Error", isPresented: $state.showError) {
                 Button("OK", role: .cancel) {}
             } message: {
                 Text(reportService.errorMessage ?? "An unknown error occurred")
@@ -188,7 +238,7 @@ struct ReportBuilderView: View {
                 HStack(spacing: Spacing.sm) {
                     ForEach(ReportPreset.allPresets) { preset in
                         QuickPresetButton(preset: preset) {
-                            applyPreset(preset)
+                            state.applyPreset(preset)
                         }
                     }
                 }
@@ -211,10 +261,10 @@ struct ReportBuilderView: View {
                 ForEach(ReportType.allCases) { type in
                     ReportTypeCard(
                         type: type,
-                        isSelected: selectedReportType == type
+                        isSelected: state.selectedReportType == type
                     ) {
                         HapticFeedback.selectionChanged()
-                        selectedReportType = type
+                        state.selectedReportType = type
                     }
                 }
             }
@@ -230,7 +280,7 @@ struct ReportBuilderView: View {
                 .accessibilityAddTraits(.isHeader)
 
             // Period picker
-            Picker("Period", selection: $selectedPeriod) {
+            Picker("Period", selection: $state.selectedPeriod) {
                 ForEach(ReportPeriod.allCases) { period in
                     Text(period.displayName).tag(period)
                 }
@@ -238,20 +288,20 @@ struct ReportBuilderView: View {
             .pickerStyle(.segmented)
 
             // Custom date pickers (shown when custom is selected)
-            if selectedPeriod == .custom {
+            if state.selectedPeriod == .custom {
                 VStack(spacing: Spacing.sm) {
                     DatePicker(
                         "Start Date",
-                        selection: $customStartDate,
-                        in: ...customEndDate,
+                        selection: $state.customStartDate,
+                        in: ...state.customEndDate,
                         displayedComponents: .date
                     )
                     .datePickerStyle(.compact)
 
                     DatePicker(
                         "End Date",
-                        selection: $customEndDate,
-                        in: customStartDate...,
+                        selection: $state.customEndDate,
+                        in: state.customStartDate...,
                         displayedComponents: .date
                     )
                     .datePickerStyle(.compact)
@@ -265,7 +315,7 @@ struct ReportBuilderView: View {
             HStack {
                 Image(systemName: "calendar")
                     .foregroundColor(.secondary)
-                Text(dateRangeDisplayText)
+                Text(state.dateRangeDisplayText)
                     .font(.subheadline)
                     .foregroundColor(.secondary)
             }
@@ -283,7 +333,7 @@ struct ReportBuilderView: View {
                 Spacer()
 
                 Button("Select All") {
-                    selectedSections = Set(ReportSection.allCases)
+                    state.selectedSections = Set(ReportSection.allCases)
                 }
                 .font(.subheadline)
             }
@@ -293,13 +343,13 @@ struct ReportBuilderView: View {
                 ForEach(ReportSection.allCases) { section in
                     SectionToggleRow(
                         section: section,
-                        isSelected: selectedSections.contains(section)
+                        isSelected: state.selectedSections.contains(section)
                     ) {
                         HapticFeedback.selectionChanged()
-                        if selectedSections.contains(section) {
-                            selectedSections.remove(section)
+                        if state.selectedSections.contains(section) {
+                            state.selectedSections.remove(section)
                         } else {
-                            selectedSections.insert(section)
+                            state.selectedSections.insert(section)
                         }
                     }
                 }
@@ -316,14 +366,14 @@ struct ReportBuilderView: View {
                 .accessibilityAddTraits(.isHeader)
 
             VStack(spacing: 0) {
-                Toggle(isOn: $includeCharts) {
+                Toggle(isOn: $state.includeCharts) {
                     Label("Include Charts", systemImage: "chart.line.uptrend.xyaxis")
                 }
                 .padding()
 
                 Divider()
 
-                Toggle(isOn: $includeClinicBranding) {
+                Toggle(isOn: $state.includeClinicBranding) {
                     Label("Include Clinic Branding", systemImage: "building.2")
                 }
                 .padding()
@@ -357,41 +407,18 @@ struct ReportBuilderView: View {
             .frame(maxWidth: .infinity)
             .padding()
             .background(
-                reportService.isGenerating || selectedSections.isEmpty
+                reportService.isGenerating || state.selectedSections.isEmpty
                     ? Color.gray
                     : Color.modusCyan
             )
             .cornerRadius(CornerRadius.md)
         }
-        .disabled(reportService.isGenerating || selectedSections.isEmpty)
+        .disabled(reportService.isGenerating || state.selectedSections.isEmpty)
         .accessibilityLabel(reportService.isGenerating ? "Generating report: \(reportService.currentStep)" : "Generate report")
         .accessibilityHint("Creates a PDF report with the selected options")
     }
 
-    // MARK: - Computed Properties
-
-    private static let mediumDateFormatter: DateFormatter = {
-        let formatter = DateFormatter()
-        formatter.dateStyle = .medium
-        return formatter
-    }()
-
-    private var dateRangeDisplayText: String {
-        let formatter = Self.mediumDateFormatter
-
-        let startDate: Date
-        let endDate: Date
-
-        if selectedPeriod == .custom {
-            startDate = customStartDate
-            endDate = customEndDate
-        } else {
-            endDate = Date()
-            startDate = Calendar.current.date(byAdding: .day, value: -selectedPeriod.rawValue, to: endDate) ?? endDate
-        }
-
-        return "\(formatter.string(from: startDate)) - \(formatter.string(from: endDate))"
-    }
+    // MARK: - Helper Methods
 
     private func adherenceColor(_ percentage: Double) -> Color {
         switch percentage {
@@ -403,49 +430,33 @@ struct ReportBuilderView: View {
 
     // MARK: - Actions
 
-    private func applyPreset(_ preset: ReportPreset) {
-        HapticFeedback.selectionChanged()
-        selectedReportType = preset.reportType
-        selectedPeriod = preset.period
-        selectedSections = Set(preset.sections)
-    }
-
     private func generateReport() {
         HapticFeedback.medium()
 
         Task {
-            let startDate: Date
-            let endDate: Date
-
-            if selectedPeriod == .custom {
-                startDate = customStartDate
-                endDate = customEndDate
-            } else {
-                endDate = Date()
-                startDate = Calendar.current.date(byAdding: .day, value: -selectedPeriod.rawValue, to: endDate) ?? endDate
-            }
+            let dateRange = state.resolvedDateRange()
 
             let configuration = ReportConfiguration(
-                reportType: selectedReportType,
+                reportType: state.selectedReportType,
                 patientId: patient.id,
-                startDate: startDate,
-                endDate: endDate,
-                includedSections: Array(selectedSections),
-                includeCharts: includeCharts,
-                includeClinicBranding: includeClinicBranding
+                startDate: dateRange.start,
+                endDate: dateRange.end,
+                includedSections: Array(state.selectedSections),
+                includeCharts: state.includeCharts,
+                includeClinicBranding: state.includeClinicBranding
             )
 
             do {
                 let report = try await reportService.generateReport(
                     configuration: configuration,
                     patient: patient,
-                    branding: includeClinicBranding ? brandingService.branding : nil
+                    branding: state.includeClinicBranding ? brandingService.branding : nil
                 )
 
-                generatedReport = report
-                showSuccessAlert = true
+                state.generatedReport = report
+                state.showSuccessAlert = true
             } catch {
-                showError = true
+                state.showError = true
             }
         }
     }

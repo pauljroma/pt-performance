@@ -203,16 +203,19 @@ struct TodayHubView: View {
                     }
                 }
                 .task {
-                    // Load streak data when view appears
                     if let patientIdString = supabase.userId,
                        let patientId = UUID(uuidString: patientIdString) {
-                        await streakViewModel.loadData(for: patientId)
+                        // Load streak data, mode status, and quick start in parallel
+                        async let a: () = streakViewModel.loadData(for: patientId)
                         // ACP-MODE: Load mode-specific status card data
-                        await modeStatusViewModel.loadData(for: patientId)
+                        async let b: () = modeStatusViewModel.loadData(for: patientId)
+                        // ACP-501: Pre-load quick start data for faster response
+                        async let c: Void = { _ = await quickStartService.prepareQuickStart() }()
+                        _ = await (a, b, c)
+                    } else {
+                        // ACP-501: Pre-load quick start data for faster response
+                        _ = await quickStartService.prepareQuickStart()
                     }
-
-                    // ACP-501: Pre-load quick start data for faster response
-                    _ = await quickStartService.prepareQuickStart()
                 }
                 // ACP-501: Handle deep links for Today Hub context
                 .onChange(of: appState.pendingDeepLink) { _, newValue in

@@ -849,8 +849,9 @@ struct ExercisePickerSheet: View {
                 }
             }
             .task {
-                await loadExercises()
-                await loadFavorites()
+                async let a: () = loadExercises()
+                async let b: () = loadFavorites()
+                _ = await (a, b)
             }
         }
     }

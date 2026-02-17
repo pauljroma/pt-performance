@@ -130,12 +130,14 @@ struct PatientListView: View {
             ShareSheet(items: [exportedSummary])
         }
         .refreshableWithHaptic {
-            await viewModel.refresh(therapistId: therapistId)
-            await loadCoachingAlerts()
+            async let a: () = viewModel.refresh(therapistId: therapistId)
+            async let b: () = loadCoachingAlerts()
+            _ = await (a, b)
         }
         .task {
-            await viewModel.fetchPatients(for: therapistId)
-            await loadCoachingAlerts()
+            async let a: () = viewModel.fetchPatients(for: therapistId)
+            async let b: () = loadCoachingAlerts()
+            _ = await (a, b)
         }
     }
 

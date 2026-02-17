@@ -1,19 +1,32 @@
 import SwiftUI
 
+// MARK: - View State
+
+@MainActor
+class TherapistProgramsViewState: ObservableObject {
+    @Published var selectedProgram: ProgramListItem?
+    @Published var showProgramViewer = false
+    @Published var showProgramBuilder = false
+    @Published var showLibraryProgramBuilder = false
+    @Published var showProgramManager = false
+    @Published var editingProgramId: String?
+    @Published var editingPatientId: UUID?
+    @Published var showEditor = false
+    @Published var selectedTypeFilter: ProgramType? = nil
+    @Published var showProgramAnalytics = false
+    @Published var showComparePrograms = false
+    @Published var analyticsProgramId: UUID?
+
+    func showProgramEditor(programId: String, patientId: UUID) {
+        editingProgramId = programId
+        editingPatientId = patientId
+        showEditor = true
+    }
+}
+
 struct TherapistProgramsView: View {
     @StateObject private var viewModel = ProgramsListViewModel()
-    @State private var selectedProgram: ProgramListItem?
-    @State private var showProgramViewer = false
-    @State private var showProgramBuilder = false
-    @State private var showLibraryProgramBuilder = false
-    @State private var showProgramManager = false
-    @State private var editingProgramId: String?
-    @State private var editingPatientId: UUID?
-    @State private var showEditor = false
-    @State private var selectedTypeFilter: ProgramType? = nil
-    @State private var showProgramAnalytics = false
-    @State private var showComparePrograms = false
-    @State private var analyticsProgramId: UUID?
+    @StateObject private var state = TherapistProgramsViewState()
 
     var body: some View {
         NavigationStack {
@@ -39,7 +52,7 @@ struct TherapistProgramsView: View {
                         Text("Programs created for patients will appear here")
                     } actions: {
                         Button("Create Program") {
-                            showProgramBuilder = true
+                            state.showProgramBuilder = true
                         }
                         .buttonStyle(.borderedProminent)
                     }
@@ -56,19 +69,19 @@ struct TherapistProgramsView: View {
                 ToolbarItem(placement: .primaryAction) {
                     Menu {
                         Button {
-                            showProgramBuilder = true
+                            state.showProgramBuilder = true
                         } label: {
                             Label("Create Program", systemImage: "plus.circle")
                         }
 
                         Button {
-                            showLibraryProgramBuilder = true
+                            state.showLibraryProgramBuilder = true
                         } label: {
                             Label("Build Library Program", systemImage: "books.vertical")
                         }
 
                         Button {
-                            showProgramManager = true
+                            state.showProgramManager = true
                         } label: {
                             Label("Manage Programs", systemImage: "pencil.circle")
                         }
@@ -76,13 +89,13 @@ struct TherapistProgramsView: View {
                         Divider()
 
                         Button {
-                            showProgramAnalytics = true
+                            state.showProgramAnalytics = true
                         } label: {
                             Label("Program Analytics", systemImage: "chart.bar.xaxis")
                         }
 
                         Button {
-                            showComparePrograms = true
+                            state.showComparePrograms = true
                         } label: {
                             Label("Compare Programs", systemImage: "arrow.left.arrow.right")
                         }
@@ -91,12 +104,12 @@ struct TherapistProgramsView: View {
                     }
                 }
             }
-            .springSheet(item: $selectedProgram) { program in
+            .springSheet(item: $state.selectedProgram) { program in
                 NavigationStack {
                     ProgramViewerView(patientId: program.patientId)
                 }
             }
-            .springSheet(isPresented: $showProgramBuilder, onDismiss: {
+            .springSheet(isPresented: $state.showProgramBuilder, onDismiss: {
                 // Refresh programs list when builder is dismissed
                 Task {
                     await viewModel.loadPrograms()
@@ -104,7 +117,7 @@ struct TherapistProgramsView: View {
             }) {
                 ProgramBuilderView(patientId: nil)
             }
-            .springSheet(isPresented: $showLibraryProgramBuilder, onDismiss: {
+            .springSheet(isPresented: $state.showLibraryProgramBuilder, onDismiss: {
                 // Refresh programs list when library builder is dismissed
                 Task {
                     await viewModel.loadPrograms()
@@ -112,25 +125,25 @@ struct TherapistProgramsView: View {
             }) {
                 TherapistProgramBuilderView()
             }
-            .springSheet(isPresented: $showProgramManager) {
+            .springSheet(isPresented: $state.showProgramManager) {
                 ProgramManagerView()
             }
-            .springSheet(isPresented: $showEditor, onDismiss: {
+            .springSheet(isPresented: $state.showEditor, onDismiss: {
                 // Refresh programs list when editor is dismissed
                 Task {
                     await viewModel.loadPrograms()
                 }
             }) {
-                if let programId = editingProgramId, let patientId = editingPatientId {
+                if let programId = state.editingProgramId, let patientId = state.editingPatientId {
                     ProgramEditorView(programId: programId, patientId: patientId)
                 }
             }
-            .springSheet(isPresented: $showProgramAnalytics) {
+            .springSheet(isPresented: $state.showProgramAnalytics) {
                 NavigationStack {
                     ProgramEffectivenessView()
                 }
             }
-            .springSheet(isPresented: $showComparePrograms) {
+            .springSheet(isPresented: $state.showComparePrograms) {
                 NavigationStack {
                     ProgramEffectivenessView()
                 }
@@ -152,15 +165,15 @@ struct TherapistProgramsView: View {
                 ProgramListCard(program: program) {
                     // Open analytics for this program
                     if let programUUID = UUID(uuidString: program.id) {
-                        analyticsProgramId = programUUID
-                        showProgramAnalytics = true
+                        state.analyticsProgramId = programUUID
+                        state.showProgramAnalytics = true
                     }
                 }
                 .swipeActions(edge: .trailing) {
                     Button {
                         // Navigate to editor
                         if let patientId = UUID(uuidString: program.patientId) {
-                            showProgramEditor(programId: program.id, patientId: patientId)
+                            state.showProgramEditor(programId: program.id, patientId: patientId)
                         }
                     } label: {
                         Label("Edit", systemImage: "pencil")
@@ -170,8 +183,8 @@ struct TherapistProgramsView: View {
                     Button {
                         // Open analytics
                         if let programUUID = UUID(uuidString: program.id) {
-                            analyticsProgramId = programUUID
-                            showProgramAnalytics = true
+                            state.analyticsProgramId = programUUID
+                            state.showProgramAnalytics = true
                         }
                     } label: {
                         Label("Analytics", systemImage: "chart.bar.xaxis")
@@ -179,7 +192,7 @@ struct TherapistProgramsView: View {
                     .tint(.purple)
                 }
                 .onTapGesture {
-                    selectedProgram = program
+                    state.selectedProgram = program
                 }
             }
         }
@@ -188,17 +201,17 @@ struct TherapistProgramsView: View {
     private var filterBar: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 8) {
-                FilterChip(label: "All", isSelected: selectedTypeFilter == nil) {
-                    selectedTypeFilter = nil
+                FilterChip(label: "All", isSelected: state.selectedTypeFilter == nil) {
+                    state.selectedTypeFilter = nil
                 }
                 ForEach(ProgramType.allCases) { type in
                     FilterChip(
                         label: type.displayName,
                         icon: type.icon,
                         color: type.color,
-                        isSelected: selectedTypeFilter == type
+                        isSelected: state.selectedTypeFilter == type
                     ) {
-                        selectedTypeFilter = type
+                        state.selectedTypeFilter = type
                     }
                 }
             }
@@ -208,15 +221,10 @@ struct TherapistProgramsView: View {
     }
 
     private var filteredPrograms: [ProgramListItem] {
-        guard let filter = selectedTypeFilter else { return viewModel.programs }
+        guard let filter = state.selectedTypeFilter else { return viewModel.programs }
         return viewModel.programs.filter { $0.resolvedProgramType == filter }
     }
 
-    private func showProgramEditor(programId: String, patientId: UUID) {
-        editingProgramId = programId
-        editingPatientId = patientId
-        showEditor = true
-    }
 }
 
 // MARK: - Program List Card

@@ -74,8 +74,9 @@ struct WorkoutGridView: View {
                 }
             }
             .task {
-                await viewModel.loadExercises()
-                await viewModel.loadAvailableExercises()
+                async let a: () = viewModel.loadExercises()
+                async let b: () = viewModel.loadAvailableExercises()
+                _ = await (a, b)
                 viewModel.subscribeToRealtimeUpdates()
             }
             .onDisappear {

@@ -83,15 +83,21 @@ struct SupplementDashboardView: View {
                 )
             }
             .task {
-                await viewModel.loadData()
                 if let userId = PTSupabaseClient.shared.userId, let patientId = UUID(uuidString: userId) {
-                    try? await interactionService.checkCurrentRoutine(patientId: patientId)
+                    async let a: () = viewModel.loadData()
+                    async let b: () = { try? await interactionService.checkCurrentRoutine(patientId: patientId) }()
+                    _ = await (a, b)
+                } else {
+                    await viewModel.loadData()
                 }
             }
             .refreshable {
-                await viewModel.loadData()
                 if let userId = PTSupabaseClient.shared.userId, let patientId = UUID(uuidString: userId) {
-                    try? await interactionService.checkCurrentRoutine(patientId: patientId)
+                    async let a: () = viewModel.loadData()
+                    async let b: () = { try? await interactionService.checkCurrentRoutine(patientId: patientId) }()
+                    _ = await (a, b)
+                } else {
+                    await viewModel.loadData()
                 }
             }
             .sheet(isPresented: $showingInteractionView) {

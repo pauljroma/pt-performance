@@ -7,20 +7,39 @@
 
 import SwiftUI
 
+// MARK: - Dashboard View State
+
+@MainActor
+class TherapistDashboardViewState: ObservableObject {
+    @Published var selectedPatient: Patient?
+    @Published var columnVisibility: NavigationSplitViewVisibility = .doubleColumn
+    @Published var showDebugLogs = false
+    @Published var showAddPatient = false
+    @Published var showCreateProgram = false
+    @Published var showCreateTemplate = false
+    @Published var showReports = false
+    @Published var showEscalationQueue = false
+    @Published var showProgramAnalytics = false
+    @Published var selectedEscalation: RiskEscalation?
+
+    func handlePatientSelection(_ patient: Patient, shouldUseSplitView: Bool) {
+        HapticFeedback.selectionChanged()
+        selectedPatient = patient
+
+        // On iPad, ensure detail is visible
+        if shouldUseSplitView {
+            columnVisibility = .doubleColumn
+        }
+    }
+}
+
+// MARK: - TherapistDashboardView
+
 struct TherapistDashboardView: View {
+    @StateObject private var state = TherapistDashboardViewState()
     @StateObject private var viewModel = PatientListViewModel()
     @StateObject private var schedulingViewModel = TherapistSchedulingViewModel()
     @StateObject private var escalationService = RiskEscalationService.shared
-    @State private var selectedPatient: Patient?
-    @State private var columnVisibility: NavigationSplitViewVisibility = .doubleColumn
-    @State private var showDebugLogs = false
-    @State private var showAddPatient = false
-    @State private var showCreateProgram = false
-    @State private var showCreateTemplate = false
-    @State private var showReports = false
-    @State private var showEscalationQueue = false
-    @State private var showProgramAnalytics = false
-    @State private var selectedEscalation: RiskEscalation?
     @Environment(\.horizontalSizeClass) var horizontalSizeClass
     @EnvironmentObject var appState: AppState
 
@@ -39,30 +58,30 @@ struct TherapistDashboardView: View {
                 iPhoneLayout
             }
         }
-        .springSheet(isPresented: $showDebugLogs) {
+        .springSheet(isPresented: $state.showDebugLogs) {
             DebugLogView()
         }
-        .springSheet(isPresented: $showAddPatient) {
+        .springSheet(isPresented: $state.showAddPatient) {
             TherapistPatientSetupView()
         }
-        .springSheet(isPresented: $showCreateProgram) {
+        .springSheet(isPresented: $state.showCreateProgram) {
             EnhancedProgramBuilderView()
         }
-        .springSheet(isPresented: $showReports) {
+        .springSheet(isPresented: $state.showReports) {
             TherapistReportingView()
                 .environmentObject(appState)
         }
-        .springSheet(isPresented: $showEscalationQueue) {
+        .springSheet(isPresented: $state.showEscalationQueue) {
             EscalationQueueView()
         }
-        .springSheet(isPresented: $showCreateTemplate) {
+        .springSheet(isPresented: $state.showCreateTemplate) {
             WorkoutTemplateBuilderView()
         }
-        .springSheet(isPresented: $showProgramAnalytics) {
+        .springSheet(isPresented: $state.showProgramAnalytics) {
             ProgramAnalyticsDashboardView()
                 .environmentObject(appState)
         }
-        .springSheet(item: $selectedEscalation) { escalation in
+        .springSheet(item: $state.selectedEscalation) { escalation in
             EscalationDetailSheet(
                 escalation: escalation,
                 patient: viewModel.patient(for: escalation.patientId),
@@ -99,7 +118,7 @@ struct TherapistDashboardView: View {
 
             // Find the patient in the loaded list and select them
             if let patient = viewModel.patient(for: patientUUID) {
-                handlePatientSelection(patient)
+                state.handlePatientSelection(patient, shouldUseSplitView: shouldUseSplitView)
             } else {
                 DebugLogger.shared.log("[TherapistDashboardView] Deep link patient not found: \(patientIdString)", level: .warning)
             }
@@ -109,12 +128,12 @@ struct TherapistDashboardView: View {
     // MARK: - iPad Split View Layout
 
     private var iPadLayout: some View {
-        NavigationSplitView(columnVisibility: $columnVisibility) {
+        NavigationSplitView(columnVisibility: $state.columnVisibility) {
             patientListContent
                 .navigationTitle("Dashboard")
                 .toolbar {
                     ToolbarItem(placement: .navigationBarTrailing) {
-                        Button(action: { showDebugLogs = true }) {
+                        Button(action: { state.showDebugLogs = true }) {
                             Image(systemName: "ant.circle")
                                 .foregroundColor(.orange)
                         }
@@ -126,7 +145,7 @@ struct TherapistDashboardView: View {
                     max: DeviceHelper.sidebarWidth.max
                 )
         } detail: {
-            if let patient = selectedPatient {
+            if let patient = state.selectedPatient {
                 PatientDetailView(patient: patient)
             } else {
                 placeholderDetailView
@@ -142,7 +161,7 @@ struct TherapistDashboardView: View {
                 .navigationTitle("Dashboard")
                 .toolbar {
                     ToolbarItem(placement: .navigationBarTrailing) {
-                        Button(action: { showDebugLogs = true }) {
+                        Button(action: { state.showDebugLogs = true }) {
                             Image(systemName: "ant.circle")
                                 .foregroundColor(.orange)
                         }
@@ -169,7 +188,7 @@ struct TherapistDashboardView: View {
 
                             if escalationService.unacknowledgedCount > 0 {
                                 Button {
-                                    showEscalationQueue = true
+                                    state.showEscalationQueue = true
                                 } label: {
                                     Text("View All (\(escalationService.activeEscalations.count))")
                                         .font(.subheadline)
@@ -192,11 +211,11 @@ struct TherapistDashboardView: View {
                                 onCallPatient: {
                                     // Handle call action
                                     if let patient = viewModel.patient(for: escalation.patientId) {
-                                        handlePatientSelection(patient)
+                                        state.handlePatientSelection(patient, shouldUseSplitView: shouldUseSplitView)
                                     }
                                 },
                                 onViewDetails: {
-                                    selectedEscalation = escalation
+                                    state.selectedEscalation = escalation
                                 }
                             )
                             .padding(.horizontal)
@@ -205,7 +224,7 @@ struct TherapistDashboardView: View {
                         // Summary banner for remaining alerts
                         if escalationService.activeEscalations.count > 3 {
                             SafetyAlertsBanner(summary: escalationService.summary) {
-                                showEscalationQueue = true
+                                state.showEscalationQueue = true
                             }
                             .padding(.horizontal)
                         }
@@ -218,13 +237,13 @@ struct TherapistDashboardView: View {
                     patients: viewModel.patients,
                     activeFlags: viewModel.activeFlags,
                     upcomingSessions: schedulingViewModel.sessions,
-                    onAddPatient: { showAddPatient = true },
-                    onCreateProgram: { showCreateProgram = true },
-                    onCreateTemplate: { showCreateTemplate = true },
-                    onViewReports: { showReports = true },
-                    onViewAnalytics: { showProgramAnalytics = true },
+                    onAddPatient: { state.showAddPatient = true },
+                    onCreateProgram: { state.showCreateProgram = true },
+                    onCreateTemplate: { state.showCreateTemplate = true },
+                    onViewReports: { state.showReports = true },
+                    onViewAnalytics: { state.showProgramAnalytics = true },
                     onSessionTap: { item in
-                        handlePatientSelection(item.patient)
+                        state.handlePatientSelection(item.patient, shouldUseSplitView: shouldUseSplitView)
                     }
                 )
 
@@ -238,7 +257,7 @@ struct TherapistDashboardView: View {
 
                         WorkloadFlagsList(flags: viewModel.activeFlags) { flag in
                             if let patient = viewModel.patient(for: flag.patientId) {
-                                handlePatientSelection(patient)
+                                state.handlePatientSelection(patient, shouldUseSplitView: shouldUseSplitView)
                             }
                         }
                         .padding(.horizontal)
@@ -258,13 +277,13 @@ struct TherapistDashboardView: View {
                             PatientCardView(patient: patient)
                                 .padding(.horizontal)
                                 .background(
-                                    selectedPatient?.id == patient.id
+                                    state.selectedPatient?.id == patient.id
                                         ? Color.modusCyan.opacity(0.1)
                                         : Color.clear
                                 )
                                 .cornerRadius(CornerRadius.md)
                                 .onTapGesture {
-                                    handlePatientSelection(patient)
+                                    state.handlePatientSelection(patient, shouldUseSplitView: shouldUseSplitView)
                                 }
                         } else {
                             // iPhone: Navigation Link
@@ -306,15 +325,6 @@ struct TherapistDashboardView: View {
         )
     }
 
-    private func handlePatientSelection(_ patient: Patient) {
-        HapticFeedback.selectionChanged()
-        selectedPatient = patient
-
-        // On iPad, ensure detail is visible
-        if shouldUseSplitView {
-            columnVisibility = .doubleColumn
-        }
-    }
 }
 
 struct PatientCardView: View {

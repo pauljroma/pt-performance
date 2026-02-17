@@ -59,8 +59,9 @@ struct StreakView: View {
         .navigationTitle("Streak")
         .navigationBarTitleDisplayMode(.inline)
         .task {
-            await streakService.checkStreak()
-            await streakService.loadCalendarData()
+            async let a: () = streakService.checkStreak()
+            async let b: () = streakService.loadCalendarData()
+            _ = await (a, b)
 
             withAnimation(.easeOut(duration: AnimationDuration.standard)) {
                 headerAppeared = true

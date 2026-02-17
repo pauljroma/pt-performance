@@ -21,8 +21,9 @@ struct FastingView: View {
                 EndFastSheet(viewModel: viewModel)
             }
             .task {
-                await viewModel.loadData()
-                await viewModel.generateRecommendation(trainingTime: nil)
+                async let a: () = viewModel.loadData()
+                async let b: () = viewModel.generateRecommendation(trainingTime: nil)
+                _ = await (a, b)
             }
             .refreshable {
                 await viewModel.loadData()

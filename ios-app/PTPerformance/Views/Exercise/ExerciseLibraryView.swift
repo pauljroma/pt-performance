@@ -967,8 +967,9 @@ struct ExerciseLibraryDetailSheet: View {
             }
         }
         .task {
-            await infoViewModel.fetchTemplate(id: exercise.id.uuidString)
-            await loadHDVideos()
+            async let a: () = infoViewModel.fetchTemplate(id: exercise.id.uuidString)
+            async let b: () = loadHDVideos()
+            _ = await (a, b)
         }
         .fullScreenCover(isPresented: $showFullScreenPlayer) {
             if !hdVideos.isEmpty {
