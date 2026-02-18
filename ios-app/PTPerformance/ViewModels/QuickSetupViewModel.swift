@@ -73,7 +73,7 @@ class QuickSetupViewModel: ObservableObject {
             return cached
         }
 
-        guard let userId = supabase.userId else {
+        guard let authUserId = supabase.authUserId else {
             throw NSError(domain: "QuickSetup", code: -1, userInfo: [NSLocalizedDescriptionKey: "Not logged in"])
         }
 
@@ -81,7 +81,7 @@ class QuickSetupViewModel: ObservableObject {
         let response = try await supabase.client
             .from("patients")
             .select("id")
-            .eq("user_id", value: userId)
+            .eq("user_id", value: authUserId)
             .execute()
 
         let decoder = JSONDecoder()
@@ -95,7 +95,7 @@ class QuickSetupViewModel: ObservableObject {
         }
 
         // No patient record exists - create one
-        let patientId = try await createPatientRecord(userId: userId)
+        let patientId = try await createPatientRecord(userId: authUserId)
         cachedPatientId = patientId
         return patientId
     }
@@ -369,17 +369,17 @@ class QuickSetupViewModel: ObservableObject {
         isLoading = true
         defer { isLoading = false }
 
-        guard let userId = supabase.userId else {
+        guard let authUserId = supabase.authUserId else {
             error = "Not logged in"
             return
         }
 
         do {
-            // Update patient mode using user_id
+            // Update patient mode using auth user_id
             try await supabase.client
                 .from("patients")
                 .update(["mode": selectedMode.rawValue])
-                .eq("user_id", value: userId)
+                .eq("user_id", value: authUserId)
                 .execute()
 
             // Reload mode in service
@@ -393,13 +393,13 @@ class QuickSetupViewModel: ObservableObject {
 
     /// Save mode without blocking or showing errors (for skip scenarios)
     private func saveModeQuietly() async {
-        guard let userId = supabase.userId else { return }
+        guard let authUserId = supabase.authUserId else { return }
 
         do {
             try await supabase.client
                 .from("patients")
                 .update(["mode": selectedMode.rawValue])
-                .eq("user_id", value: userId)
+                .eq("user_id", value: authUserId)
                 .execute()
 
             await modeService.loadPatientMode()

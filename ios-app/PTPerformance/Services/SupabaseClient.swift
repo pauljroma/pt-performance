@@ -31,6 +31,13 @@ class PTSupabaseClient: ObservableObject {
     @Published var userId: String?
     @Published var isOffline = false
 
+    /// The Supabase auth user ID (from auth.users). Use this when querying
+    /// tables that have a `user_id` column referencing auth.users(id).
+    /// Note: `userId` stores the patient/therapist *database* ID, which is different.
+    var authUserId: String? {
+        client.auth.currentUser?.id.uuidString
+    }
+
     /// Indicates whether the client was initialized with a valid configuration
     /// When false, all operations will fail gracefully
     private(set) var isConfigurationValid = true
