@@ -447,7 +447,7 @@ class DeepLinkService: ObservableObject {
         }
 
         do {
-            let data = try JSONEncoder().encode(attribution)
+            let data = try SafeJSON.encoder().encode(attribution)
             UserDefaults.standard.set(data, forKey: Keys.firstInstallAttribution)
             logger.success(tag, "Stored first install attribution")
         } catch {
@@ -462,7 +462,7 @@ class DeepLinkService: ObservableObject {
         }
 
         do {
-            return try JSONDecoder().decode(AttributionData.self, from: data)
+            return try SafeJSON.decoder().decode(AttributionData.self, from: data)
         } catch {
             logger.error(tag, "Failed to decode first install attribution: \(error.localizedDescription)")
             return nil
@@ -480,7 +480,7 @@ class DeepLinkService: ObservableObject {
         }
 
         do {
-            let data = try JSONEncoder().encode(history)
+            let data = try SafeJSON.encoder().encode(history)
             UserDefaults.standard.set(data, forKey: Keys.attributionHistory)
         } catch {
             logger.error(tag, "Failed to encode attribution history: \(error.localizedDescription)")
@@ -494,7 +494,7 @@ class DeepLinkService: ObservableObject {
         }
 
         do {
-            return try JSONDecoder().decode([AttributionData].self, from: data)
+            return try SafeJSON.decoder().decode([AttributionData].self, from: data)
         } catch {
             logger.error(tag, "Failed to decode attribution history: \(error.localizedDescription)")
             return []

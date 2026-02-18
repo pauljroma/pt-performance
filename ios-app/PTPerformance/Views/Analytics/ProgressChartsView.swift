@@ -770,13 +770,13 @@ class ProgressChartsViewModel: ObservableObject {
 
     private func loadAnnotationsFromStorage() {
         if let data = UserDefaults.standard.data(forKey: annotationsKey),
-           let decoded = try? JSONDecoder().decode([ChartAnnotation].self, from: data) {
+           let decoded = try? SafeJSON.decoder().decode([ChartAnnotation].self, from: data) {
             annotations = decoded.sorted { $0.date > $1.date }
         }
     }
 
     private func saveAnnotationsToStorage() {
-        if let encoded = try? JSONEncoder().encode(annotations) {
+        if let encoded = try? SafeJSON.encoder().encode(annotations) {
             UserDefaults.standard.set(encoded, forKey: annotationsKey)
         }
     }

@@ -35,6 +35,17 @@ struct RecommendationFeedback: Codable, Identifiable {
         self.timestamp = timestamp
         self.comment = comment
     }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.id = (try? container.decode(UUID.self, forKey: .id)) ?? UUID()
+        self.recommendationId = (try? container.decode(String.self, forKey: .recommendationId)) ?? ""
+        self.recommendationType = (try? container.decode(RecommendationFeedbackType.self, forKey: .recommendationType)) ?? .healthInsight
+        self.isPositive = (try? container.decode(Bool.self, forKey: .isPositive)) ?? true
+        self.timestamp = (try? container.decodeIfPresent(Double.self, forKey: .timestamp))
+            .map { Date(timeIntervalSinceReferenceDate: $0) } ?? Date()
+        self.comment = try? container.decodeIfPresent(String.self, forKey: .comment)
+    }
 }
 
 /// Types of AI recommendations that can receive feedback
@@ -239,7 +250,7 @@ class RecommendationFeedbackStore: ObservableObject {
         }
 
         do {
-            let items = try JSONDecoder().decode([RecommendationFeedback].self, from: data)
+            let items = try SafeJSON.decoder().decode([RecommendationFeedback].self, from: data)
             feedbackItems = items
         } catch {
             #if DEBUG
@@ -304,7 +315,7 @@ class RecommendationFeedbackStore: ObservableObject {
 
     private func saveFeedback() {
         do {
-            let data = try JSONEncoder().encode(feedbackItems)
+            let data = try SafeJSON.encoder().encode(feedbackItems)
             UserDefaults.standard.set(data, forKey: userDefaultsKey)
         } catch {
             #if DEBUG

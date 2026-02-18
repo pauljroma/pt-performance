@@ -163,7 +163,7 @@ class ReEngagementService: ObservableObject {
     private init() {
         // Load any persisted offer
         if let data = defaults.data(forKey: offerKey),
-           let offer = try? JSONDecoder().decode(ReEngagementOffer.self, from: data),
+           let offer = try? SafeJSON.decoder().decode(ReEngagementOffer.self, from: data),
            !offer.isExpired {
             self.reEngagementOffer = offer
         }
@@ -358,7 +358,7 @@ class ReEngagementService: ObservableObject {
         reEngagementOffer = offer
 
         // Persist the offer
-        if let data = try? JSONEncoder().encode(offer) {
+        if let data = try? SafeJSON.encoder().encode(offer) {
             defaults.set(data, forKey: offerKey)
         }
 

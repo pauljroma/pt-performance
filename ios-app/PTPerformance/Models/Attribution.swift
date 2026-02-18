@@ -209,6 +209,40 @@ struct ReviewPromptState: Codable {
         case lastSelectedRating = "last_selected_rating"
     }
 
+    // Custom Decodable init — the auto-synthesized version can trap (EXC_BREAKPOINT)
+    // on corrupted Date values in UserDefaults, bypassing try? error handling.
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.sessionCount = (try? container.decode(Int.self, forKey: .sessionCount)) ?? 0
+        self.workoutsCompleted = (try? container.decode(Int.self, forKey: .workoutsCompleted)) ?? 0
+        self.achievementsUnlocked = (try? container.decode(Int.self, forKey: .achievementsUnlocked)) ?? 0
+        self.lastPromptDate = (try? container.decodeIfPresent(Double.self, forKey: .lastPromptDate)).map { Date(timeIntervalSinceReferenceDate: $0) }
+        self.lastSystemReviewDate = (try? container.decodeIfPresent(Double.self, forKey: .lastSystemReviewDate)).map { Date(timeIntervalSinceReferenceDate: $0) }
+        self.permanentlyDismissed = (try? container.decode(Bool.self, forKey: .permanentlyDismissed)) ?? false
+        self.promptShownCount = (try? container.decode(Int.self, forKey: .promptShownCount)) ?? 0
+        self.lastSelectedRating = try? container.decodeIfPresent(Int.self, forKey: .lastSelectedRating)
+    }
+
+    init(
+        sessionCount: Int,
+        workoutsCompleted: Int,
+        achievementsUnlocked: Int,
+        lastPromptDate: Date?,
+        lastSystemReviewDate: Date?,
+        permanentlyDismissed: Bool,
+        promptShownCount: Int,
+        lastSelectedRating: Int?
+    ) {
+        self.sessionCount = sessionCount
+        self.workoutsCompleted = workoutsCompleted
+        self.achievementsUnlocked = achievementsUnlocked
+        self.lastPromptDate = lastPromptDate
+        self.lastSystemReviewDate = lastSystemReviewDate
+        self.permanentlyDismissed = permanentlyDismissed
+        self.promptShownCount = promptShownCount
+        self.lastSelectedRating = lastSelectedRating
+    }
+
     /// Default initial state
     static let initial = ReviewPromptState(
         sessionCount: 0,

@@ -953,6 +953,9 @@ class TodaySessionViewModel: ObservableObject {
                 await HealthSyncManager.shared.exportCompletedSession(updatedSession)
             }
 
+            // ACP-979: Track workout completion for App Store review prompting
+            ASOService.shared.trackWorkoutCompleted()
+
             return .success(updatedSession)
 
         } catch {

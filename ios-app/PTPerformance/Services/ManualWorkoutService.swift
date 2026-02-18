@@ -764,6 +764,11 @@ class ManualWorkoutService: ObservableObject {
                 await HealthSyncManager.shared.exportCompletedManualSession(session)
             }
 
+            // ACP-979: Track workout completion for App Store review prompting
+            Task { @MainActor in
+                ASOService.shared.trackWorkoutCompleted()
+            }
+
             return session
         } catch {
             ErrorLogger.shared.logError(error, context: "ManualWorkoutService.completeWorkout", metadata: ["session_id": sessionId.uuidString])

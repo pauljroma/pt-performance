@@ -39,7 +39,7 @@ class StreakFreezeService: ObservableObject {
     private init() {
         // Load saved inventory
         if let data = UserDefaults.standard.data(forKey: userDefaultsKey),
-           let saved = try? JSONDecoder().decode(StreakFreezeInventory.self, from: data) {
+           let saved = try? SafeJSON.decoder().decode(StreakFreezeInventory.self, from: data) {
             self.inventory = saved
         } else {
             self.inventory = StreakFreezeInventory()
@@ -187,7 +187,7 @@ class StreakFreezeService: ObservableObject {
 
     private func saveInventory() {
         do {
-            let data = try JSONEncoder().encode(inventory)
+            let data = try SafeJSON.encoder().encode(inventory)
             UserDefaults.standard.set(data, forKey: userDefaultsKey)
         } catch {
             logger.log("[StreakFreezeService] Failed to save inventory: \(error.localizedDescription)", level: .error)

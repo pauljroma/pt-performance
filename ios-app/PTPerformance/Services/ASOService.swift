@@ -86,10 +86,32 @@ class ASOService: ObservableObject {
     // MARK: - Initialization
 
     private init() {
-        // Load persisted review state
-        if let data = UserDefaults.standard.data(forKey: reviewStateKey),
-           let state = try? JSONDecoder().decode(ReviewPromptState.self, from: data) {
-            self.reviewState = state
+        // Load persisted review state with defensive decoding.
+        // Corrupted UserDefaults data can cause EXC_BREAKPOINT traps in the
+        // synthesized Codable init, which bypass try? error handling.
+        if let data = UserDefaults.standard.data(forKey: reviewStateKey) {
+            // Validate JSON structure before attempting Codable decode
+            if let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
+                // Pre-validate Date fields are numeric (deferredToDate encodes as Double).
+                // Non-numeric values (strings, nulls stored as non-nil) cause runtime traps.
+                let dateKeys = ["last_prompt_date", "last_system_review_date"]
+                let datesValid = dateKeys.allSatisfy { key in
+                    guard let value = json[key] else { return true } // absent is fine
+                    return value is NSNull || value is Double || value is Int
+                }
+
+                if datesValid, let state = try? JSONDecoder().decode(ReviewPromptState.self, from: data) {
+                    self.reviewState = state
+                } else {
+                    // Data is corrupted — clear it and start fresh
+                    UserDefaults.standard.removeObject(forKey: reviewStateKey)
+                    self.reviewState = .initial
+                }
+            } else {
+                // Not valid JSON — clear it
+                UserDefaults.standard.removeObject(forKey: reviewStateKey)
+                self.reviewState = .initial
+            }
         } else {
             self.reviewState = .initial
         }

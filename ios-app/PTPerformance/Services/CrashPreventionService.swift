@@ -47,8 +47,13 @@ final class CrashPreventionService {
 
     // MARK: - Installation
 
-    /// Install global crash handlers. Call once during app startup, before Sentry initializes
-    /// its own handlers so that our handler runs first (handlers are LIFO).
+    /// Install global crash handlers. Call once during app startup.
+    ///
+    /// Note: Signal handlers (SIGSEGV, SIGABRT, SIGTRAP, etc.) are intentionally NOT installed.
+    /// Custom signal handlers interfere with Sentry's native crash reporting and the OS crash
+    /// reporter. The handlers called UserDefaults and Thread.callStackSymbols (not async-signal-safe),
+    /// which caused deadlocks when the crash originated during UserDefaults access — resulting in
+    /// silent kills with no .ips crash file generated.
     func install() {
         guard !isInstalled else {
             logger.info("CrashPreventionService already installed, skipping")
@@ -56,19 +61,13 @@ final class CrashPreventionService {
         }
         isInstalled = true
 
-        // Install uncaught exception handler
+        // Install uncaught exception handler for Objective-C exceptions only.
+        // Swift errors and runtime traps (EXC_BREAKPOINT/SIGTRAP) are handled by Sentry.
         NSSetUncaughtExceptionHandler { exception in
             CrashPreventionService.handleUncaughtException(exception)
         }
 
-        // Install signal handlers for common fatal signals
-        signal(SIGSEGV) { sig in CrashPreventionService.handleSignal(sig) }
-        signal(SIGABRT) { sig in CrashPreventionService.handleSignal(sig) }
-        signal(SIGBUS) { sig in CrashPreventionService.handleSignal(sig) }
-        signal(SIGFPE) { sig in CrashPreventionService.handleSignal(sig) }
-        signal(SIGTRAP) { sig in CrashPreventionService.handleSignal(sig) }
-
-        logger.info("CrashPreventionService installed: exception and signal handlers active")
+        logger.info("CrashPreventionService installed: exception handler active, signal handlers deferred to Sentry")
     }
 
     // MARK: - Safe Operations

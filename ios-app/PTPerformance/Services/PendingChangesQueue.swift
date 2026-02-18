@@ -500,7 +500,7 @@ class PendingChangesQueue: ObservableObject {
         }
 
         do {
-            changes = try JSONDecoder().decode([PendingChange].self, from: data)
+            changes = try SafeJSON.decoder().decode([PendingChange].self, from: data)
 
             // Reset any "syncing" status to "pending" on load (app was killed mid-sync)
             for i in changes.indices {
@@ -518,7 +518,7 @@ class PendingChangesQueue: ObservableObject {
 
     private func saveQueue() {
         do {
-            let data = try JSONEncoder().encode(changes)
+            let data = try SafeJSON.encoder().encode(changes)
             UserDefaults.standard.set(data, forKey: persistenceKey)
         } catch {
             DebugLogger.shared.log("⚠️ Failed to save pending changes: \(error)", level: .warning)

@@ -348,7 +348,7 @@ class AudioHealthJournalViewModel: ObservableObject {
     }
 
     private func saveEntries() {
-        if let encoded = try? JSONEncoder().encode(entries) {
+        if let encoded = try? SafeJSON.encoder().encode(entries) {
             UserDefaults.standard.set(encoded, forKey: storageKey)
         }
     }

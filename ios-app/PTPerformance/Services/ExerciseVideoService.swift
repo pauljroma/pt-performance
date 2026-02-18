@@ -505,7 +505,7 @@ class ExerciseVideoService: ObservableObject {
 
     private func loadAllCacheMetadata() -> [String: VideoCacheMetadata] {
         guard let data = try? Data(contentsOf: metadataUrl),
-              let metadata = try? JSONDecoder().decode([String: VideoCacheMetadata].self, from: data) else {
+              let metadata = try? SafeJSON.decoder().decode([String: VideoCacheMetadata].self, from: data) else {
             return [:]
         }
         return metadata
@@ -513,7 +513,7 @@ class ExerciseVideoService: ObservableObject {
 
     private func saveAllCacheMetadata(_ metadata: [String: VideoCacheMetadata]) {
         do {
-            let data = try JSONEncoder().encode(metadata)
+            let data = try SafeJSON.encoder().encode(metadata)
             try data.write(to: metadataUrl)
         } catch {
             ErrorLogger.shared.logError(error, context: "ExerciseVideoService.saveAllCacheMetadata")

@@ -141,7 +141,7 @@ class OfflineQueueManager: ObservableObject {
         }
 
         do {
-            pendingLogs = try JSONDecoder().decode([PendingExerciseLog].self, from: data)
+            pendingLogs = try SafeJSON.decoder().decode([PendingExerciseLog].self, from: data)
             DebugLogger.shared.log("📦 Loaded \(pendingLogs.count) pending logs from queue", level: .diagnostic)
         } catch {
             DebugLogger.shared.log("⚠️ Failed to load offline queue: \(error.localizedDescription)", level: .warning)
@@ -151,7 +151,7 @@ class OfflineQueueManager: ObservableObject {
 
     private func saveQueue() {
         do {
-            let data = try JSONEncoder().encode(pendingLogs)
+            let data = try SafeJSON.encoder().encode(pendingLogs)
             UserDefaults.standard.set(data, forKey: queueKey)
         } catch {
             DebugLogger.shared.log("⚠️ Failed to save offline queue: \(error.localizedDescription)", level: .warning)

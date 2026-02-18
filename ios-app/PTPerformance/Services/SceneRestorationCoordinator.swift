@@ -295,7 +295,7 @@ final class SceneRestorationCoordinator {
     /// Persist a snapshot to UserDefaults as JSON.
     private func persistSnapshot(_ snapshot: SceneStateSnapshot) {
         do {
-            let data = try JSONEncoder().encode(snapshot)
+            let data = try SafeJSON.encoder().encode(snapshot)
             UserDefaults.standard.set(data, forKey: snapshotKey)
         } catch {
             logger.error("Failed to persist snapshot: \(error.localizedDescription)")
@@ -308,7 +308,7 @@ final class SceneRestorationCoordinator {
             return nil
         }
         do {
-            return try JSONDecoder().decode(SceneStateSnapshot.self, from: data)
+            return try SafeJSON.decoder().decode(SceneStateSnapshot.self, from: data)
         } catch {
             logger.error("Failed to decode persisted snapshot: \(error.localizedDescription)")
             clearPersistedSnapshot()

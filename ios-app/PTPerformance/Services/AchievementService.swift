@@ -191,6 +191,9 @@ class AchievementService: ObservableObject {
         // Trigger celebration
         pendingCelebration = event
 
+        // ACP-979: Track achievement unlock for App Store review prompting
+        ASOService.shared.trackAchievementUnlocked()
+
         // Haptic feedback
         HapticFeedback.success()
 
@@ -432,14 +435,14 @@ class AchievementService: ObservableObject {
     // MARK: - Caching
 
     private func saveToCache() {
-        guard let data = try? JSONEncoder().encode(unlockedAchievements) else { return }
+        guard let data = try? SafeJSON.encoder().encode(unlockedAchievements) else { return }
         UserDefaults.standard.set(data, forKey: unlockedAchievementsKey)
         UserDefaults.standard.set(Date(), forKey: lastSyncKey)
     }
 
     private func loadFromCache() {
         guard let data = UserDefaults.standard.data(forKey: unlockedAchievementsKey),
-              let achievements = try? JSONDecoder().decode([UnlockedAchievement].self, from: data) else {
+              let achievements = try? SafeJSON.decoder().decode([UnlockedAchievement].self, from: data) else {
             return
         }
         unlockedAchievements = achievements

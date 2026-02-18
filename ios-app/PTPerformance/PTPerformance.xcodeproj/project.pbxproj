@@ -783,6 +783,7 @@
 		A64F3E65372BF23B70F6CEC9 /* ExerciseVideo.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6ED561489E1A4F35124ECF3 /* ExerciseVideo.swift */; };
 		A66C6475C1454469A898CDE6 /* ModeSwitchingPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7E72AE4C5694CD5BA7EEF9B /* ModeSwitchingPanel.swift */; };
 		A74A6402E1624668D41C5908 /* DataConsentViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE06C8FB0A768C7B230BA5D0 /* DataConsentViewModel.swift */; };
+		A769CA02399D6995EF02CEEC /* SafeJSON.swift in Sources */ = {isa = PBXBuildFile; fileRef = 347C2E1043BBEBB81869E5FF /* SafeJSON.swift */; };
 		A76E54E37F8E89E67285ACC2 /* ReportMetricCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A8D9C5C519DB676691F9C51 /* ReportMetricCard.swift */; };
 		A8107BAE4DE2CF6457A989F4 /* DynamicTypeKit.swift in Sources */ = {isa = PBXBuildFile; fileRef = 524E529499091DB403E32D41 /* DynamicTypeKit.swift */; };
 		A8274A95B9D33958625A1360 /* Color+DarkMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D5DBBA89044CAA135122D1A /* Color+DarkMode.swift */; };
@@ -1428,6 +1429,7 @@
 		33ADA82D9349149BD7E863F3 /* PerformanceModeDashboardView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = PerformanceModeDashboardView.swift; path = PerformanceModeDashboardView.swift; sourceTree = "<group>"; };
 		33F232DE3F893B0626165B91 /* SupplementRecommendation.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = SupplementRecommendation.swift; path = Models/SupplementRecommendation.swift; sourceTree = "<group>"; };
 		342C6F5A2722465E3D611FD8 /* LoadingStateView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = LoadingStateView.swift; path = Utils/LoadingStateView.swift; sourceTree = "<group>"; };
+		347C2E1043BBEBB81869E5FF /* SafeJSON.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = SafeJSON.swift; path = Services/SafeJSON.swift; sourceTree = "<group>"; };
 		347C3D63B3C4CFB4ED623250 /* SafetyWarningBanner.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = SafetyWarningBanner.swift; path = Views/Health/SafetyWarningBanner.swift; sourceTree = "<group>"; };
 		34988911E8A0920578FF2ADA /* PatientListView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = PatientListView.swift; path = Views/Therapist/PatientListView.swift; sourceTree = "<group>"; };
 		3501BA13E5213EF0718D8F26 /* OutcomeMeasure.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = OutcomeMeasure.swift; path = Models/OutcomeMeasure.swift; sourceTree = "<group>"; };
@@ -3209,6 +3211,7 @@
 				497E77C8ABA24FBEFDB515C3 /* PaywallExperimentService.swift */,
 				A021306B88E82177EA33E9BF /* MemoryBudgetManager.swift */,
 				6BB4325E04917C3F1FF5AD7F /* PainTrackingService.swift */,
+				347C2E1043BBEBB81869E5FF /* SafeJSON.swift */,
 			);
 			name = Services;
 			sourceTree = "<group>";
@@ -6029,6 +6032,7 @@
 				98AF7E840C09F2CB576656C3 /* MemoryEfficientCollections.swift in Sources */,
 				F0907A000AC058C2FB3B0811 /* DynamicTypeModifiers.swift in Sources */,
 				A13EE32AF1C5EAD270A52B96 /* PainTrackingService.swift in Sources */,
+				A769CA02399D6995EF02CEEC /* SafeJSON.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -6211,7 +6215,7 @@
 				CODE_SIGN_ENTITLEMENTS = PTPerformance/PTPerformance.entitlements;
 				CODE_SIGN_IDENTITY = "";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 528;
+				CURRENT_PROJECT_VERSION = 535;
 				DEVELOPMENT_TEAM = 5NNLBL74XR;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Info.plist;
@@ -6236,7 +6240,7 @@
 				CODE_SIGN_ENTITLEMENTS = PTPerformance/PTPerformance.entitlements;
 				CODE_SIGN_IDENTITY = "";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 528;
+				CURRENT_PROJECT_VERSION = 535;
 				DEVELOPMENT_TEAM = 5NNLBL74XR;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Info.plist;

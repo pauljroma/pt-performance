@@ -58,6 +58,33 @@ actor DiskImageCache {
         let key: String
         let sizeBytes: Int64
         var lastAccessDate: Date
+
+        // Custom Codable to prevent runtime traps (EXC_BREAKPOINT/brk 1)
+        // on corrupted Date values in the manifest JSON file.
+        init(key: String, sizeBytes: Int64, lastAccessDate: Date) {
+            self.key = key
+            self.sizeBytes = sizeBytes
+            self.lastAccessDate = lastAccessDate
+        }
+
+        init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            self.key = try container.decode(String.self, forKey: .key)
+            self.sizeBytes = (try? container.decode(Int64.self, forKey: .sizeBytes)) ?? 0
+            self.lastAccessDate = (try? container.decodeIfPresent(Double.self, forKey: .lastAccessDate))
+                .map { Date(timeIntervalSinceReferenceDate: $0) } ?? Date()
+        }
+
+        func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(key, forKey: .key)
+            try container.encode(sizeBytes, forKey: .sizeBytes)
+            try container.encode(lastAccessDate.timeIntervalSinceReferenceDate, forKey: .lastAccessDate)
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case key, sizeBytes, lastAccessDate
+        }
     }
 
     // MARK: - Properties
@@ -252,8 +279,18 @@ actor DiskImageCache {
 
     /// Load the manifest from disk into memory.
     private func loadManifest() {
-        guard let data = try? Data(contentsOf: manifestURL),
-              let entries = try? JSONDecoder().decode([ManifestEntry].self, from: data) else {
+        guard let data = try? Data(contentsOf: manifestURL) else {
+            manifest = [:]
+            currentSizeBytes = 0
+            return
+        }
+
+        // Validate JSON is parseable before attempting Codable decode.
+        // Corrupted manifest files can cause runtime traps in synthesized Codable.
+        guard (try? JSONSerialization.jsonObject(with: data)) != nil,
+              let entries = try? SafeJSON.decoder().decode([ManifestEntry].self, from: data) else {
+            // Corrupted manifest — delete and start fresh
+            try? fileManager.removeItem(at: manifestURL)
             manifest = [:]
             currentSizeBytes = 0
             return
@@ -306,7 +343,7 @@ actor DiskImageCache {
     /// Write the current manifest to disk.
     private func persistManifest() {
         let entries = Array(manifest.values)
-        guard let data = try? JSONEncoder().encode(entries) else { return }
+        guard let data = try? SafeJSON.encoder().encode(entries) else { return }
 
         do {
             try data.write(to: manifestURL, options: .atomic)

@@ -409,6 +409,19 @@ struct StreakFreeze: Codable, Identifiable, Hashable, Equatable {
         self.usedAt = usedAt
         self.usedForDate = usedForDate
     }
+
+    // Custom Codable to prevent EXC_BREAKPOINT on corrupted Date values
+    enum CodingKeys: String, CodingKey {
+        case id, earnedAt, usedAt, usedForDate
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.id = (try? container.decode(UUID.self, forKey: .id)) ?? UUID()
+        self.earnedAt = (try? container.decode(Date.self, forKey: .earnedAt)) ?? Date()
+        self.usedAt = try? container.decodeIfPresent(Date.self, forKey: .usedAt)
+        self.usedForDate = try? container.decodeIfPresent(Date.self, forKey: .usedForDate)
+    }
 }
 
 /// Manages streak freeze inventory for a user

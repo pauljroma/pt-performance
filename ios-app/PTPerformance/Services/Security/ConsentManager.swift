@@ -382,7 +382,7 @@ final class ConsentManager: ObservableObject {
         for type in PrivacyConsentType.allCases {
             let key = Self.storageKeyPrefix + type.rawValue
             if let data = defaults.data(forKey: key),
-               let record = try? JSONDecoder().decode(ConsentRecord.self, from: data) {
+               let record = try? SafeJSON.decoder().decode(ConsentRecord.self, from: data) {
                 consents[type] = record
             } else {
                 // Default: data processing is granted (required), others not granted
@@ -407,7 +407,7 @@ final class ConsentManager: ObservableObject {
     /// Save a consent record to UserDefaults
     private func saveConsentToStorage(type: PrivacyConsentType, record: ConsentRecord) {
         let key = Self.storageKeyPrefix + type.rawValue
-        if let data = try? JSONEncoder().encode(record) {
+        if let data = try? SafeJSON.encoder().encode(record) {
             defaults.set(data, forKey: key)
         }
     }

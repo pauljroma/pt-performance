@@ -157,4 +157,24 @@ struct CachedReadiness: Codable {
     let energyLevel: Int?
     let sorenessLevel: Int?
     let stressLevel: Int?
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.score = (try? container.decode(Int.self, forKey: .score)) ?? 0
+        self.date = (try? container.decodeIfPresent(Double.self, forKey: .date))
+            .map { Date(timeIntervalSinceReferenceDate: $0) } ?? Date()
+        self.sleepHours = try? container.decodeIfPresent(Double.self, forKey: .sleepHours)
+        self.energyLevel = try? container.decodeIfPresent(Int.self, forKey: .energyLevel)
+        self.sorenessLevel = try? container.decodeIfPresent(Int.self, forKey: .sorenessLevel)
+        self.stressLevel = try? container.decodeIfPresent(Int.self, forKey: .stressLevel)
+    }
+
+    init(score: Int, date: Date, sleepHours: Double?, energyLevel: Int?, sorenessLevel: Int?, stressLevel: Int?) {
+        self.score = score
+        self.date = date
+        self.sleepHours = sleepHours
+        self.energyLevel = energyLevel
+        self.sorenessLevel = sorenessLevel
+        self.stressLevel = stressLevel
+    }
 }

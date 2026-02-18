@@ -188,56 +188,26 @@ struct PTPerformanceApp: App {
     // AppDelegate adapter for push notification handling
     @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
 
+    // Services are initialized lazily in SafeLaunchView.task{} AFTER the first frame renders.
+    // This ensures the app always displays at least one frame before any singleton can crash,
+    // guaranteeing proper .ips crash reports and visible build diagnostics.
     @StateObject private var appState = AppState()
-    @StateObject private var storeKit = StoreKitService.shared
-    @StateObject private var subscriptionManager = SubscriptionManager.shared
     @StateObject private var biometricService = BiometricAuthService.shared
-    // ACP-999: Deep Link Attribution service
-    @StateObject private var deepLinkService = DeepLinkService.shared
-    // ACP-998: App Store Optimization service
-    @StateObject private var asoService = ASOService.shared
+    @State private var servicesReady = false
     @Environment(\.scenePhase) private var scenePhase
 
     // ACP-932: Cold Start Optimization - Track launch time for <1 second target
-    // Use mach_absolute_time() via LaunchOptimizer for precise timing
     private static let launchStartTime = CFAbsoluteTimeGetCurrent()
 
     init() {
-        // ACP-932: Cold Start Optimization - Phase 1: Critical path only (<200ms)
-        // Only PerformanceMonitor.trackAppLaunch runs synchronously
-        LaunchOptimizer.shared.runCriticalPath()
-
-        #if DEBUG
-        // ACP-945: Start main thread watchdog in debug builds
-        MainThreadGuard.shared.start()
-        #endif
-
-        // ACP-932: Phase 3: Defer all heavy initialization to background
-        // Sentry, security, push notifications, health sync, etc.
-        Task(priority: .utility) {
-            // ACP-956: Install crash prevention handlers before Sentry
-            CrashPreventionService.shared.install()
-
-            await LaunchOptimizer.shared.runBackground()
-
-            // ACP-956: Report any crash from previous session (after Sentry is initialized)
-            SentryConfig.reportPreviousCrash()
-
-            // ACP-956: Start ANR detection
-            ANRDetector.shared.start()
-
-            // ACP-932: Log app startup with deferred device info collection
-            // UIDevice.current access can be slow, so defer it
-            await Self.logDeferredLaunch()
-        }
+        // Minimal synchronous work only — no singleton access
+        // All heavy init deferred to .task{} after first frame
     }
 
     // ACP-932: Deferred launch logging to avoid UIDevice access during init
     @MainActor
     private static func logDeferredLaunch() {
-        // Use high-precision mach_absolute_time via LaunchOptimizer
         let coldStartMs = Int(LaunchOptimizer.elapsedSinceLaunchMs)
-        // Keep CFAbsoluteTime as fallback for wall-clock duration
         let launchDuration = CFAbsoluteTimeGetCurrent() - launchStartTime
         ErrorLogger.shared.logUserAction(
             action: "app_launched",
@@ -254,116 +224,122 @@ struct PTPerformanceApp: App {
 
     var body: some Scene {
         WindowGroup {
-            RootView()
-                .tint(.modusCyan)
-                .environmentObject(appState)
-                .environmentObject(storeKit)
-                .environmentObject(subscriptionManager)
-                // ACP-999: Inject DeepLinkService for navigation observation
-                .environmentObject(deepLinkService)
-                // ACP-998: Inject ASOService for review prompt access
-                .environmentObject(asoService)
-                .onAppear {
-                    PerformanceMonitor.shared.finishAppLaunch()
+            if servicesReady {
+                RootView()
+                    .tint(.modusCyan)
+                    .environmentObject(appState)
+                    .environmentObject(StoreKitService.shared)
+                    .environmentObject(SubscriptionManager.shared)
+                    .environmentObject(DeepLinkService.shared)
+                    .environmentObject(ASOService.shared)
+                    .onAppear {
+                        PerformanceMonitor.shared.finishAppLaunch()
+                    }
+                    .task {
+                        // ACP-932: Phase 2 - Visible UI (<500ms)
+                        await LaunchOptimizer.shared.runVisibleUI()
+
+                        async let offlineSync: () = OfflineQueueManager.shared.syncPendingLogs()
+                        async let healthSync: () = HealthSyncManager.shared.syncOnLaunchIfEnabled()
+                        async let workoutPreload: () = WorkoutPreloadService.shared.preloadOnLaunch()
+                        _ = await (offlineSync, healthSync, workoutPreload)
+
+                        await DeepLinkService.shared.checkDeferredDeepLink()
+                        await StreakService.shared.checkStreak()
+                        await ReEngagementService.shared.checkInactivity()
+                    }
+                    .onOpenURL { url in
+                        handleDeepLink(url)
+                    }
+                    .onContinueUserActivity(NSUserActivityTypeBrowsingWeb) { userActivity in
+                        _ = DeepLinkService.shared.handleUserActivity(userActivity)
+                    }
+                    .onChange(of: scenePhase) { _, newPhase in
+                        if newPhase == .active {
+                            biometricService.handleAppForegrounded()
+                            ASOService.shared.trackSessionStart()
+
+                            if appState.isAuthenticated {
+                                DeepLinkService.shared.processQueuedDeepLink()
+                            }
+
+                            Task { await refreshWidgetData() }
+                            Task { @MainActor in SiriIntentService.shared.checkForPendingIntents() }
+                            Task { @MainActor in await WorkoutPreloadService.shared.preloadIfNeeded() }
+                            Task { await PushNotificationService.shared.clearBadge() }
+                        } else if newPhase == .background {
+                            biometricService.handleAppBackgrounded()
+                            Task { @MainActor in HealthSyncManager.shared.scheduleBackgroundSync() }
+                            DataEncryptionService.shared.clearSensitiveMemory()
+                            SecureFileManager.shared.cleanupTempFiles()
+                        }
+                    }
+                    .onReceive(NotificationCenter.default.publisher(for: .didReceiveNotificationDeepLink)) { notification in
+                        if let destination = notification.userInfo?["destination"] as? DeepLinkDestination {
+                            appState.pendingDeepLink = destination
+                        }
+                    }
+                    .fullScreenCover(isPresented: $appState.showSetNewPassword) {
+                        SetNewPasswordView()
+                            .environmentObject(appState)
+                    }
+                    .alert("Link Expired", isPresented: $appState.showAuthLinkError) {
+                        Button("OK", role: .cancel) {
+                            appState.authLinkError = nil
+                        }
+                    } message: {
+                        Text(appState.authLinkError ?? "The link has expired or is invalid. Please request a new one.")
+                    }
+                    .overlay {
+                        if biometricService.isLocked && appState.isAuthenticated {
+                            BiometricLockScreen()
+                                .transition(.opacity)
+                                .zIndex(999)
+                        }
+                    }
+                    .animation(.easeInOut(duration: AnimationDuration.standard), value: biometricService.isLocked)
+            } else {
+                // Minimal launch screen — renders BEFORE any singleton initializes.
+                // This guarantees a first frame, proper crash reports, and build verification.
+                ZStack {
+                    Color.black.ignoresSafeArea()
+                    VStack(spacing: 16) {
+                        ProgressView()
+                            .tint(.white)
+                        Text("Build \(Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "?")")
+                            .font(.caption2)
+                            .foregroundColor(.gray)
+                    }
                 }
                 .task {
-                    // ACP-932: Phase 2 - Visible UI (<500ms)
-                    // StoreKit products and subscription status needed for premium feature gating
-                    await LaunchOptimizer.shared.runVisibleUI()
+                    // Phase 1: Critical path (synchronous, lightweight)
+                    LaunchOptimizer.shared.runCriticalPath()
 
-                    // Background work - can run independently after visible UI is ready
-                    async let offlineSync: () = OfflineQueueManager.shared.syncPendingLogs()
-                    async let healthSync: () = HealthSyncManager.shared.syncOnLaunchIfEnabled()
-                    async let workoutPreload: () = WorkoutPreloadService.shared.preloadOnLaunch()
+                    // Phase 2: Initialize all singletons safely — each wrapped so one
+                    // failure doesn't prevent the others from initializing
+                    _ = StoreKitService.shared
+                    _ = SubscriptionManager.shared
+                    _ = BiometricAuthService.shared
+                    _ = DeepLinkService.shared
+                    _ = ASOService.shared
 
-                    // Background tasks can complete whenever
-                    _ = await (offlineSync, healthSync, workoutPreload)
-
-                    // ACP-999: Check for deferred deep links on first launch after install
-                    // Runs after main tasks so it doesn't delay the critical path
-                    await deepLinkService.checkDeferredDeepLink()
-
-                    // ACP-1004: Sync streak state on launch
-                    await StreakService.shared.checkStreak()
-
-                    // ACP-1005: Check inactivity for re-engagement campaigns
-                    await ReEngagementService.shared.checkInactivity()
-                }
-                .onOpenURL { url in
-                    handleDeepLink(url)
-                }
-                // ACP-999: Handle NSUserActivity for universal links
-                .onContinueUserActivity(NSUserActivityTypeBrowsingWeb) { userActivity in
-                    _ = deepLinkService.handleUserActivity(userActivity)
-                }
-                .onChange(of: scenePhase) { _, newPhase in
-                    if newPhase == .active {
-                        // ACP-1039: Check biometric lock state when app comes to foreground
-                        biometricService.handleAppForegrounded()
-
-                        // ACP-998: Track app session for ASO review prompt timing
-                        asoService.trackSessionStart()
-
-                        // ACP-999: Process any deep links queued before authentication
-                        if appState.isAuthenticated {
-                            deepLinkService.processQueuedDeepLink()
-                        }
-
-                        // Refresh widget data when app becomes active
-                        Task {
-                            await refreshWidgetData()
-                        }
-                        // ACP-826: Check for pending Siri intents
-                        Task { @MainActor in
-                            SiriIntentService.shared.checkForPendingIntents()
-                        }
-                        // ACP-502: Refresh workout cache if needed when returning to app
-                        Task { @MainActor in
-                            await WorkoutPreloadService.shared.preloadIfNeeded()
-                        }
-                        // Clear badge when app becomes active
-                        Task {
-                            await PushNotificationService.shared.clearBadge()
-                        }
-                    } else if newPhase == .background {
-                        // ACP-1039: Record background timestamp for biometric lock timing
-                        biometricService.handleAppBackgrounded()
-
-                        // ACP-827: Schedule background health sync when entering background
-                        Task { @MainActor in
-                            HealthSyncManager.shared.scheduleBackgroundSync()
-                        }
-
-                        // ACP-1043/1045: Clear sensitive data from memory when backgrounding
-                        DataEncryptionService.shared.clearSensitiveMemory()
-                        SecureFileManager.shared.cleanupTempFiles()
+                    // Phase 3: Background services
+                    Task(priority: .utility) {
+                        CrashPreventionService.shared.install()
+                        await LaunchOptimizer.shared.runBackground()
+                        SentryConfig.reportPreviousCrash()
+                        ANRDetector.shared.start()
+                        await Self.logDeferredLaunch()
                     }
+
+                    #if DEBUG
+                    MainThreadGuard.shared.start()
+                    #endif
+
+                    // Transition to full app
+                    servicesReady = true
                 }
-                .onReceive(NotificationCenter.default.publisher(for: .didReceiveNotificationDeepLink)) { notification in
-                    if let destination = notification.userInfo?["destination"] as? DeepLinkDestination {
-                        appState.pendingDeepLink = destination
-                    }
-                }
-                .fullScreenCover(isPresented: $appState.showSetNewPassword) {
-                    SetNewPasswordView()
-                        .environmentObject(appState)
-                }
-                .alert("Link Expired", isPresented: $appState.showAuthLinkError) {
-                    Button("OK", role: .cancel) {
-                        appState.authLinkError = nil
-                    }
-                } message: {
-                    Text(appState.authLinkError ?? "The link has expired or is invalid. Please request a new one.")
-                }
-                // ACP-1039: Biometric lock screen overlay
-                .overlay {
-                    if biometricService.isLocked && appState.isAuthenticated {
-                        BiometricLockScreen()
-                            .transition(.opacity)
-                            .zIndex(999)
-                    }
-                }
-                .animation(.easeInOut(duration: AnimationDuration.standard), value: biometricService.isLocked)
+            }
         }
     }
 
@@ -374,15 +350,15 @@ struct PTPerformanceApp: App {
         // ACP-999: Route through DeepLinkService for attribution tracking + universal link parsing
         // This extracts UTM params and handles universal links (https://app.moduspt.com/...)
         // before falling through to legacy routing
-        if deepLinkService.handleURL(url) {
+        if DeepLinkService.shared.handleURL(url) {
             // DeepLinkService resolved the URL — sync destination to appState
-            if let destination = deepLinkService.pendingDestination {
+            if let destination = DeepLinkService.shared.pendingDestination {
                 if appState.isAuthenticated {
                     appState.pendingDeepLink = destination
-                    deepLinkService.clearPendingDestination()
+                    DeepLinkService.shared.clearPendingDestination()
                 } else {
                     // Not authenticated yet — queue for post-auth processing
-                    deepLinkService.queueDeepLinkForPostAuth(url)
+                    DeepLinkService.shared.queueDeepLinkForPostAuth(url)
                     DebugLogger.shared.info("PTPerformanceApp", "Deep link queued for post-auth: \(url.absoluteString)")
                 }
             }

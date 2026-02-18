@@ -804,7 +804,7 @@ class OptimisticUpdateManager: ObservableObject {
         }
 
         do {
-            pendingUpdates = try JSONDecoder().decode([PendingOptimisticUpdate].self, from: data)
+            pendingUpdates = try SafeJSON.decoder().decode([PendingOptimisticUpdate].self, from: data)
             pendingUpdateCount = pendingUpdates.count
             DebugLogger.shared.log("📦 Loaded \(pendingUpdates.count) pending optimistic updates", level: .diagnostic)
         } catch {
@@ -815,7 +815,7 @@ class OptimisticUpdateManager: ObservableObject {
 
     private func savePendingUpdates() {
         do {
-            let data = try JSONEncoder().encode(pendingUpdates)
+            let data = try SafeJSON.encoder().encode(pendingUpdates)
             UserDefaults.standard.set(data, forKey: persistenceKey)
         } catch {
             DebugLogger.shared.log("⚠️ Failed to save optimistic updates: \(error)", level: .warning)

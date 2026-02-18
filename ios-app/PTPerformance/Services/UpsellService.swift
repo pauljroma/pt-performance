@@ -299,7 +299,7 @@ class UpsellService: ObservableObject {
 
     private func getWeeklyImpressions() -> [Date] {
         guard let data = UserDefaults.standard.data(forKey: Keys.weeklyImpressions),
-              let dates = try? JSONDecoder().decode([Date].self, from: data) else {
+              let dates = try? SafeJSON.decoder().decode([Date].self, from: data) else {
             return []
         }
         return dates
@@ -309,7 +309,7 @@ class UpsellService: ObservableObject {
         // Weekly timestamps
         var impressions = getWeeklyImpressions()
         impressions.append(Date())
-        if let data = try? JSONEncoder().encode(impressions) {
+        if let data = try? SafeJSON.encoder().encode(impressions) {
             UserDefaults.standard.set(data, forKey: Keys.weeklyImpressions)
         }
 
@@ -354,7 +354,7 @@ class UpsellService: ObservableObject {
     private func cleanupStaleImpressions() {
         let oneWeekAgo = Date().addingTimeInterval(-7 * 24 * 60 * 60)
         let impressions = getWeeklyImpressions().filter { $0 > oneWeekAgo }
-        if let data = try? JSONEncoder().encode(impressions) {
+        if let data = try? SafeJSON.encoder().encode(impressions) {
             UserDefaults.standard.set(data, forKey: Keys.weeklyImpressions)
         }
     }

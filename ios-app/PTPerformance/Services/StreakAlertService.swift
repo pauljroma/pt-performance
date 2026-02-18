@@ -140,7 +140,7 @@ class StreakAlertService: ObservableObject {
     private init() {
         // Load saved configuration
         if let data = UserDefaults.standard.data(forKey: userDefaultsKey),
-           let config = try? JSONDecoder().decode(StreakAlertConfiguration.self, from: data) {
+           let config = try? SafeJSON.decoder().decode(StreakAlertConfiguration.self, from: data) {
             self.configuration = config
         } else {
             self.configuration = .default
@@ -531,7 +531,7 @@ class StreakAlertService: ObservableObject {
     /// Save configuration to UserDefaults
     private func saveConfiguration() {
         do {
-            let data = try JSONEncoder().encode(configuration)
+            let data = try SafeJSON.encoder().encode(configuration)
             UserDefaults.standard.set(data, forKey: userDefaultsKey)
         } catch {
             ErrorLogger.shared.logError(error, context: "StreakAlertService.saveConfiguration")

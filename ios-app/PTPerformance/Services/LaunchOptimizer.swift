@@ -48,7 +48,10 @@ final class LaunchOptimizer {
     /// Elapsed time since launch in seconds (high precision)
     static var elapsedSinceLaunch: Double {
         let now = mach_absolute_time()
-        return machTimeToSeconds(now - launchStartMachTime)
+        // Guard against unsigned underflow: if launchStartMachTime was captured
+        // after `now` (static init ordering), return 0 instead of trapping.
+        guard now >= launchStartMachTime else { return 0 }
+        return machTimeToSeconds(now &- launchStartMachTime)
     }
 
     /// Elapsed time since launch in milliseconds (high precision)

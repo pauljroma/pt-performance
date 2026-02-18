@@ -226,7 +226,7 @@ class BackgroundTimerManager: ObservableObject {
         )
 
         do {
-            let encoded = try JSONEncoder().encode(state)
+            let encoded = try SafeJSON.encoder().encode(state)
             UserDefaults.standard.set(encoded, forKey: "timer_state")
 
             DebugLogger.shared.info("DEBUG",
@@ -247,7 +247,7 @@ class BackgroundTimerManager: ObservableObject {
         }
 
         do {
-            let state = try JSONDecoder().decode(TimerState.self, from: data)
+            let state = try SafeJSON.decoder().decode(TimerState.self, from: data)
             DebugLogger.shared.info("DEBUG",
                 "Restored timer state: \(state.templateName), Round \(state.currentRound)/\(state.totalRounds)",
             )
