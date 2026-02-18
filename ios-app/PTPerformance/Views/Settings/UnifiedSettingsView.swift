@@ -1139,12 +1139,18 @@ struct AboutView: View {
             }
 
             Section("Legal") {
-                if let termsURL = URL(string: "https://getmodus.com/terms") {
+                if let termsURL = URL(string: "https://getmodus.app/terms") {
                     Link("Terms of Service", destination: termsURL)
                 }
-                if let privacyURL = URL(string: "https://getmodus.com/privacy") {
+                if let privacyURL = URL(string: "https://getmodus.app/privacy") {
                     Link("Privacy Policy", destination: privacyURL)
                 }
+            }
+
+            Section {
+                Text("Modus is not a medical device and does not provide medical advice. Always consult your healthcare provider before starting any exercise program. Stop exercising immediately if you feel pain, dizziness, or shortness of breath.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
 
             Section {

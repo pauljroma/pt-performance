@@ -353,7 +353,7 @@ struct DataConsentView: View {
     // MARK: - Helper Methods
 
     private func openPrivacyPolicy() {
-        if let url = URL(string: "https://ptperformance.app/privacy") {
+        if let url = URL(string: "https://getmodus.app/privacy") {
             UIApplication.shared.open(url)
         }
     }

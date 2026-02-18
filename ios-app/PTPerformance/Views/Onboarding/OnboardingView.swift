@@ -93,7 +93,14 @@ struct OnboardingView: View {
                         }
                         .accessibilityLabel("Explore First")
                         .accessibilityHint("Skip setup and explore the app")
-                        .padding(.bottom, Spacing.xs)
+
+                        // Health disclaimer
+                        Text("Modus is not a medical device and does not provide medical advice. Consult your healthcare provider before starting any exercise program.")
+                            .font(.system(size: 11))
+                            .foregroundColor(.secondary.opacity(0.7))
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal, Spacing.md)
+                            .padding(.bottom, Spacing.xs)
                     } else {
                         // Non-final pages — subtle next hint
                         Color.clear

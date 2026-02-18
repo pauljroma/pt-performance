@@ -151,6 +151,7 @@ struct AuthLandingView: View {
 
                 Spacer()
 
+                #if DEBUG
                 // MARK: - Demo Login (For Testing)
                 VStack(spacing: Spacing.sm) {
                     Divider()
@@ -202,12 +203,14 @@ struct AuthLandingView: View {
                         .accessibilityHint("Sign in as a demo therapist user for testing")
                     }
                 }
+                #endif
 
                 // MARK: - Footer
-                Text("By continuing, you agree to our Terms of Service and Privacy Policy.")
+                Text("By continuing, you agree to our [Terms of Service](https://getmodus.app/terms) and [Privacy Policy](https://getmodus.app/privacy).")
                     .font(.caption2)
                     .foregroundColor(.secondary)
                     .multilineTextAlignment(.center)
+                    .tint(.accentColor)
                     .padding(.horizontal, Spacing.xl)
                     .padding(.bottom, Spacing.md)
             }

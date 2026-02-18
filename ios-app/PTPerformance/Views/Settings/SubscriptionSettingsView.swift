@@ -373,12 +373,12 @@ struct SubscriptionSettingsView: View {
                 .multilineTextAlignment(.center)
 
             HStack(spacing: Spacing.md) {
-                if let termsURL = URL(string: "https://getmodus.com/terms") {
+                if let termsURL = URL(string: "https://getmodus.app/terms") {
                     Link("Terms", destination: termsURL)
                         .font(.caption2)
                         .foregroundStyle(Color.modusCyan)
                 }
-                if let privacyURL = URL(string: "https://getmodus.com/privacy") {
+                if let privacyURL = URL(string: "https://getmodus.app/privacy") {
                     Link("Privacy", destination: privacyURL)
                         .font(.caption2)
                         .foregroundStyle(Color.modusCyan)
