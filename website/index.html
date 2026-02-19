@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Modus - Smarter Training, Coming Soon</title>
-    <meta name="description" content="Modus is the intelligent training platform that adapts to your body. Personalized workouts, recovery insights, and performance tracking. Coming soon.">
+    <title>Modus - Smarter Training</title>
+    <meta name="description" content="Modus is the intelligent training platform that adapts to your body. Personalized workouts, recovery insights, and performance tracking.">
     <meta property="og:title" content="Modus - Smarter Training">
-    <meta property="og:description" content="The intelligent training platform that adapts to your body. Coming soon.">
+    <meta property="og:description" content="The intelligent training platform that adapts to your body.">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://getmodus.app">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -218,64 +218,32 @@
             }
         }
 
-        /* Email form */
-        .email-form {
-            display: flex;
-            gap: 12px;
-            width: 100%;
-            max-width: 480px;
+        /* App Store button */
+        .cta-section {
             animation: fadeInUp 0.8s ease-out 0.3s both;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
         }
 
-        .email-input {
-            flex: 1;
-            padding: 16px 20px;
-            font-size: 16px;
-            font-family: inherit;
-            background: var(--dark-elevated);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 12px;
-            color: var(--text-primary);
-            outline: none;
+        .app-store-btn {
+            display: inline-block;
             transition: all 0.3s ease;
         }
 
-        .email-input::placeholder {
-            color: var(--text-tertiary);
-        }
-
-        .email-input:focus {
-            border-color: var(--primary);
-            box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.15);
-        }
-
-        .submit-btn {
-            padding: 16px 28px;
-            font-size: 16px;
-            font-weight: 600;
-            font-family: inherit;
-            background: var(--gradient-1);
-            border: none;
-            border-radius: 12px;
-            color: white;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            white-space: nowrap;
-        }
-
-        .submit-btn:hover {
+        .app-store-btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 10px 30px rgba(0, 122, 255, 0.3);
+            filter: brightness(1.1);
         }
 
-        .submit-btn:active {
-            transform: translateY(0);
+        .app-store-btn img {
+            height: 54px;
         }
 
-        .form-note {
+        .cta-note {
             font-size: 14px;
             color: var(--text-tertiary);
-            margin-top: 16px;
             animation: fadeInUp 0.8s ease-out 0.4s both;
         }
 
@@ -477,6 +445,13 @@
             border-top: 1px solid rgba(255, 255, 255, 0.05);
         }
 
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 24px;
+            margin-bottom: 16px;
+        }
+
         footer p {
             font-size: 14px;
             color: var(--text-tertiary);
@@ -492,40 +467,11 @@
             color: var(--primary);
         }
 
-        /* Success state */
-        .success-message {
-            display: none;
-            align-items: center;
-            gap: 12px;
-            background: rgba(0, 212, 170, 0.1);
-            border: 1px solid rgba(0, 212, 170, 0.3);
-            padding: 16px 24px;
-            border-radius: 12px;
-            color: var(--accent);
-            font-weight: 500;
-        }
-
-        .success-message.show {
-            display: flex;
-        }
-
-        .email-form.hidden {
-            display: none;
-        }
-
         /* Responsive */
         @media (max-width: 768px) {
             .features {
                 grid-template-columns: 1fr;
                 gap: 16px;
-            }
-
-            .email-form {
-                flex-direction: column;
-            }
-
-            .submit-btn {
-                width: 100%;
             }
 
             .hero {
@@ -560,32 +506,19 @@
         <main class="hero">
             <div class="badge">
                 <span class="badge-dot"></span>
-                Coming Soon
+                Available Now
             </div>
 
             <h1>Train <span>Smarter</span>,<br>Recover Faster</h1>
 
-            <p>The intelligent training platform that adapts to your body. Personalized workouts, real-time recovery insights, and performance tracking—all powered by your data.</p>
+            <p>The intelligent training platform that adapts to your body. Personalized workouts, real-time recovery insights, and performance tracking — all powered by your data.</p>
 
-            <form class="email-form" id="waitlistForm">
-                <input
-                    type="email"
-                    class="email-input"
-                    placeholder="Enter your email"
-                    required
-                    id="emailInput"
-                >
-                <button type="submit" class="submit-btn">Join Waitlist</button>
-            </form>
-
-            <div class="success-message" id="successMessage">
-                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                    <path d="M10 0C4.48 0 0 4.48 0 10C0 15.52 4.48 20 10 20C15.52 20 20 15.52 20 10C20 4.48 15.52 0 10 0ZM8 15L3 10L4.41 8.59L8 12.17L15.59 4.58L17 6L8 15Z" fill="currentColor"/>
-                </svg>
-                You're on the list! We'll be in touch soon.
+            <div class="cta-section">
+                <a href="https://apps.apple.com/app/modus-smarter-training/id6741090498" class="app-store-btn">
+                    <img src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg" alt="Download on the App Store">
+                </a>
+                <p class="cta-note">Free to download. iOS 17+</p>
             </div>
-
-            <p class="form-note">Be first to experience the future of training. No spam, ever.</p>
 
             <div class="features">
                 <div class="feature-card">
@@ -596,7 +529,7 @@
                 <div class="feature-card">
                     <div class="feature-icon">🎯</div>
                     <h3>Adaptive Programs</h3>
-                    <p>Workouts that evolve with you—auto-adjusting based on your progress and feedback.</p>
+                    <p>Workouts that evolve with you — auto-adjusting based on your progress and feedback.</p>
                 </div>
                 <div class="feature-card">
                     <div class="feature-icon">💡</div>
@@ -658,62 +591,13 @@
         </main>
 
         <footer>
-            <p>© 2026 Modus · <a href="mailto:hello@getmodus.app">hello@getmodus.app</a></p>
+            <div class="footer-links">
+                <a href="/terms">Terms of Service</a>
+                <a href="/privacy">Privacy Policy</a>
+                <a href="mailto:hello@getmodus.app">Contact</a>
+            </div>
+            <p>&copy; 2026 X2machines, LLC. All rights reserved.</p>
         </footer>
     </div>
-
-    <script>
-        // Waitlist API endpoint
-        const WAITLIST_URL = 'https://rpbxeaxlaoyoqkohytlw.supabase.co/functions/v1/waitlist';
-
-        document.getElementById('waitlistForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-
-            const email = document.getElementById('emailInput').value.trim().toLowerCase();
-            const form = document.getElementById('waitlistForm');
-            const successMessage = document.getElementById('successMessage');
-            const submitBtn = form.querySelector('.submit-btn');
-
-            // Disable button while submitting
-            submitBtn.disabled = true;
-            submitBtn.textContent = 'Joining...';
-
-            try {
-                const response = await fetch(WAITLIST_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        email: email,
-                        source: 'website'
-                    })
-                });
-
-                const data = await response.json();
-
-                if (data.success) {
-                    form.classList.add('hidden');
-                    if (data.message === 'Already on waitlist') {
-                        successMessage.innerHTML = `
-                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                                <path d="M10 0C4.48 0 0 4.48 0 10C0 15.52 4.48 20 10 20C15.52 20 20 15.52 20 10C20 4.48 15.52 0 10 0ZM8 15L3 10L4.41 8.59L8 12.17L15.59 4.58L17 6L8 15Z" fill="currentColor"/>
-                            </svg>
-                            You're already on the list! We'll be in touch soon.
-                        `;
-                    }
-                    successMessage.classList.add('show');
-                } else {
-                    throw new Error(data.error || 'Unknown error');
-                }
-
-            } catch (error) {
-                console.error('Waitlist error:', error);
-                submitBtn.disabled = false;
-                submitBtn.textContent = 'Join Waitlist';
-                alert('Something went wrong. Please try again.');
-            }
-        });
-    </script>
 </body>
 </html>
