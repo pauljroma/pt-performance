@@ -322,6 +322,59 @@ struct Session: Codable, Identifiable, Hashable, Sendable {
         // exercises is NOT in CodingKeys - will use default value
     }
 
+    init(
+        id: UUID,
+        phase_id: UUID,
+        name: String,
+        sequence: Int,
+        weekday: Int? = nil,
+        notes: String? = nil,
+        created_at: Date? = nil,
+        completed: Bool? = nil,
+        started_at: Date? = nil,
+        completed_at: Date? = nil,
+        total_volume: Double? = nil,
+        avg_rpe: Double? = nil,
+        avg_pain: Double? = nil,
+        duration_minutes: Int? = nil,
+        exercises: [Exercise] = []
+    ) {
+        self.id = id
+        self.phase_id = phase_id
+        self.name = name
+        self.sequence = sequence
+        self.weekday = weekday
+        self.notes = notes
+        self.created_at = created_at
+        self.completed = completed
+        self.started_at = started_at
+        self.completed_at = completed_at
+        self.total_volume = total_volume
+        self.avg_rpe = avg_rpe
+        self.avg_pain = avg_pain
+        self.duration_minutes = duration_minutes
+        self.exercises = exercises
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(UUID.self, forKey: .id)
+        phase_id = try container.decode(UUID.self, forKey: .phase_id)
+        name = try container.decodeIfPresent(String.self, forKey: .name) ?? "Untitled Session"
+        sequence = try container.decodeIfPresent(Int.self, forKey: .sequence) ?? 0
+        weekday = try container.decodeIfPresent(Int.self, forKey: .weekday)
+        notes = try container.decodeIfPresent(String.self, forKey: .notes)
+        created_at = try container.decodeIfPresent(Date.self, forKey: .created_at)
+        completed = try container.decodeIfPresent(Bool.self, forKey: .completed)
+        started_at = try container.decodeIfPresent(Date.self, forKey: .started_at)
+        completed_at = try container.decodeIfPresent(Date.self, forKey: .completed_at)
+        total_volume = try container.decodeIfPresent(Double.self, forKey: .total_volume)
+        avg_rpe = try container.decodeIfPresent(Double.self, forKey: .avg_rpe)
+        avg_pain = try container.decodeIfPresent(Double.self, forKey: .avg_pain)
+        duration_minutes = try container.decodeIfPresent(Int.self, forKey: .duration_minutes)
+        exercises = []
+    }
+
     var dateDisplay: String {
         // Use weekday to display day of week
         if let day = weekday {
