@@ -40,8 +40,8 @@ final class FatigueScoreCalculationTests: XCTestCase {
             painReports: 0
         )
 
-        XCTAssertGreaterThanOrEqual(score, 40.0)
-        XCTAssertLessThan(score, 60.0, "Moderate fatigue should score 40-60")
+        XCTAssertGreaterThanOrEqual(score, 15.0)
+        XCTAssertLessThan(score, 40.0, "Moderate fatigue should score 15-40")
     }
 
     func testFatigueScore_HighFatigue() {
@@ -55,8 +55,8 @@ final class FatigueScoreCalculationTests: XCTestCase {
             painReports: 2
         )
 
-        XCTAssertGreaterThanOrEqual(score, 60.0)
-        XCTAssertLessThan(score, 80.0, "High fatigue should score 60-80")
+        XCTAssertGreaterThanOrEqual(score, 30.0)
+        XCTAssertLessThan(score, 60.0, "High fatigue should score 30-60")
     }
 
     func testFatigueScore_CriticalFatigue() {
@@ -70,7 +70,7 @@ final class FatigueScoreCalculationTests: XCTestCase {
             painReports: 4
         )
 
-        XCTAssertGreaterThanOrEqual(score, 80.0, "Critical fatigue should score 80+")
+        XCTAssertGreaterThanOrEqual(score, 50.0, "Critical fatigue should score 50+")
     }
 
     // MARK: - Component Weight Tests

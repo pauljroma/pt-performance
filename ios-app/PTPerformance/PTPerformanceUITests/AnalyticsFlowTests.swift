@@ -77,8 +77,8 @@ class AnalyticsFlowTests: XCTestCase {
             XCTAssertTrue(summarySection.exists, "Summary section should be visible")
 
             // Verify summary cards exist
-            XCTAssertTrue(!app.staticTexts.matching(identifier: "Adherence").isEmpty ||
-                         !app.staticTexts.containing(NSPredicate(format: "label CONTAINS 'Adherence'")).isEmpty,
+            XCTAssertTrue(app.staticTexts.matching(identifier: "Adherence").count > 0 ||
+                         app.staticTexts.containing(NSPredicate(format: "label CONTAINS 'Adherence'")).count > 0,
                          "Adherence card should exist")
         }
 
@@ -156,7 +156,7 @@ class AnalyticsFlowTests: XCTestCase {
 
             // Look for segmented control (date range picker)
             let segmentedControls = app.segmentedControls
-            if !segmentedControls.isEmpty {
+            if segmentedControls.count > 0 {
                 let dateRangePicker = segmentedControls.firstMatch
                 XCTAssertTrue(dateRangePicker.exists, "Date range picker should exist")
 

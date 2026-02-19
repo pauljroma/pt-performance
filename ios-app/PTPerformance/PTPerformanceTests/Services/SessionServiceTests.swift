@@ -819,7 +819,7 @@ final class EmptyExercisesHandlingTests: XCTestCase {
     }
 
     func testSession_NullExercisesField_Fails() {
-        // exercises is a required field, null should fail
+        // exercises field uses decodeIfPresent, null defaults to empty array
         let json = """
         {
             "session": {
@@ -836,7 +836,8 @@ final class EmptyExercisesHandlingTests: XCTestCase {
 
         let decoder = JSONDecoder()
 
-        XCTAssertThrowsError(try decoder.decode(TodaySessionResponse.self, from: json))
+        let response = try! decoder.decode(TodaySessionResponse.self, from: json)
+        XCTAssertTrue(response.exercises.isEmpty, "Null exercises should default to empty array")
     }
 }
 
@@ -844,8 +845,8 @@ final class EmptyExercisesHandlingTests: XCTestCase {
 
 final class SessionErrorHandlingTests: XCTestCase {
 
-    func testSession_MissingRequiredField_Throws() {
-        // Missing 'sequence' field
+    func testSession_MissingRequiredField_Throws() throws {
+        // 'sequence' now uses decodeIfPresent with default 0
         let json = """
         {
             "id": "123e4567-e89b-12d3-a456-426614174000",
@@ -856,13 +857,9 @@ final class SessionErrorHandlingTests: XCTestCase {
 
         let decoder = JSONDecoder()
 
-        XCTAssertThrowsError(try decoder.decode(Session.self, from: json)) { error in
-            if case DecodingError.keyNotFound(let key, _) = error {
-                XCTAssertEqual(key.stringValue, "sequence")
-            } else {
-                XCTFail("Expected keyNotFound error for 'sequence'")
-            }
-        }
+        let session = try decoder.decode(Session.self, from: json)
+        XCTAssertEqual(session.name, "Incomplete Session")
+        XCTAssertEqual(session.sequence, 0, "Missing sequence should default to 0")
     }
 
     func testSession_InvalidUUID_Throws() {

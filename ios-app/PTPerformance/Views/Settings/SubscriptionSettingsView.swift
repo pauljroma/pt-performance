@@ -469,7 +469,7 @@ private let comparisonFeatures: [ComparisonItem] = [
     ComparisonItem(feature: .telehealth, name: "Telehealth", icon: "video.fill"),
     ComparisonItem(feature: .prioritySupport, name: "Priority Support", icon: "headphones"),
     ComparisonItem(feature: .exportData, name: "Data Export", icon: "square.and.arrow.up.fill"),
-    ComparisonItem(feature: .wearableIntegration, name: "Wearables", icon: "applewatch"),
+    ComparisonItem(feature: .wearableIntegration, name: "Wearables", icon: "applewatch")
 ]
 
 // MARK: - Preview

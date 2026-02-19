@@ -269,11 +269,14 @@ struct TherapistSettingsView: View {
     @EnvironmentObject var appState: AppState
     @State private var showingLogoutConfirmation = false
     @State private var isLoggingOut = false
+    #if DEBUG
     @State private var showCommandCenter = false
+    #endif
 
     var body: some View {
         NavigationStack {
             List {
+                #if DEBUG
                 // Phase 3: X2 Command Center access
                 Section("X2Index") {
                     Button {
@@ -291,6 +294,7 @@ struct TherapistSettingsView: View {
                         }
                     }
                 }
+                #endif
 
                 Section("Help & Support") {
                     Button {
@@ -322,10 +326,12 @@ struct TherapistSettingsView: View {
                 }
             }
             .navigationTitle("Settings")
+            #if DEBUG
             .springSheet(isPresented: $showCommandCenter) {
                 X2CommandCenterView()
                     .environmentObject(appState)
             }
+            #endif
             .alert("Log Out", isPresented: $showingLogoutConfirmation) {
                 Button("Cancel", role: .cancel) { }
                 Button("Log Out", role: .destructive) {

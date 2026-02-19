@@ -40,50 +40,50 @@ final class AchievementRecommendationsTests: XCTestCase {
         )
     }
 
-    // MARK: - getClosestToUnlock Tests
+    // MARK: - getNextGoals Tests (replaces removed getClosestToUnlock)
 
-    func testGetClosestToUnlock_EmptyList() {
+    func testGetNextGoals_EmptyList() {
         let achievements: [AchievementProgress] = []
 
-        let result = AchievementRecommendations.getClosestToUnlock(from: achievements)
+        let result = AchievementRecommendations.getNextGoals(from: achievements)
 
         XCTAssertTrue(result.isEmpty)
     }
 
-    func testGetClosestToUnlock_FilterUnlocked() {
+    func testGetNextGoals_FilterUnlocked() {
         let achievements = [
             createTestProgress(id: "1", currentValue: 5, isUnlocked: false),
             createTestProgress(id: "2", currentValue: 10, isUnlocked: true), // Unlocked
             createTestProgress(id: "3", currentValue: 8, isUnlocked: false)
         ]
 
-        let result = AchievementRecommendations.getClosestToUnlock(from: achievements)
+        let result = AchievementRecommendations.getNextGoals(from: achievements)
 
         // Should not include unlocked achievements
         XCTAssertFalse(result.contains { $0.isUnlocked })
     }
 
-    func testGetClosestToUnlock_FilterZeroProgress() {
+    func testGetNextGoals_FilterZeroProgress() {
         let achievements = [
             createTestProgress(id: "1", currentValue: 5, isUnlocked: false),
             createTestProgress(id: "2", currentValue: 0, isUnlocked: false), // Zero progress
             createTestProgress(id: "3", currentValue: 8, isUnlocked: false)
         ]
 
-        let result = AchievementRecommendations.getClosestToUnlock(from: achievements)
+        let result = AchievementRecommendations.getNextGoals(from: achievements)
 
         // Should not include zero-progress achievements
         XCTAssertFalse(result.contains { $0.currentValue == 0 })
     }
 
-    func testGetClosestToUnlock_SortedByProgress() {
+    func testGetNextGoals_SortedByProgress() {
         let achievements = [
             createTestProgress(id: "1", requirement: 10, currentValue: 3), // 30%
             createTestProgress(id: "2", requirement: 10, currentValue: 9), // 90%
             createTestProgress(id: "3", requirement: 10, currentValue: 5)  // 50%
         ]
 
-        let result = AchievementRecommendations.getClosestToUnlock(from: achievements)
+        let result = AchievementRecommendations.getNextGoals(from: achievements)
 
         // Should be sorted by highest progress first
         XCTAssertEqual(result[0].definition.id, "2")
@@ -91,7 +91,7 @@ final class AchievementRecommendationsTests: XCTestCase {
         XCTAssertEqual(result[2].definition.id, "1")
     }
 
-    func testGetClosestToUnlock_RespectsLimit() {
+    func testGetNextGoals_RespectsLimit() {
         let achievements = [
             createTestProgress(id: "1", requirement: 10, currentValue: 9),
             createTestProgress(id: "2", requirement: 10, currentValue: 8),
@@ -100,15 +100,13 @@ final class AchievementRecommendationsTests: XCTestCase {
             createTestProgress(id: "5", requirement: 10, currentValue: 5)
         ]
 
-        let result = AchievementRecommendations.getClosestToUnlock(from: achievements, limit: 3)
+        let result = AchievementRecommendations.getNextGoals(from: achievements, limit: 3)
 
         XCTAssertEqual(result.count, 3)
         XCTAssertEqual(result[0].definition.id, "1")
         XCTAssertEqual(result[1].definition.id, "2")
         XCTAssertEqual(result[2].definition.id, "3")
     }
-
-    // MARK: - getNextGoals Tests
 
     func testGetNextGoals_InProgressFirst() {
         let achievements = [
@@ -119,11 +117,11 @@ final class AchievementRecommendationsTests: XCTestCase {
 
         let result = AchievementRecommendations.getNextGoals(from: achievements, limit: 3)
 
-        // In-progress achievements should come first
+        // In-progress achievements should come first (zero progress is filtered out)
         XCTAssertGreaterThan(result[0].currentValue, 0)
     }
 
-    func testGetNextGoals_IncludesNotStartedIfNeeded() {
+    func testGetNextGoals_OnlyReturnsInProgress() {
         let achievements = [
             createTestProgress(id: "1", currentValue: 5),
             createTestProgress(id: "2", currentValue: 0)
@@ -131,13 +129,13 @@ final class AchievementRecommendationsTests: XCTestCase {
 
         let result = AchievementRecommendations.getNextGoals(from: achievements, limit: 3)
 
-        // Should include not-started if needed to fill limit
-        XCTAssertEqual(result.count, 2)
+        // getNextGoals filters out zero-progress items, so only in-progress returned
+        XCTAssertEqual(result.count, 1)
     }
 
-    // MARK: - getClosestByCategory Tests
+    // MARK: - achievements(ofType:) Tests
 
-    func testGetClosestByCategory_ReturnsOnePerCategory() {
+    func testAchievementsByType_ReturnsMatchingType() {
         let achievements = [
             createTestProgress(id: "streak1", type: .streak, requirement: 10, currentValue: 5),
             createTestProgress(id: "streak2", type: .streak, requirement: 10, currentValue: 8),
@@ -145,28 +143,24 @@ final class AchievementRecommendationsTests: XCTestCase {
             createTestProgress(id: "volume1", type: .volume, requirement: 10, currentValue: 7)
         ]
 
-        let result = AchievementRecommendations.getClosestByCategory(from: achievements)
+        let streakResults = AchievementRecommendations.achievements(ofType: .streak, from: achievements)
 
-        // Should return one per category (the one with highest progress)
-        XCTAssertEqual(result[.streak]?.definition.id, "streak2")
-        XCTAssertEqual(result[.workouts]?.definition.id, "workout1")
-        XCTAssertEqual(result[.volume]?.definition.id, "volume1")
+        XCTAssertEqual(streakResults.count, 2)
+        XCTAssertTrue(streakResults.allSatisfy { $0.definition.type == .streak })
     }
 
-    func testGetClosestByCategory_ExcludesUnlocked() {
+    func testAchievementsByType_ReturnsEmptyForNoMatches() {
         let achievements = [
-            createTestProgress(id: "1", type: .streak, currentValue: 10, isUnlocked: true),
-            createTestProgress(id: "2", type: .streak, currentValue: 5, isUnlocked: false)
+            createTestProgress(id: "streak1", type: .streak, requirement: 10, currentValue: 5)
         ]
 
-        let result = AchievementRecommendations.getClosestByCategory(from: achievements)
+        let result = AchievementRecommendations.achievements(ofType: .volume, from: achievements)
 
-        // Should not include unlocked achievements
-        XCTAssertEqual(result[.streak]?.definition.id, "2")
+        XCTAssertTrue(result.isEmpty)
     }
 }
 
-final class AchievementProgressTests: XCTestCase {
+final class AchievementProgressCalculationTests: XCTestCase {
 
     private func createDefinition(requirement: Int = 10) -> AchievementDefinition {
         AchievementDefinition(

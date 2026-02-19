@@ -792,11 +792,12 @@ final class BodyCompGoalStatusTests: XCTestCase {
 
     func testAllCases() {
         let allCases = BodyCompGoalStatus.allCases
-        XCTAssertEqual(allCases.count, 4)
+        XCTAssertEqual(allCases.count, 5)
         XCTAssertTrue(allCases.contains(.active))
         XCTAssertTrue(allCases.contains(.achieved))
         XCTAssertTrue(allCases.contains(.paused))
         XCTAssertTrue(allCases.contains(.cancelled))
+        XCTAssertTrue(allCases.contains(.unknown))
     }
 
     func testDisplayNames() {

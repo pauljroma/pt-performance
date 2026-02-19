@@ -96,13 +96,9 @@ class OuraWearableAdapter: WearableProvider {
     /// 4. Exchange code for access + refresh tokens via POST to token endpoint
     /// 5. Store tokens securely in Keychain via `SecureStore`
     func authorize() async throws {
-        // TODO: Implement Oura OAuth 2.0 flow
-        //
-        // let authURL = buildAuthorizationURL()
-        // let callbackURL = try await performOAuthFlow(authURL: authURL)
-        // let code = extractAuthorizationCode(from: callbackURL)
-        // let token = try await exchangeCodeForToken(code: code)
-        // storeTokens(token)
+        // Post-v1: Oura OAuth 2.0 flow is not yet implemented.
+        // See the Implementation Plan in the doc comment above for the intended flow.
+        // Tracked for a future release once Oura partnership details are finalized.
         logger.log("[OuraWearableAdapter] authorize() called - not yet implemented", level: .warning)
         throw WearableError.providerNotRegistered(.oura)
     }

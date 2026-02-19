@@ -1121,8 +1121,8 @@ final class SessionDecodingTests: XCTestCase {
         XCTAssertThrowsError(try decoder.decode(Session.self, from: data))
     }
 
-    func testSessionDecodingMissingRequiredFields() {
-        // Missing 'name' which is required
+    func testSessionDecodingMissingRequiredFields() throws {
+        // 'name' now uses decodeIfPresent with default "Untitled Session"
         let json = """
         {
             "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
@@ -1132,7 +1132,9 @@ final class SessionDecodingTests: XCTestCase {
         """
 
         let data = json.data(using: .utf8)!
-        XCTAssertThrowsError(try decoder.decode(Session.self, from: data))
+        let session = try decoder.decode(Session.self, from: data)
+        XCTAssertEqual(session.name, "Untitled Session", "Missing name should default to 'Untitled Session'")
+        XCTAssertEqual(session.sequence, 1)
     }
 
     func testSessionDecodingInvalidUUID() {

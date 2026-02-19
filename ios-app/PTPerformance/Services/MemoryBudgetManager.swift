@@ -207,14 +207,14 @@ actor MemoryBudgetManager {
 
     /// Default per-subsystem budgets in bytes.
     private static let defaultBudgets: [SubsystemID: (budget: Int64, priority: Int)] = [
-        .imagePipeline:     (budget: 80_000_000,  priority: 20),  // 80 MB
-        .imageCache:        (budget: 50_000_000,  priority: 10),  // 50 MB
-        .apiResponseCache:  (budget: 30_000_000,  priority: 30),  // 30 MB
-        .workoutCache:      (budget: 20_000_000,  priority: 50),  // 20 MB
-        .videoCache:        (budget: 100_000_000, priority: 15),  // 100 MB
-        .exerciseLibrary:   (budget: 15_000_000,  priority: 40),  // 15 MB
-        .workoutHistory:    (budget: 10_000_000,  priority: 35),  // 10 MB
-        .general:           (budget: 0,           priority: 60),  // Unlimited tracking
+        .imagePipeline: (budget: 80_000_000, priority: 20), // 80 MB
+        .imageCache: (budget: 50_000_000, priority: 10), // 50 MB
+        .apiResponseCache: (budget: 30_000_000, priority: 30), // 30 MB
+        .workoutCache: (budget: 20_000_000, priority: 50), // 20 MB
+        .videoCache: (budget: 100_000_000, priority: 15), // 100 MB
+        .exerciseLibrary: (budget: 15_000_000, priority: 40), // 15 MB
+        .workoutHistory: (budget: 10_000_000, priority: 35), // 10 MB
+        .general: (budget: 0, priority: 60) // Unlimited tracking
     ]
 
     // MARK: - Properties

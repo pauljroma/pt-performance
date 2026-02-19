@@ -278,7 +278,6 @@ final class HealthHubSnapshotTests: SnapshotTestCase {
 
         verifyViewInBothColorSchemes(view, named: "SuggestedQuestionChip")
     }
-}
 
 // MARK: - FastingTrackerView Component Tests
 

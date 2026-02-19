@@ -13,7 +13,9 @@ import SwiftUI
 class TherapistDashboardViewState: ObservableObject {
     @Published var selectedPatient: Patient?
     @Published var columnVisibility: NavigationSplitViewVisibility = .doubleColumn
+    #if DEBUG
     @Published var showDebugLogs = false
+    #endif
     @Published var showAddPatient = false
     @Published var showCreateProgram = false
     @Published var showCreateTemplate = false
@@ -58,9 +60,11 @@ struct TherapistDashboardView: View {
                 iPhoneLayout
             }
         }
+        #if DEBUG
         .springSheet(isPresented: $state.showDebugLogs) {
             DebugLogView()
         }
+        #endif
         .springSheet(isPresented: $state.showAddPatient) {
             TherapistPatientSetupView()
         }
@@ -132,12 +136,14 @@ struct TherapistDashboardView: View {
             patientListContent
                 .navigationTitle("Dashboard")
                 .toolbar {
+                    #if DEBUG
                     ToolbarItem(placement: .navigationBarTrailing) {
                         Button(action: { state.showDebugLogs = true }) {
                             Image(systemName: "ant.circle")
                                 .foregroundColor(.orange)
                         }
                     }
+                    #endif
                 }
                 .navigationSplitViewColumnWidth(
                     min: DeviceHelper.sidebarWidth.min,
@@ -160,12 +166,14 @@ struct TherapistDashboardView: View {
             patientListContent
                 .navigationTitle("Dashboard")
                 .toolbar {
+                    #if DEBUG
                     ToolbarItem(placement: .navigationBarTrailing) {
                         Button(action: { state.showDebugLogs = true }) {
                             Image(systemName: "ant.circle")
                                 .foregroundColor(.orange)
                         }
                     }
+                    #endif
                 }
         }
     }
@@ -399,7 +407,7 @@ struct AddPatientPlaceholderView: View {
                     .font(.title)
                     .fontWeight(.bold)
 
-                Text("Patient registration form coming soon.\nThis feature will allow you to add new patients to your caseload.")
+                Text("To add a new patient to your caseload, please contact your clinic administrator or reach out to support.")
                     .font(.body)
                     .foregroundColor(.secondary)
                     .multilineTextAlignment(.center)

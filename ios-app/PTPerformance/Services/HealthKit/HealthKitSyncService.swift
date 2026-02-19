@@ -119,7 +119,7 @@ class HealthKitSyncService: ObservableObject {
     private static let utcDateFormatter: DateFormatter = {
         let f = DateFormatter()
         f.dateFormat = "yyyy-MM-dd"
-        f.timeZone = TimeZone(identifier: "UTC")!
+        f.timeZone = TimeZone(secondsFromGMT: 0) ?? .current
         return f
     }()
 

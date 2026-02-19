@@ -383,7 +383,7 @@ struct UpgradePathView: View {
             ComparisonFeature(name: "Telehealth", icon: "video.fill", proIncluded: false, eliteIncluded: true, isEliteExclusive: true),
             ComparisonFeature(name: "Priority Support", icon: "headphones", proIncluded: false, eliteIncluded: true, isEliteExclusive: true),
             ComparisonFeature(name: "Data Export", icon: "square.and.arrow.up.fill", proIncluded: false, eliteIncluded: true, isEliteExclusive: true),
-            ComparisonFeature(name: "Wearable Integration", icon: "applewatch", proIncluded: false, eliteIncluded: true, isEliteExclusive: true),
+            ComparisonFeature(name: "Wearable Integration", icon: "applewatch", proIncluded: false, eliteIncluded: true, isEliteExclusive: true)
         ]
     }
 

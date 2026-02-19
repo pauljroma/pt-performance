@@ -89,7 +89,7 @@ final class ProgramBuilderViewModelTests: XCTestCase {
         viewModel.phases = [phase]
 
         XCTAssertFalse(viewModel.isValid)
-        XCTAssertTrue(viewModel.validationError?.contains("Phase 1") ?? false)
+        XCTAssertTrue(viewModel.validationError?.contains("phase 1") ?? false)
     }
 
     func testIsValid_InvalidPhaseDuration_False() {

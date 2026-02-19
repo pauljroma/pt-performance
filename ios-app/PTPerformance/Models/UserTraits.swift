@@ -113,7 +113,7 @@ struct FeatureUsageFlags: Codable, Equatable, Sendable {
             "has_used_substitution": String(hasUsedSubstitution),
             "has_used_programs": String(hasUsedPrograms),
             "has_shared_content": String(hasSharedContent),
-            "has_enabled_notifications": String(hasEnabledNotifications),
+            "has_enabled_notifications": String(hasEnabledNotifications)
         ]
     }
 
@@ -123,7 +123,7 @@ struct FeatureUsageFlags: Codable, Equatable, Sendable {
             hasCompletedWorkout, hasUsedAIChat, hasLoggedNutrition,
             hasViewedReadiness, hasConnectedHealthKit, hasConnectedWearable,
             hasUsedSubstitution, hasUsedPrograms, hasSharedContent,
-            hasEnabledNotifications,
+            hasEnabledNotifications
         ]
         return flags.filter { $0 }.count
     }

@@ -604,32 +604,32 @@ enum ComparisonPreset: String, CaseIterable, Identifiable {
 
         switch self {
         case .thisWeekVsLast:
-            let thisWeekStart = calendar.date(from: calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: now))!
-            let lastWeekStart = calendar.date(byAdding: .day, value: -7, to: thisWeekStart)!
+            let thisWeekStart = calendar.date(from: calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: now)) ?? now
+            let lastWeekStart = calendar.date(byAdding: .day, value: -7, to: thisWeekStart) ?? now
             return (
                 DateInterval(start: lastWeekStart, end: thisWeekStart),
                 DateInterval(start: thisWeekStart, end: now)
             )
 
         case .thisMonthVsLast:
-            let thisMonthStart = calendar.date(from: calendar.dateComponents([.year, .month], from: now))!
-            let lastMonthStart = calendar.date(byAdding: .month, value: -1, to: thisMonthStart)!
+            let thisMonthStart = calendar.date(from: calendar.dateComponents([.year, .month], from: now)) ?? now
+            let lastMonthStart = calendar.date(byAdding: .month, value: -1, to: thisMonthStart) ?? now
             return (
                 DateInterval(start: lastMonthStart, end: thisMonthStart),
                 DateInterval(start: thisMonthStart, end: now)
             )
 
         case .last30VsPrevious30:
-            let thirtyDaysAgo = calendar.date(byAdding: .day, value: -30, to: now)!
-            let sixtyDaysAgo = calendar.date(byAdding: .day, value: -60, to: now)!
+            let thirtyDaysAgo = calendar.date(byAdding: .day, value: -30, to: now) ?? now
+            let sixtyDaysAgo = calendar.date(byAdding: .day, value: -60, to: now) ?? now
             return (
                 DateInterval(start: sixtyDaysAgo, end: thirtyDaysAgo),
                 DateInterval(start: thirtyDaysAgo, end: now)
             )
 
         case .last90VsPrevious90:
-            let ninetyDaysAgo = calendar.date(byAdding: .day, value: -90, to: now)!
-            let oneEightyDaysAgo = calendar.date(byAdding: .day, value: -180, to: now)!
+            let ninetyDaysAgo = calendar.date(byAdding: .day, value: -90, to: now) ?? now
+            let oneEightyDaysAgo = calendar.date(byAdding: .day, value: -180, to: now) ?? now
             return (
                 DateInterval(start: oneEightyDaysAgo, end: ninetyDaysAgo),
                 DateInterval(start: ninetyDaysAgo, end: now)
@@ -646,9 +646,9 @@ class ComparePeriodViewModel: ObservableObject {
     // MARK: - Published Properties
 
     @Published var selectedPreset: ComparisonPreset?
-    @Published var period1Start: Date = Calendar.current.date(byAdding: .day, value: -60, to: Date())!
-    @Published var period1End: Date = Calendar.current.date(byAdding: .day, value: -30, to: Date())!
-    @Published var period2Start: Date = Calendar.current.date(byAdding: .day, value: -30, to: Date())!
+    @Published var period1Start: Date = Calendar.current.date(byAdding: .day, value: -60, to: Date()) ?? Date()
+    @Published var period1End: Date = Calendar.current.date(byAdding: .day, value: -30, to: Date()) ?? Date()
+    @Published var period2Start: Date = Calendar.current.date(byAdding: .day, value: -30, to: Date()) ?? Date()
     @Published var period2End: Date = Date()
     @Published var comparison: RangeComparison?
     @Published var isLoading = false

@@ -41,7 +41,7 @@ final class AICoachViewModelTests: XCTestCase {
 
     func testInitialState_SuggestedQuestionsExist() {
         XCTAssertFalse(sut.suggestedQuestions.isEmpty)
-        XCTAssertEqual(sut.suggestedQuestions.count, 4) // Default questions
+        XCTAssertEqual(sut.suggestedQuestions.count, 5) // Default questions
     }
 
     func testInitialState_TodayFocusIsEmpty() {

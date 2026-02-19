@@ -13,6 +13,7 @@
 
 import Foundation
 import XCTest
+import Supabase
 @testable import PTPerformance
 
 // MARK: - RLS Test User Types
@@ -295,7 +296,7 @@ class RLSTestHelper {
         table: String,
         userType: RLSTestUserType,
         expectedToSucceed: Bool,
-        filter: ((any Supabase.PostgrestFilterBuilder) -> any Supabase.PostgrestFilterBuilder)? = nil
+        filter: ((PostgrestFilterBuilder) -> PostgrestFilterBuilder)? = nil
     ) async -> RLSTestResult {
         do {
             var query = client.client.from(table).select()

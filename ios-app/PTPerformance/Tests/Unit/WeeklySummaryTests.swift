@@ -177,10 +177,10 @@ final class WeeklySummaryTests: XCTestCase {
 
     func testPerformanceCategoryGood() {
         let summary = makeWeeklySummary(
-            adherencePercentage: 80,
+            adherencePercentage: 70,
             volumeChangePercent: 5,
             streakMaintained: true,
-            currentStreak: 7
+            currentStreak: 3
         )
 
         XCTAssertEqual(summary.performanceCategory, .good)
@@ -189,7 +189,7 @@ final class WeeklySummaryTests: XCTestCase {
     func testPerformanceCategoryAverage() {
         let summary = makeWeeklySummary(
             adherencePercentage: 60,
-            volumeChangePercent: -2,
+            volumeChangePercent: 5,
             streakMaintained: false,
             currentStreak: 3
         )

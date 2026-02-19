@@ -683,6 +683,7 @@ extension RTSTestingViewModel {
         ]
 
         // Add some test results
+        guard viewModel.criteria.count >= 3 else { return viewModel }
         viewModel.testResults[viewModel.criteria[0].id] = RTSTestResult(
             criterionId: viewModel.criteria[0].id,
             protocolId: UUID(),

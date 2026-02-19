@@ -952,9 +952,9 @@ final class BreathingManager: ObservableObject {
             updateGuidanceText(for: phase)
         }
 
-        // Voice narration
+        // Voice narration (post-v1: will use AVSpeechSynthesizer for spoken phase cues)
         if session.enableNarration {
-            // TODO: Add AVSpeechSynthesizer narration
+            // Narration support is planned for a future release.
         }
     }
 
@@ -1042,13 +1042,9 @@ final class BreathingManager: ObservableObject {
     }
 
     private func playAmbientSound(_ sound: AmbientSound) {
-        // TODO: Load and play actual audio files
-        // For now, this is a placeholder for ambient sound playback
-        // In production, you would:
-        // 1. Add audio files to the bundle (rain.mp3, ocean.mp3, etc.)
-        // 2. Load with AVAudioPlayer
-        // 3. Set numberOfLoops = -1 for continuous playback
-        // 4. Set volume and play
+        // Post-v1: Ambient sound playback is not yet wired up.
+        // Implementation will add bundled audio files (rain.mp3, ocean.mp3, etc.)
+        // and use AVAudioPlayer with looping for continuous playback.
     }
 
     // MARK: - Settings Methods

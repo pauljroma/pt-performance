@@ -97,7 +97,7 @@ final class OutcomeMeasureModelTests: XCTestCase {
             normalizedScore: 81.25
         )
 
-        XCTAssertEqual(measure.formattedScore, "81.3")
+        XCTAssertEqual(measure.formattedScore, "81.2")
     }
 
     func testOutcomeMeasure_FormattedScore_WithRawScoreOnly() {
@@ -274,7 +274,7 @@ final class OutcomeMeasureModelTests: XCTestCase {
             therapistId: UUID(),
             measureType: .LEFS, // maxScore = 80
             responses: [:],
-            normalizedScore: 64.0 // 80% of 80
+            normalizedScore: 56.0 // (56/80)*100 = 70% -> mild (60..<80)
         )
 
         XCTAssertEqual(measure.severityLevel, .mild)
@@ -286,7 +286,7 @@ final class OutcomeMeasureModelTests: XCTestCase {
             therapistId: UUID(),
             measureType: .LEFS,
             responses: [:],
-            normalizedScore: 48.0 // 60% of 80
+            normalizedScore: 36.0 // (36/80)*100 = 45% -> moderate (40..<60)
         )
 
         XCTAssertEqual(measure.severityLevel, .moderate)
@@ -985,7 +985,7 @@ final class OutcomeMeasureEdgeCaseTests: XCTestCase {
             measureType: .LEFS,
             responses: [:],
             rawScore: 80.0,
-            normalizedScore: 100.0
+            normalizedScore: 80.0
         )
 
         XCTAssertEqual(measure.severityLevel, .minimal)

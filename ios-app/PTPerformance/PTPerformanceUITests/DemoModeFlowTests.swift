@@ -152,17 +152,20 @@ final class DemoModeFlowTests: XCTestCase {
     func testDemoPatientCanViewExerciseTechnique() throws {
         loginAsDemoPatient()
 
+        var skipReason: String?
         XCTContext.runActivity(named: "Find and tap on exercise") { _ in
-            let exerciseCell = findFirstExercise()
+            let exerciseCell = self.findFirstExercise()
             guard exerciseCell.waitForExistence(timeout: 10) else {
-                throw XCTSkip("No exercises available for technique viewing test")
+                skipReason = "No exercises available for technique viewing test"
+                return
             }
 
             exerciseCell.tap()
-            waitForLoadingComplete()
+            self.waitForLoadingComplete()
 
-            takeScreenshot(named: "technique_01_exercise_opened")
+            self.takeScreenshot(named: "technique_01_exercise_opened")
         }
+        if let reason = skipReason { throw XCTSkip(reason) }
 
         XCTContext.runActivity(named: "Look for technique/video button") { _ in
             let techniqueIndicators = [
@@ -318,25 +321,29 @@ final class DemoModeFlowTests: XCTestCase {
     func testDemoTherapistCanViewPatientDetails() throws {
         loginAsDemoTherapist()
 
+        var skipReason2: String?
         XCTContext.runActivity(named: "Find and tap on patient") { _ in
             // Wait for patient list to load
-            let patientList = app.tables.firstMatch
+            let patientList = self.app.tables.firstMatch
             guard patientList.waitForExistence(timeout: 10) else {
-                throw XCTSkip("Patient list not available")
+                skipReason2 = "Patient list not available"
+                return
             }
 
             let firstPatient = patientList.cells.firstMatch
             guard firstPatient.waitForExistence(timeout: 5) else {
-                throw XCTSkip("No patients available in demo mode")
+                skipReason2 = "No patients available in demo mode"
+                return
             }
 
-            takeScreenshot(named: "therapist_detail_01_patient_list")
+            self.takeScreenshot(named: "therapist_detail_01_patient_list")
 
             firstPatient.tap()
-            waitForLoadingComplete()
+            self.waitForLoadingComplete()
 
-            takeScreenshot(named: "therapist_detail_02_patient_selected")
+            self.takeScreenshot(named: "therapist_detail_02_patient_selected")
         }
+        if let reason = skipReason2 { throw XCTSkip(reason) }
 
         XCTContext.runActivity(named: "Verify patient details display") { _ in
             // Look for patient detail indicators
@@ -362,20 +369,24 @@ final class DemoModeFlowTests: XCTestCase {
     func testDemoTherapistCanViewClinicalAssessments() throws {
         loginAsDemoTherapist()
 
+        var skipReason3: String?
         XCTContext.runActivity(named: "Navigate to patient detail") { _ in
-            let patientList = app.tables.firstMatch
+            let patientList = self.app.tables.firstMatch
             guard patientList.waitForExistence(timeout: 10) else {
-                throw XCTSkip("Patient list not available")
+                skipReason3 = "Patient list not available"
+                return
             }
 
             let firstPatient = patientList.cells.firstMatch
             guard firstPatient.waitForExistence(timeout: 5) else {
-                throw XCTSkip("No patients available")
+                skipReason3 = "No patients available"
+                return
             }
 
             firstPatient.tap()
-            waitForLoadingComplete()
+            self.waitForLoadingComplete()
         }
+        if let reason = skipReason3 { throw XCTSkip(reason) }
 
         XCTContext.runActivity(named: "Find and access clinical assessments") { _ in
             // Look for assessment-related buttons or sections
@@ -564,7 +575,13 @@ final class DemoModeFlowTests: XCTestCase {
     }
 
     private func waitForLoadingComplete() {
-        E2ETestUtilities.waitForLoadingComplete(in: app, timeout: 15)
+        // Wait for any loading indicators to disappear
+        let spinner = app.activityIndicators.firstMatch
+        if spinner.exists {
+            _ = spinner.waitForNonExistence(timeout: 15)
+        }
+        // Brief pause for UI to settle
+        RunLoop.current.run(until: Date(timeIntervalSinceNow: 0.5))
     }
 
     private func loginAsDemoPatient() {

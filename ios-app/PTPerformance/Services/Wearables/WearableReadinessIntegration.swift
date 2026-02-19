@@ -873,7 +873,8 @@ class WearableReadinessIntegration: ObservableObject {
 }
 
 // MARK: - AR60 Bridge (Disabled)
-// TODO(ACP-XXX): Re-enable when AR60ReadinessScore.swift target membership is resolved
+// Disabled: AR60ReadinessScore.swift target membership issue prevents compilation.
+// This bridge can be re-enabled once the target membership is resolved.
 
 #if false
 extension WearableReadinessIntegration {

@@ -199,7 +199,7 @@ enum TestDataFactory {
         fatigueSummary: FatigueSummary? = nil,
         deloadPrescription: DeloadPrescription? = nil,
         createdAt: Date = Date(),
-        status: String? = nil,
+        status: DeloadRecommendationStatus? = nil,
         activatedAt: Date? = nil,
         dismissedAt: Date? = nil,
         dismissalReason: String? = nil

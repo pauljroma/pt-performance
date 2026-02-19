@@ -642,7 +642,7 @@ struct TodaySessionView: View {
             // Cleanup when view disappears
         }
         // Track the last active sheet so onDismiss can perform case-specific cleanup
-        .onChange(of: activeSheet?.id) { oldValue, newValue in
+        .onChange(of: activeSheet?.id) { _, _ in
             if let sheet = activeSheet {
                 lastActiveSheet = sheet
             }

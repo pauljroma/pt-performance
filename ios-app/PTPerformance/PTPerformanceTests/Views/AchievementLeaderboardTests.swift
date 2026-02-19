@@ -46,12 +46,12 @@ final class LeaderboardTimeFilterTests: XCTestCase {
     }
 }
 
-// MARK: - LeaderboardEntry Tests
+// MARK: - AchievementLeaderboardEntry Tests
 
-final class LeaderboardEntryTests: XCTestCase {
+final class AchievementLeaderboardEntryTests: XCTestCase {
 
     func testLeaderboardEntry_Initialization() {
-        let entry = LeaderboardEntry(
+        let entry = AchievementLeaderboardEntry(
             id: UUID(),
             rank: 1,
             displayName: "Test User",
@@ -74,7 +74,7 @@ final class LeaderboardEntryTests: XCTestCase {
     // MARK: - displayNameFormatted Tests
 
     func testDisplayNameFormatted_CurrentUser() {
-        let entry = LeaderboardEntry(
+        let entry = AchievementLeaderboardEntry(
             id: UUID(),
             rank: 5,
             displayName: "John Doe",
@@ -89,7 +89,7 @@ final class LeaderboardEntryTests: XCTestCase {
     }
 
     func testDisplayNameFormatted_OptedInUser() {
-        let entry = LeaderboardEntry(
+        let entry = AchievementLeaderboardEntry(
             id: UUID(),
             rank: 3,
             displayName: "Jane Smith",
@@ -104,7 +104,7 @@ final class LeaderboardEntryTests: XCTestCase {
     }
 
     func testDisplayNameFormatted_NotOptedIn() {
-        let entry = LeaderboardEntry(
+        let entry = AchievementLeaderboardEntry(
             id: UUID(),
             rank: 7,
             displayName: "Hidden User",
@@ -122,7 +122,7 @@ final class LeaderboardEntryTests: XCTestCase {
 
     func testLeaderboardEntry_Equatable() {
         let id = UUID()
-        let entry1 = LeaderboardEntry(
+        let entry1 = AchievementLeaderboardEntry(
             id: id,
             rank: 1,
             displayName: "User",
@@ -132,7 +132,7 @@ final class LeaderboardEntryTests: XCTestCase {
             isCurrentUser: false,
             isOptedIn: true
         )
-        let entry2 = LeaderboardEntry(
+        let entry2 = AchievementLeaderboardEntry(
             id: id,
             rank: 1,
             displayName: "User",
@@ -147,7 +147,7 @@ final class LeaderboardEntryTests: XCTestCase {
     }
 
     func testLeaderboardEntry_NotEquatable() {
-        let entry1 = LeaderboardEntry(
+        let entry1 = AchievementLeaderboardEntry(
             id: UUID(),
             rank: 1,
             displayName: "User1",
@@ -157,7 +157,7 @@ final class LeaderboardEntryTests: XCTestCase {
             isCurrentUser: false,
             isOptedIn: true
         )
-        let entry2 = LeaderboardEntry(
+        let entry2 = AchievementLeaderboardEntry(
             id: UUID(),
             rank: 2,
             displayName: "User2",
@@ -200,24 +200,24 @@ final class LeaderboardViewModelTests: XCTestCase {
 
 // MARK: - Sample Data Tests
 
-final class LeaderboardSampleDataTests: XCTestCase {
+final class AchievementLeaderboardSampleDataTests: XCTestCase {
 
     func testSampleEntries_HasEntries() {
-        let samples = LeaderboardEntry.sampleEntries
+        let samples = AchievementLeaderboardEntry.sampleEntries
 
         XCTAssertFalse(samples.isEmpty)
         XCTAssertGreaterThanOrEqual(samples.count, 5)
     }
 
     func testSampleEntries_HasCurrentUser() {
-        let samples = LeaderboardEntry.sampleEntries
+        let samples = AchievementLeaderboardEntry.sampleEntries
 
         let currentUser = samples.first { $0.isCurrentUser }
         XCTAssertNotNil(currentUser)
     }
 
     func testSampleEntries_RanksAreSequential() {
-        let samples = LeaderboardEntry.sampleEntries
+        let samples = AchievementLeaderboardEntry.sampleEntries
 
         for (index, entry) in samples.enumerated() {
             XCTAssertEqual(entry.rank, index + 1)
@@ -225,7 +225,7 @@ final class LeaderboardSampleDataTests: XCTestCase {
     }
 
     func testSampleEntries_PointsAreDescending() {
-        let samples = LeaderboardEntry.sampleEntries
+        let samples = AchievementLeaderboardEntry.sampleEntries
 
         for i in 0..<(samples.count - 1) {
             XCTAssertGreaterThanOrEqual(
@@ -237,7 +237,7 @@ final class LeaderboardSampleDataTests: XCTestCase {
     }
 
     func testSampleEntries_HasVariedOptInStatus() {
-        let samples = LeaderboardEntry.sampleEntries
+        let samples = AchievementLeaderboardEntry.sampleEntries
 
         let optedIn = samples.filter { $0.isOptedIn }
         let notOptedIn = samples.filter { !$0.isOptedIn }

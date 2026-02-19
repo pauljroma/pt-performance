@@ -440,8 +440,7 @@ actor AuditLogger {
         do {
             try content.write(to: currentLogFile, atomically: true, encoding: .utf8)
         } catch {
-            // Use print here since ErrorLogger might cause recursion
-            print("[AuditLogger] Failed to write audit log: \(error.localizedDescription)")
+            DebugLogger.shared.log("[AuditLogger] Failed to write audit log: \(error.localizedDescription)", level: .error)
         }
     }
 

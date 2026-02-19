@@ -525,7 +525,7 @@ actor ImagePipeline {
             return format
         }())
 
-        return renderer.image { context in
+        return renderer.image { _ in
             let rect = CGRect(origin: .zero, size: size)
             let path = UIBezierPath(roundedRect: rect, cornerRadius: radius)
             path.addClip()
