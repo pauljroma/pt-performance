@@ -17,6 +17,10 @@ struct AuthLandingView: View {
     @State private var showEmailSignIn = false
     @State private var showRegistration = false
 
+    #if DEBUG
+    @State private var showTestUserPicker = false
+    #endif
+
     var body: some View {
         NavigationStack {
             VStack(spacing: Spacing.xl) {
@@ -201,6 +205,30 @@ struct AuthLandingView: View {
                         }
                         .accessibilityLabel("Demo Therapist")
                         .accessibilityHint("Sign in as a demo therapist user for testing")
+                    }
+
+                    // Test Users Picker
+                    Button(action: {
+                        HapticFeedback.light()
+                        showTestUserPicker = true
+                    }) {
+                        HStack(spacing: Spacing.xxs + 2) {
+                            Image(systemName: "person.3.fill")
+                                .font(.caption)
+                            Text("10 Test Users")
+                                .font(.caption.weight(.semibold))
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, Spacing.sm)
+                        .background(Color.purple.opacity(0.15))
+                        .foregroundColor(.purple)
+                        .cornerRadius(CornerRadius.sm)
+                    }
+                    .accessibilityLabel("Test Users")
+                    .accessibilityHint("Browse and log in as any of 10 test user personas")
+                    .sheet(isPresented: $showTestUserPicker) {
+                        TestUserPickerView()
+                            .environmentObject(appState)
                     }
                 }
                 #endif
