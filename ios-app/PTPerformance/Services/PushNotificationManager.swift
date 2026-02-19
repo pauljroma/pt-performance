@@ -241,7 +241,7 @@ actor PushNotificationManager {
         debugLogger.log("Received APNs device token: \(tokenString.prefix(16))...", level: .success)
         #endif
 
-        guard let userId = PTSupabaseClient.shared.userId else {
+        guard let authUserId = PTSupabaseClient.shared.authUserId else {
             #if DEBUG
             debugLogger.log("Cannot register device token: no user ID", level: .warning)
             #endif
@@ -260,7 +260,7 @@ actor PushNotificationManager {
         }
 
         let payload = TokenPayload(
-            user_id: userId,
+            user_id: authUserId,
             device_token: tokenString,
             platform: "ios",
             app_version: Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "unknown",
@@ -287,7 +287,7 @@ actor PushNotificationManager {
 
     /// Unregister device token when user logs out
     func unregisterDeviceToken() async {
-        guard let userId = PTSupabaseClient.shared.userId,
+        guard let authUserId = PTSupabaseClient.shared.authUserId,
               let token = deviceToken else {
             return
         }
@@ -296,7 +296,7 @@ actor PushNotificationManager {
             try await supabase
                 .from("push_notification_tokens")
                 .update(["is_active": false])
-                .eq("user_id", value: userId)
+                .eq("user_id", value: authUserId)
                 .eq("device_token", value: token)
                 .execute()
 

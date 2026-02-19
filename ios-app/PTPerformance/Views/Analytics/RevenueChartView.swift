@@ -322,7 +322,8 @@ struct RevenueChartView: View {
     // MARK: - Chart Interaction
 
     private func handleChartTap(at location: CGPoint, proxy: ChartProxy, geometry: GeometryProxy) {
-        let plotFrame = geometry[proxy.plotFrame!]
+        guard let plotFrameAnchor = proxy.plotFrame else { return }
+        let plotFrame = geometry[plotFrameAnchor]
         let xPosition = location.x - plotFrame.origin.x
 
         guard xPosition >= 0, xPosition <= plotFrame.width else {

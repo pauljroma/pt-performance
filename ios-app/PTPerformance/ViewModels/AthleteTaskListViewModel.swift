@@ -126,14 +126,14 @@ final class AthleteTaskListViewModel: ObservableObject {
 
     private func getAthleteId() async throws -> UUID? {
         // Get current user's patient ID
-        guard let userId = PTSupabaseClient.shared.userId else {
+        guard let authUserId = PTSupabaseClient.shared.authUserId else {
             return nil
         }
 
         let response = try await PTSupabaseClient.shared.client
             .from("patients")
             .select("id")
-            .eq("user_id", value: userId)
+            .eq("user_id", value: authUserId)
             .single()
             .execute()
 

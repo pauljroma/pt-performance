@@ -212,14 +212,14 @@ actor PushNotificationService: NSObject {
 
     /// Register device token with the backend server.
     private func registerDeviceTokenWithBackend(_ token: String) async {
-        guard let userId = PTSupabaseClient.shared.userId else {
+        guard let authUserId = PTSupabaseClient.shared.authUserId else {
             #if DEBUG
             debugLogger.log("Cannot register device token: no user ID", level: .warning)
             #endif
             return
         }
 
-        let payload = DeviceTokenPayload(userId: userId, deviceToken: token)
+        let payload = DeviceTokenPayload(userId: authUserId, deviceToken: token)
 
         do {
             try await supabase
@@ -246,7 +246,7 @@ actor PushNotificationService: NSObject {
 
     /// Unregister device token when user logs out.
     func unregisterDeviceToken() async {
-        guard let userId = PTSupabaseClient.shared.userId,
+        guard let authUserId = PTSupabaseClient.shared.authUserId,
               let token = deviceToken else {
             return
         }
@@ -255,7 +255,7 @@ actor PushNotificationService: NSObject {
             try await supabase
                 .from("device_tokens")
                 .delete()
-                .eq("user_id", value: userId)
+                .eq("user_id", value: authUserId)
                 .eq("device_token", value: token)
                 .execute()
 

@@ -324,7 +324,8 @@ struct VolumeChart: View {
     // MARK: - Chart Tap Handler
 
     private func handleChartTap(at location: CGPoint, proxy: ChartProxy, geometry: GeometryProxy) {
-        let xPosition = location.x - geometry[proxy.plotFrame!].origin.x
+        guard let plotFrame = proxy.plotFrame else { return }
+        let xPosition = location.x - geometry[plotFrame].origin.x
         guard let date: Date = proxy.value(atX: xPosition) else { return }
 
         // Find the nearest data point

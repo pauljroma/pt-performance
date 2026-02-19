@@ -309,7 +309,7 @@ class WinbackService: ObservableObject {
 
     /// Attempts to fetch a server-configured winback offer from Supabase.
     private func fetchServerOffer() async -> WinbackOffer? {
-        guard let userId = PTSupabaseClient.shared.userId else {
+        guard let userId = PTSupabaseClient.shared.authUserId else {
             logger.diagnostic("Winback: No userId — skipping server offer fetch")
             return nil
         }

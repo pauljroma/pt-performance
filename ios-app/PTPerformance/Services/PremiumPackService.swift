@@ -194,7 +194,7 @@ class PremiumPackService: ObservableObject {
 
     /// Fetch all subscriptions for the current user
     func fetchUserSubscriptions() async throws -> [UserPackSubscription] {
-        guard let userId = supabase.userId else {
+        guard let userId = supabase.authUserId else {
             logger.warning("PremiumPackService", "No user logged in - cannot fetch subscriptions")
             return []
         }
@@ -233,7 +233,7 @@ class PremiumPackService: ObservableObject {
 
     /// Fetch only active subscriptions for the current user
     func fetchActiveSubscriptions() async throws -> [UserPackSubscription] {
-        guard let userId = supabase.userId else {
+        guard let userId = supabase.authUserId else {
             logger.warning("PremiumPackService", "No user logged in - cannot fetch active subscriptions")
             return []
         }

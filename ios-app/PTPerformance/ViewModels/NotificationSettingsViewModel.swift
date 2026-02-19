@@ -123,7 +123,7 @@ final class NotificationSettingsViewModel: ObservableObject {
 
     /// Load notification settings from backend
     func loadSettings() async {
-        guard supabase.userId != nil else { return }
+        guard supabase.authUserId != nil else { return }
 
         isLoading = true
         defer { isLoading = false }
@@ -137,7 +137,7 @@ final class NotificationSettingsViewModel: ObservableObject {
 
         // Load settings from database
         do {
-            guard let userId = supabase.userId else { return }
+            guard let userId = supabase.authUserId else { return }
 
             let settings: [NotificationPreferencesRow] = try await supabase.client
                 .from("user_notification_preferences")
@@ -164,14 +164,14 @@ final class NotificationSettingsViewModel: ObservableObject {
 
     /// Save current notification settings
     func saveSettings() async {
-        guard supabase.userId != nil else { return }
+        guard supabase.authUserId != nil else { return }
         guard !isSaving else { return }
 
         isSaving = true
         defer { isSaving = false }
 
         do {
-            guard let userId = supabase.userId else { return }
+            guard let userId = supabase.authUserId else { return }
 
             let timeString = Self.timeFormatter.string(from: checkInReminderTime)
 
@@ -300,7 +300,7 @@ final class NotificationSettingsViewModel: ObservableObject {
 
     /// Check if current user is a therapist
     private func checkIfTherapist() async -> Bool {
-        guard let userId = supabase.userId else { return false }
+        guard let userId = supabase.authUserId else { return false }
 
         do {
             let therapists: [TherapistCheckRow] = try await supabase.client
