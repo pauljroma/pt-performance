@@ -95,9 +95,9 @@ struct OnboardingView: View {
                         .accessibilityHint("Skip setup and explore the app")
 
                         // Health disclaimer
-                        Text("Modus is not a medical device and does not provide medical advice. Consult your healthcare provider before starting any exercise program.")
-                            .font(.system(size: 11))
-                            .foregroundColor(.secondary.opacity(0.7))
+                        Text("Modus is not a medical device and does not provide medical advice. Always consult your healthcare provider before starting any exercise program. Stop exercising immediately if you feel pain, dizziness, or shortness of breath.")
+                            .font(.footnote)
+                            .foregroundColor(.secondary)
                             .multilineTextAlignment(.center)
                             .padding(.horizontal, Spacing.md)
                             .padding(.bottom, Spacing.xs)

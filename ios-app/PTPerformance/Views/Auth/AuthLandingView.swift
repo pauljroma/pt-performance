@@ -206,11 +206,25 @@ struct AuthLandingView: View {
                 #endif
 
                 // MARK: - Footer
-                Text("By continuing, you agree to our [Terms of Service](https://getmodus.app/terms) and [Privacy Policy](https://getmodus.app/privacy).")
-                    .font(.caption2)
+                (Text("By continuing, you agree to our ")
                     .foregroundColor(.secondary)
+                + Text("[Terms of Service](https://getmodus.app/terms)")
+                    .foregroundColor(.modusCyan)
+                    .underline()
+                + Text(" and ")
+                    .foregroundColor(.secondary)
+                + Text("[Privacy Policy](https://getmodus.app/privacy)")
+                    .foregroundColor(.modusCyan)
+                    .underline()
+                + Text(".")
+                    .foregroundColor(.secondary))
+                    .font(.caption2)
                     .multilineTextAlignment(.center)
-                    .tint(.accentColor)
+                    .tint(.modusCyan)
+                    .environment(\.openURL, OpenURLAction { url in
+                        UIApplication.shared.open(url)
+                        return .handled
+                    })
                     .padding(.horizontal, Spacing.xl)
                     .padding(.bottom, Spacing.md)
             }

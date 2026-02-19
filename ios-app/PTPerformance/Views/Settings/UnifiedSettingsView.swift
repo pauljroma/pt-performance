@@ -802,6 +802,18 @@ struct UnifiedSettingsView: View {
             )
         ))
 
+        // Medical Disclaimer
+        items.append(SettingItem(
+            id: "medical_disclaimer",
+            icon: "cross.case.fill",
+            iconColor: .red,
+            title: "Medical Disclaimer",
+            subtitle: "Modus is not a medical device",
+            type: .navigation(
+                AnyView(MedicalDisclaimerView())
+            )
+        ))
+
         // About
         items.append(SettingItem(
             id: "about",
@@ -1161,6 +1173,46 @@ struct AboutView: View {
             }
         }
         .navigationTitle("About")
+        .navigationBarTitleDisplayMode(.inline)
+    }
+}
+
+// MARK: - Medical Disclaimer View
+
+struct MedicalDisclaimerView: View {
+    var body: some View {
+        List {
+            Section {
+                VStack(alignment: .center, spacing: Spacing.md) {
+                    Image(systemName: "cross.case.fill")
+                        .font(.system(size: 48))
+                        .foregroundStyle(.red)
+                        .accessibilityHidden(true)
+
+                    Text("Medical Disclaimer")
+                        .font(.title2)
+                        .fontWeight(.bold)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, Spacing.md)
+                .accessibilityElement(children: .combine)
+            }
+
+            Section {
+                Text("Modus is not a medical device and does not provide medical advice. Always consult your healthcare provider before starting any exercise program. Stop exercising immediately if you feel pain, dizziness, or shortness of breath.")
+                    .font(.body)
+                    .foregroundStyle(.primary)
+                    .padding(.vertical, Spacing.xs)
+            }
+
+            Section {
+                Text("The content provided in this app, including exercises, workout programs, and health-related information, is for informational purposes only and is not intended as a substitute for professional medical advice, diagnosis, or treatment.")
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+                    .padding(.vertical, Spacing.xs)
+            }
+        }
+        .navigationTitle("Medical Disclaimer")
         .navigationBarTitleDisplayMode(.inline)
     }
 }
