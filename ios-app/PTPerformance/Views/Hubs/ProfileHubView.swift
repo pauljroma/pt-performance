@@ -26,6 +26,8 @@ struct ProfileHubView: View {
 
     @StateObject private var therapistLinkingVM = TherapistLinkingViewModel()
     @State private var showQuickSetup = false
+    @State private var showModeChanger = false
+    @State private var isSavingMode = false
 
     // Animation state for staggered section reveal
     @State private var sectionsVisible = false
@@ -420,34 +422,36 @@ struct ProfileHubView: View {
 
     private var trainingModeSection: some View {
         Section("Training Mode") {
-            HStack {
-                Image(systemName: modeService.currentMode.iconName)
-                    .font(.title2)
-                    .foregroundColor(modeThemeColor)
-                    .frame(width: 28)
-                    .accessibilityHidden(true)
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(modeService.currentMode.displayName)
-                        .font(.headline)
-                        .foregroundColor(.primary)
-                    Text(modeService.currentMode.description)
-                        .font(.caption)
-                        .foregroundColor(.secondary)
+            Button {
+                showModeChanger = true
+            } label: {
+                HStack {
+                    Image(systemName: modeService.currentMode.iconName)
+                        .font(.title2)
+                        .foregroundColor(modeThemeColor)
+                        .frame(width: 28)
+                        .accessibilityHidden(true)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(modeService.currentMode.displayName)
+                            .font(.headline)
+                            .foregroundColor(.primary)
+                        Text(modeService.currentMode.description)
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    Spacer()
+                    if isSavingMode {
+                        ProgressView()
+                    } else {
+                        Image(systemName: "chevron.right")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
                 }
-                Spacer()
-                Text(modeBadgeText)
-                    .font(.caption2)
-                    .fontWeight(.medium)
-                    .padding(.horizontal, Spacing.xs)
-                    .padding(.vertical, Spacing.xxs)
-                    .background(modeThemeColor.opacity(0.15))
-                    .foregroundColor(modeThemeColor)
-                    .cornerRadius(CornerRadius.xs)
-                    .accessibilityHidden(true)
             }
             .padding(.vertical, Spacing.xxs)
             .accessibilityElement(children: .combine)
-            .accessibilityLabel("Training Mode: \(modeService.currentMode.displayName). \(modeService.currentMode.description)")
+            .accessibilityLabel("Training Mode: \(modeService.currentMode.displayName). Tap to change.")
 
             // Primary metrics for current mode
             HStack(spacing: 12) {
@@ -463,6 +467,46 @@ struct ProfileHubView: View {
             .padding(.vertical, 2)
             .accessibilityElement(children: .combine)
             .accessibilityLabel("Primary metrics: \(modeService.currentMode.primaryMetrics.joined(separator: ", "))")
+        }
+        .confirmationDialog("Change Training Mode", isPresented: $showModeChanger, titleVisibility: .visible) {
+            ForEach(Mode.allCases, id: \.self) { mode in
+                Button(mode.displayName) {
+                    Task { await changeMode(to: mode) }
+                }
+                .disabled(mode == modeService.currentMode)
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("Choose how you want to train. This changes your dashboard and tracked metrics.")
+        }
+    }
+
+    private func changeMode(to newMode: Mode) async {
+        guard newMode != modeService.currentMode else { return }
+        guard let authUserId = PTSupabaseClient.shared.authUserId else { return }
+
+        isSavingMode = true
+        defer { isSavingMode = false }
+
+        do {
+            try await PTSupabaseClient.shared.client
+                .from("patients")
+                .update(["mode": newMode.rawValue])
+                .eq("user_id", value: authUserId)
+                .execute()
+
+            await modeService.loadPatientMode()
+            HapticFeedback.formSubmission(success: true)
+            ErrorLogger.shared.logUserAction(
+                action: "mode_changed",
+                properties: ["new_mode": newMode.rawValue]
+            )
+        } catch {
+            HapticFeedback.formSubmission(success: false)
+            ErrorLogger.shared.logError(
+                error,
+                context: "ProfileHub mode change to \(newMode.rawValue)"
+            )
         }
     }
 

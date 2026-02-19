@@ -393,7 +393,13 @@ class QuickSetupViewModel: ObservableObject {
 
     /// Save mode without blocking or showing errors (for skip scenarios)
     private func saveModeQuietly() async {
-        guard let authUserId = supabase.authUserId else { return }
+        guard let authUserId = supabase.authUserId else {
+            ErrorLogger.shared.logError(
+                NSError(domain: "QuickSetup", code: -1, userInfo: [NSLocalizedDescriptionKey: "No auth user ID during mode save"]),
+                context: "saveModeQuietly - no auth user"
+            )
+            return
+        }
 
         do {
             try await supabase.client
@@ -404,6 +410,8 @@ class QuickSetupViewModel: ObservableObject {
 
             await modeService.loadPatientMode()
         } catch {
+            // Log to production crash reporting so silent failures are visible
+            ErrorLogger.shared.logError(error, context: "QuickSetup saveModeQuietly(\(selectedMode.rawValue))")
             DebugLogger.shared.log("[QuickSetup] Silent mode save failed: \(error.localizedDescription)", level: .warning)
         }
     }
