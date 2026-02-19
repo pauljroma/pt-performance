@@ -74,7 +74,7 @@ struct SystemWorkoutTemplate: Codable, Identifiable {
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         id = try container.decode(UUID.self, forKey: .id)
-        name = try container.decode(String.self, forKey: .name)
+        name = try container.decodeIfPresent(String.self, forKey: .name) ?? "Untitled Workout"
         description = try container.decodeIfPresent(String.self, forKey: .description)
         category = try container.decodeIfPresent(String.self, forKey: .category)
         difficulty = try container.decodeIfPresent(String.self, forKey: .difficulty)

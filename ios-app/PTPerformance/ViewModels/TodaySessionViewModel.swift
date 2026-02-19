@@ -446,14 +446,15 @@ class TodaySessionViewModel: ObservableObject {
         let logger = DebugLogger.shared
         logger.log("📱 Calling RPC get_today_enrolled_session...")
 
-        // Response struct matching RPC return type
+        // Response struct matching RPC return type — all Strings optional-safe
+        // since the RPC may return null for any joined field
         struct EnrolledSessionRow: Codable {
-            let session_id: String
-            let session_name: String
-            let phase_name: String
-            let program_name: String
+            let session_id: String?
+            let session_name: String?
+            let phase_name: String?
+            let program_name: String?
             let program_library_title: String?
-            let enrollment_id: String
+            let enrollment_id: String?
         }
 
         let response = try await supabase.client
@@ -473,13 +474,18 @@ class TodaySessionViewModel: ObservableObject {
             return nil
         }
 
-        logger.log("✅ RPC found session: \(row.session_name) (ID: \(row.session_id))", level: .success)
+        guard let sessionId = row.session_id else {
+            logger.log("⚠️ RPC returned enrolled session with no session_id", level: .warning)
+            return nil
+        }
+
+        logger.log("✅ RPC found session: \(row.session_name ?? "unnamed") (ID: \(sessionId))", level: .success)
 
         // Now fetch the full session object by ID
         let sessionResponse = try await supabase.client
             .from("sessions")
             .select("*")
-            .eq("id", value: row.session_id)
+            .eq("id", value: sessionId)
             .limit(1)
             .execute()
 

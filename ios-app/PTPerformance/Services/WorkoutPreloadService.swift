@@ -223,17 +223,17 @@ final class WorkoutPreloadService: ObservableObject {
             .execute()
 
         struct ScheduledRow: Codable {
-            let session_id: String
+            let session_id: String?
         }
 
         let scheduledSessions = try JSONDecoder().decode([ScheduledRow].self, from: scheduledResponse.data)
 
-        if let scheduled = scheduledSessions.first {
+        if let scheduled = scheduledSessions.first, let sessionId = scheduled.session_id {
             // Fetch the scheduled session details
             let sessionResponse = try await supabase.client
                 .from("sessions")
                 .select("*")
-                .eq("id", value: scheduled.session_id)
+                .eq("id", value: sessionId)
                 .limit(1)
                 .execute()
 
