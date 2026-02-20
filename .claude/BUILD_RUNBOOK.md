@@ -13,7 +13,7 @@
 **Standard Build Flow:**
 1. Verify all migrations applied
 2. Increment build number
-3. Build IPA via Xcode/fastlane
+3. Build IPA via Xcode
 4. Upload to TestFlight
 5. Update Linear issue
 6. Document in outcomes
@@ -77,8 +77,7 @@ git status
 # Update line: static let buildNumber = "32"
 # Change to: static let buildNumber = "33"
 
-# 2. Xcode project (if using fastlane, this may be automatic)
-# Fastlane typically handles this via increment_build_number
+# 2. Xcode project
 
 # 3. README.md
 # Update: **Build:** 32
@@ -89,26 +88,7 @@ git status
 
 ## Step 3: Build IPA
 
-### Method A: Using Fastlane (Preferred)
-
-```bash
-cd ios-app/PTPerformance
-bundle exec fastlane beta
-```
-
-**What fastlane does:**
-1. Increments build number automatically
-2. Builds IPA for TestFlight
-3. Archives build
-4. Optionally uploads (if configured)
-
-**Expected Output:**
-```
-✅ Build succeeded
-✅ IPA created at: ios-app/PTPerformance/PTPerformance.ipa
-```
-
-### Method B: Using Xcode GUI
+### Using Xcode GUI
 
 1. Open `ios-app/PTPerformance/PTPerformance.xcodeproj`
 2. Select "Any iOS Device" as target
@@ -124,19 +104,10 @@ bundle exec fastlane beta
 
 ## Step 4: Upload to TestFlight
 
-### If fastlane handled upload
-
-Check output - if you see:
-```
-✅ Successfully uploaded to TestFlight
-```
-
-Skip to Step 5.
-
-### If manual upload needed
+### Upload via command line or Xcode Organizer
 
 ```bash
-# Using Xcode Organizer (already open from Method B above)
+# Using Xcode Organizer (already open from archive step above)
 # OR using command line:
 
 cd ios-app/PTPerformance
@@ -339,29 +310,6 @@ Use this for each build:
 
 **Next:** Build 33 (Session Completion feature)
 
----
-
-## Fastlane Lanes Reference
-
-**Available lanes:**
-
-```bash
-# Build and upload to TestFlight
-bundle exec fastlane beta
-
-# Build only (no upload)
-bundle exec fastlane build
-
-# Run tests
-bundle exec fastlane test
-
-# Increment build number
-bundle exec fastlane increment_build
-```
-
-**Location:** `ios-app/PTPerformance/fastlane/Fastfile`
-
----
 
 ## Post-Build Actions
 

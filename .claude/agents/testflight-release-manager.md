@@ -19,8 +19,8 @@ A build that reaches TestFlight testers represents the team's quality bar. Every
 ## Focus Areas
 - **Build Number Management**: `CURRENT_PROJECT_VERSION` in `ios-app/PTPerformance/PTPerformance.xcodeproj/project.pbxproj` (appears twice -- Debug and Release). Current build: 543. Always check before incrementing.
 - **Quality Gates**: Before any TestFlight upload: (1) all pending migrations applied, (2) `xcodebuild build` succeeds, (3) SwiftLint passes, (4) PTPerformanceTests pass, (5) PTPerformanceUITests pass.
-- **Build Process**: Archive via Xcode or Fastlane (`cd ios-app/PTPerformance && bundle exec fastlane beta_simple`). Runbook: `.claude/BUILD_RUNBOOK.md`.
-- **Upload**: Via `xcrun altool` or Fastlane `upload_to_testflight`. Bundle ID: `com.ptperformance.app`. Scheme: `PTPerformance`.
+- **Build Process**: Archive via `xcodebuild` (see `.claude/BUILD_RUNBOOK.md`).
+- **Upload**: Via `xcodebuild -exportArchive` with `build/ExportOptions.plist`. Bundle ID: `com.ptperformance.app`. Scheme: `PTPerformance`.
 - **Release Notes**: Include build number, summary of changes since last build, any known issues. Reference Linear issue IDs (ACP-xxx) where applicable.
 
 ## Key Actions

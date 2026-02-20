@@ -34,7 +34,6 @@ Ask them for these 6 values:
 1. **APP_STORE_CONNECT_API_KEY_ID** - From App Store Connect API
 2. **APP_STORE_CONNECT_API_ISSUER_ID** - From App Store Connect API
 3. **APP_STORE_CONNECT_API_KEY_CONTENT** - Base64-encoded .p8 file
-4. **FASTLANE_TEAM_ID** - Apple Developer Team ID
 5. **MATCH_PASSWORD** - Password for the certificates repo
 6. **MATCH_GIT_BASIC_AUTHORIZATION** - Git credentials for match repo
 
@@ -57,20 +56,17 @@ Convert .p8 to base64:
 base64 -i AuthKey_XXXXXX.p8 | tr -d '\n'
 ```
 
-#### 2. Match Configuration
+#### 2. Team ID
 
-These should already exist in your GitHub Secrets. If you need to regenerate match:
-```bash
-bundle exec fastlane match nuke distribution
-bundle exec fastlane match appstore
-```
+Your Apple Developer Team ID is needed for signing. Find it at https://developer.apple.com/account under Membership Details.
 
 ## After Setup
 
 Run the build:
 ```bash
-cd /Users/expo/Code/expo/clients/linear-bootstrap/ios-app/PTPerformance
-bundle exec fastlane beta
+cd ios-app/PTPerformance
+xcodebuild -scheme PTPerformance -configuration Release \
+  -archivePath ./build/PTPerformance.xcarchive archive
 ```
 
 Expected time: **2-3 minutes** on M3 Ultra!
@@ -89,7 +85,7 @@ set +a
 # Check if variables are set
 echo "Key ID: ${APP_STORE_CONNECT_API_KEY_ID:0:10}..."
 echo "Issuer ID: ${APP_STORE_CONNECT_API_ISSUER_ID:0:10}..."
-echo "Team ID: $FASTLANE_TEAM_ID"
+echo "Team ID: Set in Xcode project"
 ```
 
 ## Troubleshooting
@@ -108,6 +104,4 @@ echo "Team ID: $FASTLANE_TEAM_ID"
 - Verify it's base64 encoded (should be a long string)
 - Make sure you copied the entire value
 
-**Match password error?**
-- MATCH_PASSWORD must match the password used to encrypt the certificates
-- If you don't know it, you'll need to regenerate match certificates
+

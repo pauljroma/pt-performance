@@ -92,6 +92,7 @@ struct CheckInPromptCard: View {
             .cornerRadius(CornerRadius.lg)
         }
         .buttonStyle(.plain)
+        .accessibilityIdentifier("check_in_prompt_card")
         .sheet(isPresented: $showingCheckIn, onDismiss: {
             // Refresh status after check-in is dismissed
             Task {

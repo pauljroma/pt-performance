@@ -71,49 +71,142 @@ final class WorkoutExecutionDeepFlowTests: XCTestCase {
 
     /// Attempts to navigate into a workout from the Today Hub.
     /// Returns `true` if a workout execution screen was reached, `false` otherwise.
+    ///
+    /// Strategy order:
+    /// 1. Direct "Start Workout" button (OneTapStartButton or TodayWorkoutCard)
+    /// 2. Prescribed workout "Start Workout" / "Start" button (PrescribedWorkoutsCard)
+    /// 3. "Browse Workout Library" button (visible when no prescribed session)
+    /// 4. Quick Actions menu (ellipsis) to access workout library
+    /// 5. Generic fallback: tappable text / collection view cells
     @discardableResult
     private func navigateToWorkout() -> Bool {
-        // Look for any workout entry point on the Today Hub
-        let workoutEntryPredicate = NSPredicate(
-            format: """
-            label CONTAINS[c] 'Start Workout' \
-            OR label CONTAINS[c] 'Begin' \
-            OR label CONTAINS[c] 'Today\\'s Session' \
-            OR label CONTAINS[c] 'Workout'
-            """
-        )
+        // Wait for async session loading to complete on the Today Hub.
+        // TodaySessionView shows a loading skeleton while fetching; wait for it to resolve.
+        waitForTodayHubContentToLoad()
 
-        // Check buttons first
-        let workoutButton = app.buttons.containing(workoutEntryPredicate).firstMatch
-        if workoutButton.waitForExistence(timeout: 8) && workoutButton.isHittable {
-            workoutButton.tap()
+        // Strategy 1: Direct "Start Workout" button
+        // Matches OneTapStartButton (.accessibilityLabel("Start Workout"))
+        // and TodayWorkoutCard's start button (.accessibilityLabel("Start Workout"))
+        let startWorkoutButton = app.buttons["Start Workout"]
+        if startWorkoutButton.waitForExistence(timeout: 5) && startWorkoutButton.isHittable {
+            startWorkoutButton.tap()
             waitForContentToLoad()
             return waitForWorkoutExecutionScreen()
         }
 
-        // Check tappable static texts (cards / links)
-        let workoutText = app.staticTexts.containing(workoutEntryPredicate).firstMatch
-        if workoutText.waitForExistence(timeout: 5) && workoutText.isHittable {
+        // Strategy 2: Prescribed workout buttons
+        // PrescribedWorkoutsCard uses "Start prescribed workout: <name>"
+        let prescribedPredicate = NSPredicate(
+            format: "label BEGINSWITH[c] 'Start prescribed workout' OR label BEGINSWITH[c] 'Start workout'"
+        )
+        let prescribedButton = app.buttons.containing(prescribedPredicate).firstMatch
+        if prescribedButton.waitForExistence(timeout: 3) && prescribedButton.isHittable {
+            prescribedButton.tap()
+            waitForContentToLoad()
+            return waitForWorkoutExecutionScreen()
+        }
+
+        // Strategy 3: "Browse Workout Library" button (no-session fallback view)
+        let browseLibrary = app.buttons.containing(
+            NSPredicate(format: "label CONTAINS[c] 'Browse Workout Library'")
+        ).firstMatch
+        if browseLibrary.waitForExistence(timeout: 3) && browseLibrary.isHittable {
+            browseLibrary.tap()
+            waitForContentToLoad()
+            // In the library, tap the first available template/workout to start it
+            return selectAndStartWorkoutFromLibrary()
+        }
+
+        // Strategy 4: Quick Actions menu -> workout library
+        let quickActionsMenu = app.buttons["Quick Actions"]
+        if quickActionsMenu.waitForExistence(timeout: 3) && quickActionsMenu.isHittable {
+            quickActionsMenu.tap()
+            Thread.sleep(forTimeInterval: 1.0)
+            // No direct workout start in the menu, dismiss and try other paths
+            app.swipeDown()
+            Thread.sleep(forTimeInterval: 0.5)
+        }
+
+        // Strategy 5: Generic fallback - buttons matching workout-related labels
+        let workoutEntryPredicate = NSPredicate(
+            format: """
+            label CONTAINS[c] 'Start Workout' \
+            OR label CONTAINS[c] 'Begin Workout' \
+            OR label CONTAINS[c] 'Start' AND label CONTAINS[c] 'Workout'
+            """
+        )
+        let genericButton = app.buttons.containing(workoutEntryPredicate).firstMatch
+        if genericButton.waitForExistence(timeout: 3) && genericButton.isHittable {
+            genericButton.tap()
+            waitForContentToLoad()
+            return waitForWorkoutExecutionScreen()
+        }
+
+        // Strategy 6: Tappable static texts that might be workout entry points
+        let workoutText = app.staticTexts.containing(
+            NSPredicate(format: "label CONTAINS[c] 'Start Workout'")
+        ).firstMatch
+        if workoutText.waitForExistence(timeout: 3) && workoutText.isHittable {
             workoutText.tap()
             waitForContentToLoad()
             return waitForWorkoutExecutionScreen()
         }
 
-        // Try tapping the first table cell if it might be a workout row
-        let exerciseList = app.tables.firstMatch
-        if exerciseList.waitForExistence(timeout: 5) {
-            let firstCell = exerciseList.cells.firstMatch
-            if firstCell.exists && firstCell.isHittable {
-                firstCell.tap()
+        // Log diagnostic info about what IS visible
+        takeScreenshot(named: "navigate_to_workout_failed")
+        return false
+    }
+
+    /// Waits for the Today Hub content to finish its initial async loading.
+    /// The TodaySessionView shows a loading view while fetching from Supabase;
+    /// we need to wait for that to resolve before looking for entry points.
+    private func waitForTodayHubContentToLoad() {
+        // Wait for loading indicators to disappear
+        let loadingIndicator = app.activityIndicators.firstMatch
+        if loadingIndicator.exists {
+            _ = loadingIndicator.waitForNonExistence(timeout: 15)
+        }
+
+        // Also wait for the "Loading" skeleton text to disappear
+        let loadingText = app.staticTexts.containing(
+            NSPredicate(format: "label CONTAINS[c] 'Loading'")
+        ).firstMatch
+        if loadingText.exists {
+            _ = loadingText.waitForNonExistence(timeout: 15)
+        }
+
+        // Give the UI one more moment to settle
+        Thread.sleep(forTimeInterval: 1.0)
+    }
+
+    /// After navigating to the Workout Library, selects the first available
+    /// template and starts the workout. Returns true if execution screen appears.
+    private func selectAndStartWorkoutFromLibrary() -> Bool {
+        // Wait for the library to load
+        Thread.sleep(forTimeInterval: 2.0)
+
+        // Look for a "Start" or "Start Workout" button within the library
+        let startInLibrary = app.buttons.containing(
+            NSPredicate(format: "label CONTAINS[c] 'Start Workout' OR label CONTAINS[c] 'Start'")
+        ).firstMatch
+
+        // Try tapping the first cell/row in the library to select a template
+        let firstCell = app.cells.firstMatch
+        if firstCell.waitForExistence(timeout: 5) && firstCell.isHittable {
+            firstCell.tap()
+            waitForContentToLoad()
+
+            // After selecting a template, look for a start button
+            if startInLibrary.waitForExistence(timeout: 5) && startInLibrary.isHittable {
+                startInLibrary.tap()
                 waitForContentToLoad()
                 return waitForWorkoutExecutionScreen()
             }
         }
 
-        // Try tapping the first cell in a collection view / scroll view
-        let firstCollectionCell = app.collectionViews.cells.firstMatch
-        if firstCollectionCell.waitForExistence(timeout: 3) && firstCollectionCell.isHittable {
-            firstCollectionCell.tap()
+        // Direct start button might already be visible for quick-start templates
+        if startInLibrary.waitForExistence(timeout: 3) && startInLibrary.isHittable {
+            startInLibrary.tap()
             waitForContentToLoad()
             return waitForWorkoutExecutionScreen()
         }
@@ -123,26 +216,37 @@ final class WorkoutExecutionDeepFlowTests: XCTestCase {
 
     /// Waits briefly for workout execution elements to appear.
     private func waitForWorkoutExecutionScreen() -> Bool {
-        // Any of these signals that we are on the workout execution screen
-        let exerciseTitle = app.navigationBars.staticTexts.firstMatch
+        // ManualWorkoutExecutionView uses these accessibility labels:
+        // - "Complete as prescribed" button
+        // - "Log with custom values" button
+        // - "Skip exercise" button
+        // - "Complete exercise" button
+        // - "Complete workout" button
+        // - "End workout" button
+        // - "Sets completed" label
+        // Also check for generic indicators like sets/reps labels.
+        let completePrescribed = app.buttons["Complete as prescribed"]
+        let logCustom = app.buttons["Log with custom values"]
+        let skipExercise = app.buttons["Skip exercise"]
+        let completeExercise = app.buttons["Complete exercise"]
+        let completeWorkout = app.buttons["Complete workout"]
+        let endWorkout = app.buttons["End workout"]
+        let setsCompleted = app.staticTexts.containing(
+            NSPredicate(format: "label CONTAINS[c] 'Sets completed'")
+        ).firstMatch
         let setsLabel = app.staticTexts.containing(
             NSPredicate(format: "label CONTAINS[c] 'set'")
         ).firstMatch
         let repsLabel = app.staticTexts.containing(
             NSPredicate(format: "label CONTAINS[c] 'rep'")
         ).firstMatch
-        let completeSetButton = app.buttons.containing(
-            NSPredicate(format: "label CONTAINS[c] 'complete set' OR label CONTAINS[c] 'log set'")
-        ).firstMatch
-        let quickCompleteButton = app.buttons.containing(
-            NSPredicate(format: "label CONTAINS[c] 'prescribed' OR label CONTAINS[c] 'quick complete'")
-        ).firstMatch
 
-        // Wait up to 10 seconds for any workout execution indicator
-        let deadline = Date().addingTimeInterval(10)
+        // Wait up to 15 seconds for any workout execution indicator
+        let deadline = Date().addingTimeInterval(15)
         while Date() < deadline {
-            if exerciseTitle.exists || setsLabel.exists || repsLabel.exists
-                || completeSetButton.exists || quickCompleteButton.exists {
+            if completePrescribed.exists || logCustom.exists || skipExercise.exists
+                || completeExercise.exists || completeWorkout.exists || endWorkout.exists
+                || setsCompleted.exists || setsLabel.exists || repsLabel.exists {
                 return true
             }
             Thread.sleep(forTimeInterval: 0.25)
@@ -156,7 +260,7 @@ final class WorkoutExecutionDeepFlowTests: XCTestCase {
     /// workout execution elements (exercise title, set logging UI) appear.
     func testStartWorkoutFromTodayHub() throws {
         let workoutAvailable = navigateToWorkout()
-        try XCTSkipIf(!workoutAvailable, "No workout entry point found on Today Hub — skipping")
+        try XCTSkipIf(!workoutAvailable, "No workout entry point found on Today Hub — user \(testUserID) may not have a prescribed session or workout library is empty")
 
         XCTContext.runActivity(named: "Verify workout execution screen loaded") { _ in
             let exerciseTitle = app.navigationBars.staticTexts.firstMatch
@@ -612,8 +716,14 @@ final class WorkoutExecutionDeepFlowTests: XCTestCase {
 
     // MARK: - Private Helpers
 
-    /// Resolves the Quick Complete button using the same patterns as WorkoutExecutionPage.
+    /// Resolves the Quick Complete button using the actual accessibility labels
+    /// from ManualWorkoutExecutionView ("Complete as prescribed").
     private func resolveQuickCompleteButton() -> XCUIElement {
+        // Exact accessibility label from ManualWorkoutExecutionView
+        let prescribedButton = app.buttons["Complete as prescribed"]
+        if prescribedButton.exists { return prescribedButton }
+
+        // Legacy / fallback labels
         let labels = ["Quick Complete", "Quick Complete (Prescribed Values)", "I did this as prescribed", "As Prescribed"]
         for label in labels {
             let button = app.buttons[label]
@@ -624,8 +734,14 @@ final class WorkoutExecutionDeepFlowTests: XCTestCase {
         ).firstMatch
     }
 
-    /// Resolves the Skip button using the same patterns as WorkoutExecutionPage.
+    /// Resolves the Skip button using the actual accessibility labels
+    /// from ManualWorkoutExecutionView ("Skip exercise").
     private func resolveSkipButton() -> XCUIElement {
+        // Exact accessibility label from ManualWorkoutExecutionView
+        let skipExercise = app.buttons["Skip exercise"]
+        if skipExercise.exists { return skipExercise }
+
+        // Legacy / fallback labels
         let labels = ["Skip", "Skip Exercise", "Skip This"]
         for label in labels {
             let button = app.buttons[label]
@@ -636,8 +752,14 @@ final class WorkoutExecutionDeepFlowTests: XCTestCase {
         ).firstMatch
     }
 
-    /// Resolves the Finish Workout button using the same patterns as WorkoutExecutionPage.
+    /// Resolves the Finish Workout button using the actual accessibility labels
+    /// from ManualWorkoutExecutionView ("Complete workout").
     private func resolveFinishWorkoutButton() -> XCUIElement {
+        // Exact accessibility label from ManualWorkoutExecutionView
+        let completeWorkout = app.buttons["Complete workout"]
+        if completeWorkout.exists { return completeWorkout }
+
+        // Legacy / fallback labels
         let labels = ["Finish Workout", "Complete Workout", "End Workout", "Finish"]
         for label in labels {
             let button = app.buttons[label]
@@ -649,8 +771,13 @@ final class WorkoutExecutionDeepFlowTests: XCTestCase {
     }
 
     /// Resolves the Exit / Close button for leaving a workout mid-session.
+    /// ManualWorkoutExecutionView uses "End workout" accessibility label.
     private func resolveExitButton() -> XCUIElement {
-        // Try explicit Exit button first
+        // Exact accessibility label from ManualWorkoutExecutionView
+        let endWorkout = app.buttons["End workout"]
+        if endWorkout.exists { return endWorkout }
+
+        // Try explicit Exit button
         let exitButton = app.buttons["Exit"]
         if exitButton.exists { return exitButton }
 
@@ -664,27 +791,28 @@ final class WorkoutExecutionDeepFlowTests: XCTestCase {
 
         // Predicate-based fallback
         return app.buttons.containing(
-            NSPredicate(format: "label CONTAINS[c] 'exit' OR label CONTAINS[c] 'close' OR label CONTAINS[c] 'back'")
+            NSPredicate(format: "label CONTAINS[c] 'end workout' OR label CONTAINS[c] 'exit' OR label CONTAINS[c] 'close' OR label CONTAINS[c] 'back'")
         ).firstMatch
     }
 
-    /// Repeatedly taps quick-complete / complete-set to advance through exercises.
+    /// Repeatedly taps quick-complete / complete-exercise to advance through exercises.
     private func quickCompleteAllExercises(maxAttempts: Int) {
         for _ in 0..<maxAttempts {
             let quickComplete = resolveQuickCompleteButton()
-            let completeSet = app.buttons.containing(
-                NSPredicate(format: "label CONTAINS[c] 'complete set' OR label CONTAINS[c] 'log set'")
-            ).firstMatch
-            let completeExercise = app.buttons.containing(
+            let completeExerciseBtn = app.buttons["Complete exercise"]
+            let logCustomBtn = app.buttons["Log with custom values"]
+            let fallbackComplete = app.buttons.containing(
                 NSPredicate(format: "label CONTAINS[c] 'complete'")
             ).firstMatch
 
             if quickComplete.exists && quickComplete.isHittable {
                 quickComplete.tap()
-            } else if completeSet.exists && completeSet.isHittable {
-                completeSet.tap()
-            } else if completeExercise.exists && completeExercise.isHittable {
-                completeExercise.tap()
+            } else if completeExerciseBtn.exists && completeExerciseBtn.isHittable {
+                completeExerciseBtn.tap()
+            } else if logCustomBtn.exists && logCustomBtn.isHittable {
+                logCustomBtn.tap()
+            } else if fallbackComplete.exists && fallbackComplete.isHittable {
+                fallbackComplete.tap()
             } else {
                 break
             }

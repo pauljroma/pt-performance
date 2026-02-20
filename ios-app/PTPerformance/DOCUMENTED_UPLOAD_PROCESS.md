@@ -9,7 +9,6 @@ This is THE standard Apple-supported method. Command line uploads fail due to:
 - API key authentication issues (CryptoKit errors)
 - Provisioning profile complexities
 - Deprecated tools (iTMSTransporter)
-- Missing dependencies (fastlane)
 
 ### COMPLETE PROCESS (Takes 5 minutes total)
 
@@ -94,7 +93,6 @@ echo ""
    - Error: Tool deprecated, replaced by Transporter app
    - Requires Mac App Store installation
 
-3. `fastlane pilot upload`
    - Error: Bundle version mismatch, Ruby version issues
    - Requires complex environment setup
 
@@ -115,7 +113,7 @@ APP_STORE_CONNECT_API_ISSUER_ID="69a6de97-ec29-47e3-e053-5b8c7c11a4d1"
 APP_STORE_CONNECT_API_KEY_PATH="~/.appstoreconnect/private_keys/AuthKey_415c860b88184388b6e889bfd87bb440.p8"
 
 # Apple ID
-FASTLANE_APPLE_ID="support@quiver.cx"
+APPLE_ID="support@quiver.cx"
 TEAM_ID="P4Q5K8UWQ7"
 APPLE_ID_APP="6739166949"
 ```

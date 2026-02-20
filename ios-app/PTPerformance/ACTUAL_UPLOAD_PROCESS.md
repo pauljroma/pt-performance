@@ -37,7 +37,6 @@
 # 1. Ensure .env file exists with credentials
 ls -la .env
 
-# 2. Ensure bundler is installed
 bundle install
 
 # 3. That's it!
@@ -75,7 +74,7 @@ The `.env` file contains:
 APP_STORE_CONNECT_API_KEY_ID="your-key-id"
 APP_STORE_CONNECT_API_ISSUER_ID="your-issuer-id"
 APP_STORE_CONNECT_API_KEY_CONTENT="base64-encoded-key"
-FASTLANE_TEAM_ID="P4Q5K8UWQ7"
+TEAM_ID="P4Q5K8UWQ7"
 MATCH_PASSWORD="your-match-password"
 MATCH_GIT_BASIC_AUTHORIZATION="your-github-token"
 ```
@@ -141,9 +140,8 @@ open https://appstoreconnect.apple.com
 # Go to: My Apps → PTPerformance → TestFlight
 # Build should appear in ~5 minutes
 
-# Method 2: Check fastlane output
-# Look for this line:
-# ✅ Successfully uploaded package to App Store Connect
+# Method 2: Check xcodebuild export output
+# Look for: EXPORT SUCCEEDED
 ```
 
 ### Test on iPad
@@ -172,15 +170,15 @@ cp .env.example .env
 
 ### Error: "bundle command not found"
 ```bash
-# Solution: Install bundler
-gem install bundler
+# Solution: Check Xcode command line tools
+xcode-select --install
 bundle install
 ```
 
 ### Error: "Provisioning profile doesn't include signing certificate"
 ```bash
 # Solution: Re-run match
-bundle exec fastlane match appstore --force_for_new_devices
+# Re-download profiles via Xcode: Preferences > Accounts > Download Manual Profiles
 ```
 
 ### Error: "Authentication failed"
@@ -223,11 +221,6 @@ bundle exec fastlane match appstore --force_for_new_devices
 - Requires Mac App Store Transporter app
 - Not command-line friendly
 
-### ❌ Manual fastlane commands
-- Missing environment setup
-- Provisioning profile issues
-- Complex configuration
-
 ### ✅ ./run_local_build.sh
 - **Works every single time**
 - Handles all complexity automatically
@@ -257,10 +250,6 @@ cd /Users/expo/Code/expo/clients/linear-bootstrap/ios-app/PTPerformance
 
 ```
 .env                              - Credentials (DO NOT COMMIT)
-Gemfile                          - Ruby dependencies
-Gemfile.lock                     - Locked versions
-fastlane/Fastfile                - Build automation config
-fastlane/Matchfile               - Provisioning profile config
 run_local_build.sh               - THE SCRIPT TO USE
 PTPerformance.ipa                - Output IPA file
 build/PTPerformance.xcarchive    - Output archive
@@ -276,7 +265,7 @@ PTPerformance.app.dSYM.zip       - Debug symbols
 | `APP_STORE_CONNECT_API_KEY_ID` | API key identifier | `415c860b88184388b6e889bfd87bb440` |
 | `APP_STORE_CONNECT_API_ISSUER_ID` | Your team's issuer ID | `69a6de97-ec29-47e3-e053-5b8c7c11a4d1` |
 | `APP_STORE_CONNECT_API_KEY_CONTENT` | Base64-encoded .p8 file | `LS0tLS...` |
-| `FASTLANE_TEAM_ID` | Apple Developer Team ID | `P4Q5K8UWQ7` |
+| `TEAM_ID` | Apple Developer Team ID | `P4Q5K8UWQ7` |
 | `MATCH_PASSWORD` | Encryption password for match | (secret) |
 | `MATCH_GIT_BASIC_AUTHORIZATION` | GitHub token for match repo | `base64(username:token)` |
 

@@ -52,10 +52,11 @@ final class ModeSpecificTabTests: XCTestCase {
 
     // MARK: - Launch Helper
 
-    private func launchAsUser(_ userId: String) {
+    private func launchAsUser(_ userId: String, mode: String) {
         app.launchArguments = [
             "--uitesting",
-            "--auto-login-user-id", userId
+            "--auto-login-user-id", userId,
+            "--auto-login-mode", mode
         ]
         app.launchEnvironment = [
             "IS_RUNNING_UITEST": "1"
@@ -73,7 +74,7 @@ final class ModeSpecificTabTests: XCTestCase {
     // MARK: - Rehab Mode Tests (Marcus Rivera)
 
     func testRehabMode_AllTabsVisible() throws {
-        launchAsUser(Self.rehabUserID)
+        launchAsUser(Self.rehabUserID, mode: "rehab")
 
         let tabBar = app.tabBars
 
@@ -114,7 +115,7 @@ final class ModeSpecificTabTests: XCTestCase {
     }
 
     func testRehabMode_PainTrackingTabLoads() throws {
-        launchAsUser(Self.rehabUserID)
+        launchAsUser(Self.rehabUserID, mode: "rehab")
 
         let painTab = app.tabBars.buttons["Pain"]
         XCTAssertTrue(painTab.waitForExistence(timeout: 5), "Pain tab should exist")
@@ -135,7 +136,7 @@ final class ModeSpecificTabTests: XCTestCase {
     }
 
     func testRehabMode_ProgressTabLoads() throws {
-        launchAsUser(Self.rehabUserID)
+        launchAsUser(Self.rehabUserID, mode: "rehab")
 
         let progressTab = app.tabBars.buttons["Progress"]
         XCTAssertTrue(progressTab.waitForExistence(timeout: 5), "Progress tab should exist")
@@ -156,7 +157,7 @@ final class ModeSpecificTabTests: XCTestCase {
     }
 
     func testRehabMode_ROMExercisesTabLoads() throws {
-        launchAsUser(Self.rehabUserID)
+        launchAsUser(Self.rehabUserID, mode: "rehab")
 
         let romTab = app.tabBars.buttons["ROM"]
         XCTAssertTrue(romTab.waitForExistence(timeout: 5), "ROM tab should exist")
@@ -177,7 +178,7 @@ final class ModeSpecificTabTests: XCTestCase {
     }
 
     func testRehabMode_SettingsTabLoads() throws {
-        launchAsUser(Self.rehabUserID)
+        launchAsUser(Self.rehabUserID, mode: "rehab")
 
         let settingsTab = app.tabBars.buttons["Settings"]
         XCTAssertTrue(settingsTab.waitForExistence(timeout: 5), "Settings tab should exist")
@@ -200,7 +201,7 @@ final class ModeSpecificTabTests: XCTestCase {
     // MARK: - Strength Mode Tests (Jordan Williams)
 
     func testStrengthMode_AllTabsVisible() throws {
-        launchAsUser(Self.strengthUserID)
+        launchAsUser(Self.strengthUserID, mode: "strength")
 
         let tabBar = app.tabBars
 
@@ -241,7 +242,7 @@ final class ModeSpecificTabTests: XCTestCase {
     }
 
     func testStrengthMode_WorkoutsTabLoads() throws {
-        launchAsUser(Self.strengthUserID)
+        launchAsUser(Self.strengthUserID, mode: "strength")
 
         let workoutsTab = app.tabBars.buttons["Workouts"]
         XCTAssertTrue(workoutsTab.waitForExistence(timeout: 5), "Workouts tab should exist")
@@ -262,7 +263,7 @@ final class ModeSpecificTabTests: XCTestCase {
     }
 
     func testStrengthMode_PRsTabLoads() throws {
-        launchAsUser(Self.strengthUserID)
+        launchAsUser(Self.strengthUserID, mode: "strength")
 
         let prsTab = app.tabBars.buttons["PRs"]
         XCTAssertTrue(prsTab.waitForExistence(timeout: 5), "PRs tab should exist")
@@ -283,7 +284,7 @@ final class ModeSpecificTabTests: XCTestCase {
     }
 
     func testStrengthMode_ProgressTabLoads() throws {
-        launchAsUser(Self.strengthUserID)
+        launchAsUser(Self.strengthUserID, mode: "strength")
 
         let progressTab = app.tabBars.buttons["Progress"]
         XCTAssertTrue(progressTab.waitForExistence(timeout: 5), "Progress tab should exist")
@@ -306,7 +307,7 @@ final class ModeSpecificTabTests: XCTestCase {
     // MARK: - Performance Mode Tests (Tyler Brooks)
 
     func testPerformanceMode_AllTabsVisible() throws {
-        launchAsUser(Self.performanceUserID)
+        launchAsUser(Self.performanceUserID, mode: "performance")
 
         let tabBar = app.tabBars
 
@@ -343,7 +344,7 @@ final class ModeSpecificTabTests: XCTestCase {
     }
 
     func testPerformanceMode_TrainingTabLoads() throws {
-        launchAsUser(Self.performanceUserID)
+        launchAsUser(Self.performanceUserID, mode: "performance")
 
         let trainingTab = app.tabBars.buttons["Training"]
         XCTAssertTrue(trainingTab.waitForExistence(timeout: 5), "Training tab should exist")
@@ -364,7 +365,7 @@ final class ModeSpecificTabTests: XCTestCase {
     }
 
     func testPerformanceMode_AnalyticsTabLoads() throws {
-        launchAsUser(Self.performanceUserID)
+        launchAsUser(Self.performanceUserID, mode: "performance")
 
         let analyticsTab = app.tabBars.buttons["Analytics"]
         XCTAssertTrue(analyticsTab.waitForExistence(timeout: 5), "Analytics tab should exist")
@@ -385,7 +386,7 @@ final class ModeSpecificTabTests: XCTestCase {
     }
 
     func testPerformanceMode_RecoveryTabLoads() throws {
-        launchAsUser(Self.performanceUserID)
+        launchAsUser(Self.performanceUserID, mode: "performance")
 
         let recoveryTab = app.tabBars.buttons["Recovery"]
         XCTAssertTrue(recoveryTab.waitForExistence(timeout: 5), "Recovery tab should exist")
@@ -408,7 +409,7 @@ final class ModeSpecificTabTests: XCTestCase {
     // MARK: - Cross-Mode Stability Test
 
     func testModeSpecificTabSwitching_NoErrors() throws {
-        launchAsUser(Self.performanceUserID)
+        launchAsUser(Self.performanceUserID, mode: "performance")
 
         let tabBar = app.tabBars
 

@@ -175,6 +175,7 @@ struct ProfileHubView: View {
                         .accessibilityHidden(true)
                 }
                 .padding(.vertical, Spacing.xs)
+                .accessibilityIdentifier("profile_hub_settings_link")
             }
             .accessibilityLabel("Settings")
             .accessibilityHint("Manage account, preferences, health data, and more")
@@ -279,6 +280,7 @@ struct ProfileHubView: View {
                             .foregroundColor(healthKitService.isAuthorized ? .green : .secondary)
                     }
                 }
+                .accessibilityIdentifier("profile_hub_apple_health_link")
             }
             .accessibilityLabel("Apple Health")
             .accessibilityValue(healthKitService.isAuthorized ? "Connected" : "Not connected")
@@ -739,6 +741,7 @@ struct ProfileHubView: View {
             }
             .accessibilityLabel("Log Out")
             .accessibilityHint("Signs you out of the app")
+            .accessibilityIdentifier("profile_hub_log_out_button")
 
             NavigationLink {
                 AccountDeletionView()

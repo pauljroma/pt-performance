@@ -176,4 +176,3 @@ If deployment fails:
 See also:
 - `.claude/BUILD_RUNBOOK.md` - Detailed build process
 - `.claude/MIGRATION_RUNBOOK.md` - Migration procedures
-- `ios-app/PTPerformance/fastlane/` - Fastlane configuration

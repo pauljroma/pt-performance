@@ -41,6 +41,7 @@ struct AchievementShowcaseView: View {
                             .font(.caption)
                             .foregroundColor(.modusCyan)
                     }
+                    .accessibilityIdentifier("profile_hub_view_all_achievements")
                 }
                 .accessibilityLabel("View all achievements")
             }

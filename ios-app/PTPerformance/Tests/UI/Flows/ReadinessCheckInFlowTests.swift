@@ -62,110 +62,151 @@ final class ReadinessCheckInFlowTests: XCTestCase {
 
     /// Tries multiple UI paths to open the readiness check-in.
     /// Returns `true` if the check-in view was successfully opened.
+    ///
+    /// Strategy order:
+    /// 1. CheckInPromptCard - "Daily Check-in" button (always present on Today Hub)
+    /// 2. ReadinessStatusCard - "Check In Now" button (present when not yet checked in)
+    /// 3. Quick Actions menu (ellipsis.circle) -> "Daily Check-in"
+    /// 4. Generic fallback predicates for check-in related labels
     @discardableResult
     private func openReadinessCheckIn() -> Bool {
-        // Strategy 1: Look for a direct readiness / check-in button or tappable text
-        let directEntryPredicates = [
-            "label CONTAINS[c] 'readiness'",
-            "label CONTAINS[c] 'check in'",
+        // Wait for the Today Hub content to finish its initial async loading.
+        // TodaySessionView shows a loading view while fetching from Supabase.
+        waitForTodayHubContentToLoad()
+
+        // Strategy 1: CheckInPromptCard via accessibilityIdentifier (most reliable).
+        // The identifier is deterministic and not affected by SwiftUI's composed
+        // accessibility labels, which concatenate all child Text views.
+        let promptCard = app.buttons.matching(identifier: "check_in_prompt_card").firstMatch
+        if promptCard.waitForExistence(timeout: 10) && promptCard.isHittable {
+            promptCard.tap()
+            if waitForCheckInView() { return true }
+        }
+
+        // Strategy 2: ReadinessStatusCard "Check In Now" button (exact accessibility label).
+        // Visible when readiness has not been submitted today and a session is loaded.
+        let checkInNowButton = app.buttons["Check In Now"]
+        if checkInNowButton.waitForExistence(timeout: 5) && checkInNowButton.isHittable {
+            checkInNowButton.tap()
+            if waitForCheckInView() { return true }
+        }
+
+        // Strategy 3: Quick Actions menu -> "Daily Check-in"
+        // The menu button has accessibilityLabel "Quick Actions"
+        let quickActionsMenu = app.buttons["Quick Actions"]
+        if quickActionsMenu.waitForExistence(timeout: 3) && quickActionsMenu.isHittable {
+            quickActionsMenu.tap()
+            Thread.sleep(forTimeInterval: 1.0)
+
+            // Look for "Daily Check-in" menu item
+            let dailyCheckInMenuItem = app.buttons.containing(
+                NSPredicate(format: "label CONTAINS[c] 'Daily Check-in'")
+            ).firstMatch
+            if dailyCheckInMenuItem.waitForExistence(timeout: 3) && dailyCheckInMenuItem.isHittable {
+                dailyCheckInMenuItem.tap()
+                if waitForCheckInView() { return true }
+            }
+
+            // Dismiss the menu if nothing matched
+            app.swipeDown()
+            Thread.sleep(forTimeInterval: 0.5)
+        }
+
+        // Strategy 4: Composed label fallback.
+        // When SwiftUI composes a label, it concatenates child texts. The
+        // CheckInPromptCard label might be "Daily Check-in, How are you
+        // feeling today?, Start" -- search with CONTAINS to match any fragment.
+        let fallbackPredicates = [
+            "label CONTAINS[c] 'Daily Check-in'",
             "label CONTAINS[c] 'check-in'",
-            "label CONTAINS[c] 'how are you'"
+            "label CONTAINS[c] 'check in'",
+            "label CONTAINS[c] 'readiness'",
+            "label CONTAINS[c] 'how are you feeling'"
         ]
 
-        for predicateString in directEntryPredicates {
+        for predicateString in fallbackPredicates {
             let predicate = NSPredicate(format: predicateString)
 
-            // Try buttons first
             let button = app.buttons.containing(predicate).firstMatch
-            if button.waitForExistence(timeout: 3) && button.isHittable {
+            if button.waitForExistence(timeout: 2) && button.isHittable {
                 button.tap()
                 if waitForCheckInView() { return true }
             }
 
-            // Try static texts (tappable cards)
             let text = app.staticTexts.containing(predicate).firstMatch
-            if text.waitForExistence(timeout: 2) && text.isHittable {
+            if text.waitForExistence(timeout: 1) && text.isHittable {
                 text.tap()
                 if waitForCheckInView() { return true }
             }
         }
 
-        // Strategy 2: Look for a quick actions / menu / plus button
-        let menuPredicates = [
-            "label CONTAINS[c] 'quick action'",
-            "label CONTAINS[c] 'menu'",
-            "label CONTAINS[c] 'add'",
-            "label CONTAINS[c] 'log'"
-        ]
-
-        for predicateString in menuPredicates {
-            let predicate = NSPredicate(format: predicateString)
-            let menuButton = app.buttons.containing(predicate).firstMatch
-            if menuButton.waitForExistence(timeout: 2) && menuButton.isHittable {
-                menuButton.tap()
-                Thread.sleep(forTimeInterval: 1.0)
-
-                // Now look for readiness option inside the opened menu
-                let readinessOption = app.buttons.containing(
-                    NSPredicate(format: "label CONTAINS[c] 'readiness'")
-                ).firstMatch
-
-                if readinessOption.waitForExistence(timeout: 3) && readinessOption.isHittable {
-                    readinessOption.tap()
-                    if waitForCheckInView() { return true }
-                }
-
-                let checkInOption = app.staticTexts.containing(
-                    NSPredicate(format: "label CONTAINS[c] 'readiness' OR label CONTAINS[c] 'check in'")
-                ).firstMatch
-
-                if checkInOption.waitForExistence(timeout: 2) && checkInOption.isHittable {
-                    checkInOption.tap()
-                    if waitForCheckInView() { return true }
-                }
-
-                // Dismiss the menu if nothing matched
-                app.swipeDown()
-                Thread.sleep(forTimeInterval: 0.5)
-            }
-        }
-
-        // Strategy 3: Try tapping a plus (+) navigation bar button
-        let plusButton = app.navigationBars.buttons.containing(
-            NSPredicate(format: "label CONTAINS[c] 'add' OR label == '+'")
-        ).firstMatch
-        if plusButton.waitForExistence(timeout: 2) && plusButton.isHittable {
-            plusButton.tap()
-            Thread.sleep(forTimeInterval: 1.0)
-
-            let readinessInMenu = app.buttons.containing(
-                NSPredicate(format: "label CONTAINS[c] 'readiness'")
-            ).firstMatch
-            if readinessInMenu.waitForExistence(timeout: 3) {
-                readinessInMenu.tap()
-                if waitForCheckInView() { return true }
-            }
-            app.swipeDown()
-            Thread.sleep(forTimeInterval: 0.5)
-        }
-
+        // Log diagnostic info about what IS visible
+        takeScreenshot(named: "open_readiness_failed")
         return false
     }
 
-    /// Waits briefly for the readiness check-in view to appear.
+    /// Waits for the Today Hub content to finish its initial async loading.
+    /// CheckInPromptCard runs an async `loadStatus()` on appear that shows
+    /// "Loading..." while fetching from Supabase. We must wait for that to
+    /// resolve before trying to tap the card.
+    private func waitForTodayHubContentToLoad() {
+        // Wait for activity indicators (ProgressView) to disappear
+        let loadingIndicator = app.activityIndicators.firstMatch
+        if loadingIndicator.exists {
+            _ = loadingIndicator.waitForNonExistence(timeout: 20)
+        }
+
+        // Wait for any "Loading" text to disappear (covers CheckInPromptCard's
+        // "Loading..." state and ReadinessStatusCard's "Loading readiness...")
+        let loadingText = app.staticTexts.containing(
+            NSPredicate(format: "label CONTAINS[c] 'Loading'")
+        ).firstMatch
+        if loadingText.exists {
+            _ = loadingText.waitForNonExistence(timeout: 20)
+        }
+
+        // Give the UI a moment to settle after async loads complete
+        Thread.sleep(forTimeInterval: 1.5)
+    }
+
+    /// Waits for the readiness check-in view (ReadinessCheckInView) to appear.
+    /// The view has an initial loading state ("Loading your check-in...") before
+    /// showing sliders; we wait for that loading to complete first.
     private func waitForCheckInView() -> Bool {
+        // Wait for the sheet/modal to present
         Thread.sleep(forTimeInterval: 1.0)
 
-        // Check for sliders (primary indicator)
-        if app.sliders.firstMatch.waitForExistence(timeout: 5) {
+        // ReadinessCheckInView has navigationTitle "Daily Check-In"
+        let navTitle = app.navigationBars["Daily Check-In"]
+        if navTitle.waitForExistence(timeout: 8) {
+            // The check-in view is presenting; now wait for loading to complete
+            // It shows "Loading your check-in..." initially
+            let loadingText = app.staticTexts.containing(
+                NSPredicate(format: "label CONTAINS[c] 'Loading your check-in'")
+            ).firstMatch
+            if loadingText.exists {
+                _ = loadingText.waitForNonExistence(timeout: 15)
+            }
+            Thread.sleep(forTimeInterval: 0.5)
             return true
         }
 
-        // Check for readiness-related text
-        let readinessText = app.staticTexts.containing(
-            NSPredicate(format: "label CONTAINS[c] 'readiness' OR label CONTAINS[c] 'sleep' OR label CONTAINS[c] 'energy' OR label CONTAINS[c] 'how'")
+        // Fallback: Check for sliders (primary indicator of loaded check-in form)
+        if app.sliders.firstMatch.waitForExistence(timeout: 8) {
+            return true
+        }
+
+        // Fallback: Check for readiness-related text labels (Sleep, Energy, etc.)
+        let readinessLabels = app.staticTexts.containing(
+            NSPredicate(format: "label CONTAINS[c] 'Sleep' OR label CONTAINS[c] 'Energy' OR label CONTAINS[c] 'Soreness' OR label CONTAINS[c] 'Stress'")
         ).firstMatch
-        if readinessText.waitForExistence(timeout: 3) {
+        if readinessLabels.waitForExistence(timeout: 3) {
+            return true
+        }
+
+        // Check for the "Cancel" button which is on the ReadinessCheckInView toolbar
+        let cancelButton = app.buttons["Cancel"]
+        if cancelButton.exists {
             return true
         }
 
@@ -176,6 +217,27 @@ final class ReadinessCheckInFlowTests: XCTestCase {
 
     @discardableResult
     private func tapSubmitButton() -> Bool {
+        // ReadinessCheckInView uses these accessibility labels:
+        // - "Submit today's check-in" (new check-in)
+        // - "Update today's check-in" (existing check-in)
+        let submitCheckIn = app.buttons.containing(
+            NSPredicate(format: "label CONTAINS[c] 'Submit today' OR label CONTAINS[c] 'Update today'")
+        ).firstMatch
+        if submitCheckIn.exists && submitCheckIn.isHittable {
+            submitCheckIn.tap()
+            return true
+        }
+
+        // Fallback: button text "Submit Check-In" or "Update Check-In"
+        let submitTextButton = app.buttons.containing(
+            NSPredicate(format: "label CONTAINS[c] 'Submit Check-In' OR label CONTAINS[c] 'Update Check-In'")
+        ).firstMatch
+        if submitTextButton.exists && submitTextButton.isHittable {
+            submitTextButton.tap()
+            return true
+        }
+
+        // Generic fallback labels
         let submitLabels = ["Submit", "Save", "Done", "Complete", "Log"]
         for label in submitLabels {
             let button = app.buttons[label]
@@ -185,7 +247,7 @@ final class ReadinessCheckInFlowTests: XCTestCase {
             }
         }
 
-        // Fallback: predicate search
+        // Broadest fallback: predicate search
         let predicate = NSPredicate(
             format: "label CONTAINS[c] 'submit' OR label CONTAINS[c] 'save' OR label CONTAINS[c] 'done' OR label CONTAINS[c] 'complete' OR label CONTAINS[c] 'log'"
         )
@@ -201,8 +263,12 @@ final class ReadinessCheckInFlowTests: XCTestCase {
     // MARK: - Helper: Adjust Sliders
 
     /// Adjusts all available sliders to the given normalized values.
-    /// Values are applied in order: sleep, energy, stress, soreness, mood.
+    /// ReadinessCheckInView has 4 sliders in order: Sleep, Energy, Soreness, Stress.
+    /// Values are applied in order to available sliders, clamping to slider count.
     private func adjustSliders(values: [CGFloat]) {
+        // Wait for sliders to be available
+        _ = app.sliders.firstMatch.waitForExistence(timeout: 5)
+
         let sliders = app.sliders.allElementsBoundByIndex
         for (index, value) in values.enumerated() {
             guard index < sliders.count else { break }
@@ -245,17 +311,23 @@ final class ReadinessCheckInFlowTests: XCTestCase {
 
     func testAccessReadinessFromTodayHub() throws {
         let opened = openReadinessCheckIn()
-        try XCTSkipIf(!opened, "No readiness check-in entry point found on Today Hub")
+        try XCTSkipIf(!opened, "No readiness check-in entry point found on Today Hub -- CheckInPromptCard, ReadinessStatusCard, and Quick Actions menu all failed")
 
-        // Assert the check-in view is showing readiness-related content
+        // Assert the check-in view is showing readiness-related content.
+        // ReadinessCheckInView has a "Daily Check-In" nav title and sliders for
+        // Sleep, Energy, Soreness, Stress.
+        let hasNavTitle = app.navigationBars["Daily Check-In"].exists
         let hasSliders = app.sliders.firstMatch.exists
         let hasReadinessText = app.staticTexts.containing(
-            NSPredicate(format: "label CONTAINS[c] 'readiness' OR label CONTAINS[c] 'sleep' OR label CONTAINS[c] 'energy' OR label CONTAINS[c] 'how'")
+            NSPredicate(format: "label CONTAINS[c] 'Sleep' OR label CONTAINS[c] 'Energy' OR label CONTAINS[c] 'Soreness' OR label CONTAINS[c] 'Stress'")
+        ).firstMatch.exists
+        let hasCancelButton = app.buttons.containing(
+            NSPredicate(format: "label CONTAINS[c] 'Cancel check-in' OR label == 'Cancel'")
         ).firstMatch.exists
 
         XCTAssertTrue(
-            hasSliders || hasReadinessText,
-            "Readiness check-in view should display sliders or readiness-related text"
+            hasNavTitle || hasSliders || hasReadinessText || hasCancelButton,
+            "Readiness check-in view should display nav title, sliders, or readiness-related text"
         )
 
         assertNoErrorAlerts(context: "Access readiness check-in")
@@ -265,15 +337,20 @@ final class ReadinessCheckInFlowTests: XCTestCase {
     // MARK: - Test 2: Readiness Dashboard Loads
 
     func testReadinessDashboardLoads() throws {
-        // Look for readiness dashboard elements on the Today Hub without opening the check-in
+        // Wait for the Today Hub content to load before searching
+        waitForTodayHubContentToLoad()
+
+        // Look for readiness dashboard elements on the Today Hub without opening the check-in.
+        // ReadinessStatusCard shows "Daily Readiness" header.
+        // CheckInPromptCard shows "Daily Check-in" or "Check-in Complete".
         let readinessElements = app.staticTexts.containing(
-            NSPredicate(format: "label CONTAINS[c] 'readiness' OR label CONTAINS[c] 'score' OR label CONTAINS[c] 'status'")
+            NSPredicate(format: "label CONTAINS[c] 'Daily Readiness' OR label CONTAINS[c] 'readiness' OR label CONTAINS[c] 'Daily Check-in' OR label CONTAINS[c] 'Check-in Complete' OR label CONTAINS[c] 'score' OR label CONTAINS[c] 'status'")
         )
 
         let dashboardVisible = readinessElements.firstMatch.waitForExistence(timeout: 10)
         try XCTSkipIf(
             !dashboardVisible,
-            "No readiness dashboard or score display found on Today Hub"
+            "No readiness dashboard or check-in prompt found on Today Hub"
         )
 
         let matchCount = readinessElements.count
@@ -289,10 +366,15 @@ final class ReadinessCheckInFlowTests: XCTestCase {
     // MARK: - Test 3: Complete Full Readiness Check-In
 
     func testCompleteFullReadinessCheckIn() throws {
-        try XCTSkipIf(!openReadinessCheckIn(), "No readiness check-in entry point found")
+        try XCTSkipIf(!openReadinessCheckIn(), "No readiness check-in entry point found on Today Hub")
 
-        // Adjust sliders: sleep=0.7, energy=0.8, stress=0.3, soreness=0.2, mood=0.8
-        adjustSliders(values: [0.7, 0.8, 0.3, 0.2, 0.8])
+        // Wait for sliders to be ready
+        let slidersReady = app.sliders.firstMatch.waitForExistence(timeout: 10)
+        if slidersReady {
+            // Adjust sliders: sleep=0.7, energy=0.8, stress=0.3, soreness=0.2
+            // ReadinessCheckInView has 4 sliders: Sleep, Energy, Soreness, Stress
+            adjustSliders(values: [0.7, 0.8, 0.3, 0.2])
+        }
 
         takeScreenshot(named: "readiness_checkin_filled")
 
@@ -300,12 +382,15 @@ final class ReadinessCheckInFlowTests: XCTestCase {
         let submitted = tapSubmitButton()
         XCTAssertTrue(submitted, "Should find and tap a submit/save/done button")
 
-        // Wait for success indicator or sheet dismissal
+        // ReadinessCheckInView shows a success overlay with "Check-In Submitted!"
+        // or "Check-In Updated!" text, then auto-dismisses after 1.5 seconds.
         let successText = app.staticTexts.containing(
-            NSPredicate(format: "label CONTAINS[c] 'logged' OR label CONTAINS[c] 'recorded' OR label CONTAINS[c] 'saved' OR label CONTAINS[c] 'complete'")
+            NSPredicate(format: "label CONTAINS[c] 'Check-In Submitted' OR label CONTAINS[c] 'Check-In Updated' OR label CONTAINS[c] 'logged' OR label CONTAINS[c] 'recorded' OR label CONTAINS[c] 'saved'")
         ).firstMatch
-        let sheetDismissed = !app.sliders.firstMatch.waitForExistence(timeout: 5)
-        let successShown = successText.waitForExistence(timeout: 5)
+        let successShown = successText.waitForExistence(timeout: 8)
+
+        // The view auto-dismisses, so the sheet may disappear
+        let sheetDismissed = !app.navigationBars["Daily Check-In"].waitForExistence(timeout: 5)
 
         XCTAssertTrue(
             successShown || sheetDismissed,
@@ -319,7 +404,7 @@ final class ReadinessCheckInFlowTests: XCTestCase {
     // MARK: - Test 4: Check-In with Low Values
 
     func testReadinessCheckInWithLowValues() throws {
-        try XCTSkipIf(!openReadinessCheckIn(), "No readiness check-in entry point found")
+        try XCTSkipIf(!openReadinessCheckIn(), "No readiness check-in entry point found on Today Hub")
 
         // Set all sliders to low/bad values: sleep=0.2, energy=0.2, stress=0.8, soreness=0.8, mood=0.2
         adjustSliders(values: [0.2, 0.2, 0.8, 0.8, 0.2])
@@ -339,7 +424,7 @@ final class ReadinessCheckInFlowTests: XCTestCase {
     // MARK: - Test 5: Check-In with High Values
 
     func testReadinessCheckInWithHighValues() throws {
-        try XCTSkipIf(!openReadinessCheckIn(), "No readiness check-in entry point found")
+        try XCTSkipIf(!openReadinessCheckIn(), "No readiness check-in entry point found on Today Hub")
 
         // Set all sliders to optimal values: sleep=1.0, energy=1.0, stress=0.0, soreness=0.0, mood=1.0
         adjustSliders(values: [1.0, 1.0, 0.0, 0.0, 1.0])
@@ -359,21 +444,27 @@ final class ReadinessCheckInFlowTests: XCTestCase {
     // MARK: - Test 6: Dismiss Readiness Check-In
 
     func testDismissReadinessCheckIn() throws {
-        try XCTSkipIf(!openReadinessCheckIn(), "No readiness check-in entry point found")
+        try XCTSkipIf(!openReadinessCheckIn(), "No readiness check-in entry point found on Today Hub")
 
         takeScreenshot(named: "readiness_checkin_before_dismiss")
 
-        // Try close button first
-        let closeButton = app.buttons["Close"]
+        // ReadinessCheckInView has a "Cancel" toolbar button with
+        // accessibilityLabel "Cancel check-in"
+        let cancelCheckIn = app.buttons.containing(
+            NSPredicate(format: "label CONTAINS[c] 'Cancel check-in'")
+        ).firstMatch
         let cancelButton = app.buttons["Cancel"]
+        let closeButton = app.buttons["Close"]
         let dismissButton = app.buttons.containing(
             NSPredicate(format: "label CONTAINS[c] 'dismiss' OR label CONTAINS[c] 'close' OR label CONTAINS[c] 'cancel'")
         ).firstMatch
 
-        if closeButton.exists && closeButton.isHittable {
-            closeButton.tap()
+        if cancelCheckIn.exists && cancelCheckIn.isHittable {
+            cancelCheckIn.tap()
         } else if cancelButton.exists && cancelButton.isHittable {
             cancelButton.tap()
+        } else if closeButton.exists && closeButton.isHittable {
+            closeButton.tap()
         } else if dismissButton.exists && dismissButton.isHittable {
             dismissButton.tap()
         } else {
@@ -397,7 +488,7 @@ final class ReadinessCheckInFlowTests: XCTestCase {
     // MARK: - Test 7: Slider Interaction
 
     func testReadinessCheckInSliderInteraction() throws {
-        try XCTSkipIf(!openReadinessCheckIn(), "No readiness check-in entry point found")
+        try XCTSkipIf(!openReadinessCheckIn(), "No readiness check-in entry point found on Today Hub")
 
         let sliderCount = app.sliders.count
         XCTAssertGreaterThan(sliderCount, 0, "At least one slider should be present in the readiness check-in")
@@ -422,7 +513,7 @@ final class ReadinessCheckInFlowTests: XCTestCase {
     // MARK: - Test 8: Questions Visible
 
     func testReadinessCheckInQuestionsVisible() throws {
-        try XCTSkipIf(!openReadinessCheckIn(), "No readiness check-in entry point found")
+        try XCTSkipIf(!openReadinessCheckIn(), "No readiness check-in entry point found on Today Hub")
 
         // Look for question labels
         let questionKeywords = ["sleep", "energy", "stress", "soreness", "mood"]

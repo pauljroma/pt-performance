@@ -32,6 +32,27 @@ case "$COMMAND" in
           -allowProvisioningUpdates \
           | tee "build_${BUILD_NUM}_archive.log"
 
+        # Generate missing dSYMs for SPM binary frameworks (e.g., Sentry)
+        # Xcode does not auto-generate dSYMs for SPM binary targets repackaged as
+        # dynamic frameworks, causing "Upload Symbols Failed" warnings on TestFlight.
+        echo ""
+        echo "Step 2.5/3: Generating dSYMs for embedded SPM frameworks..."
+        ARCHIVE_FRAMEWORKS="$ARCHIVE_PATH/Products/Applications/PTPerformance.app/Frameworks"
+        ARCHIVE_DSYMS="$ARCHIVE_PATH/dSYMs"
+        if [ -d "$ARCHIVE_FRAMEWORKS" ]; then
+          for FW in "$ARCHIVE_FRAMEWORKS"/*.framework; do
+            FW_NAME=$(basename "$FW" .framework)
+            FW_BINARY="$FW/$FW_NAME"
+            DSYM_PATH="$ARCHIVE_DSYMS/${FW_NAME}.framework.dSYM"
+            if [ -f "$FW_BINARY" ] && [ ! -d "$DSYM_PATH" ]; then
+              echo "  Generating dSYM for $FW_NAME.framework..."
+              dsymutil "$FW_BINARY" -o "$DSYM_PATH" 2>/dev/null && \
+                echo "  ✅ Created $FW_NAME.framework.dSYM" || \
+                echo "  ⚠️ Could not generate dSYM for $FW_NAME (stripped binary)"
+            fi
+          done
+        fi
+
         # Export
         echo ""
         echo "Step 3/3: Exporting IPA..."

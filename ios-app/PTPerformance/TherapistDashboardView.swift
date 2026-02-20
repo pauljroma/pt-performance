@@ -22,6 +22,7 @@ class TherapistDashboardViewState: ObservableObject {
     @Published var showReports = false
     @Published var showEscalationQueue = false
     @Published var showProgramAnalytics = false
+    @Published var showApprovalQueue = false
     @Published var selectedEscalation: RiskEscalation?
 
     func handlePatientSelection(_ patient: Patient, shouldUseSplitView: Bool) {
@@ -42,6 +43,7 @@ struct TherapistDashboardView: View {
     @StateObject private var viewModel = PatientListViewModel()
     @StateObject private var schedulingViewModel = TherapistSchedulingViewModel()
     @StateObject private var escalationService = RiskEscalationService.shared
+    @StateObject private var approvalViewModel = ApprovalRequestViewModel()
     @Environment(\.horizontalSizeClass) var horizontalSizeClass
     @EnvironmentObject var appState: AppState
 
@@ -78,6 +80,10 @@ struct TherapistDashboardView: View {
         .springSheet(isPresented: $state.showEscalationQueue) {
             EscalationQueueView()
         }
+        .springSheet(isPresented: $state.showApprovalQueue) {
+            ApprovalQueueView()
+                .environmentObject(appState)
+        }
         .springSheet(isPresented: $state.showCreateTemplate) {
             WorkoutTemplateBuilderView()
         }
@@ -104,7 +110,8 @@ struct TherapistDashboardView: View {
                 async let flags: () = viewModel.loadActiveFlags(therapistId: therapistId)
                 async let sessions: () = schedulingViewModel.loadAllSessions(therapistId: therapistId)
                 async let escalations: () = { try? await escalationService.fetchActiveEscalations(for: therapistId) }()
-                _ = await (patients, flags, sessions, escalations)
+                async let approvals: () = approvalViewModel.fetchPendingApprovals(therapistId: therapistId)
+                _ = await (patients, flags, sessions, escalations, approvals)
             } else {
                 // SECURITY: Do NOT load patients without therapist ID
                 // This prevents unauthorized access to patient data
@@ -240,6 +247,57 @@ struct TherapistDashboardView: View {
                     .padding(.top)
                 }
 
+                // AI Approval Queue Section
+                if approvalViewModel.pendingCount > 0 {
+                    Button {
+                        state.showApprovalQueue = true
+                    } label: {
+                        HStack(spacing: Spacing.sm) {
+                            ZStack {
+                                Circle()
+                                    .fill(Color.modusCyan.opacity(0.15))
+                                    .frame(width: 44, height: 44)
+
+                                Image(systemName: "checkmark.shield")
+                                    .font(.title3)
+                                    .foregroundColor(.modusCyan)
+                            }
+
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("AI Approval Queue")
+                                    .font(.headline)
+                                    .foregroundColor(.primary)
+
+                                Text("\(approvalViewModel.pendingCount) modification\(approvalViewModel.pendingCount == 1 ? "" : "s") awaiting review")
+                                    .font(.subheadline)
+                                    .foregroundColor(.secondary)
+                            }
+
+                            Spacer()
+
+                            // Badge
+                            Text("\(approvalViewModel.pendingCount)")
+                                .font(.callout)
+                                .fontWeight(.bold)
+                                .foregroundColor(.white)
+                                .frame(minWidth: 28, minHeight: 28)
+                                .background(approvalViewModel.hasCriticalPending ? Color.red : Color.orange)
+                                .clipShape(Circle())
+
+                            Image(systemName: "chevron.right")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                        .padding(Spacing.md)
+                        .background(Color(.systemBackground))
+                        .cornerRadius(CornerRadius.md)
+                        .adaptiveShadow(Shadow.subtle)
+                    }
+                    .buttonStyle(.plain)
+                    .padding(.horizontal)
+                    .accessibilityIdentifier("dashboard_approval_queue_button")
+                }
+
                 // KPI Section at the top
                 DashboardKPISection(
                     patients: viewModel.patients,
@@ -310,7 +368,8 @@ struct TherapistDashboardView: View {
                 async let refresh: () = viewModel.refresh(therapistId: therapistId)
                 async let sessions: () = schedulingViewModel.refresh(therapistId: therapistId)
                 async let escalations: () = { try? await escalationService.fetchActiveEscalations(for: therapistId) }()
-                _ = await (refresh, sessions, escalations)
+                async let approvals: () = approvalViewModel.refreshPending(therapistId: therapistId)
+                _ = await (refresh, sessions, escalations, approvals)
             } else {
                 // SECURITY: Do NOT refresh without therapist ID
                 // This prevents unauthorized access to patient data

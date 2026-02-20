@@ -63,7 +63,7 @@ ALTER TABLE approval_requests ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "patients_view_own_approvals" ON approval_requests
     FOR SELECT USING (
         patient_id IN (
-            SELECT id FROM patients WHERE user_id = auth.uid()::text
+            SELECT id FROM patients WHERE user_id = auth.uid()
         )
         -- Demo patient bypass
         OR patient_id = '00000000-0000-0000-0000-000000000001'::uuid

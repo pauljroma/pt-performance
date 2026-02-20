@@ -272,7 +272,7 @@ struct RootView: View {
     /// Optimized to minimize time to first meaningful paint
     private func restoreSession() async {
         #if DEBUG
-        // XCUITest auto-login: --auto-login-user-id <UUID> [--auto-login-role patient|therapist]
+        // XCUITest auto-login: --auto-login-user-id <UUID> [--auto-login-role patient|therapist] [--auto-login-mode rehab|strength|performance]
         // Bypasses auth, privacy notice, onboarding, and quick setup for test automation
         if let idx = CommandLine.arguments.firstIndex(of: "--auto-login-user-id"),
            idx + 1 < CommandLine.arguments.count {
@@ -285,6 +285,14 @@ struct RootView: View {
             } else {
                 role = .patient
             }
+            // Parse optional mode override for mode-specific tab tests
+            let autoLoginMode: Mode?
+            if let modeIdx = CommandLine.arguments.firstIndex(of: "--auto-login-mode"),
+               modeIdx + 1 < CommandLine.arguments.count {
+                autoLoginMode = Mode(rawValue: CommandLine.arguments[modeIdx + 1])
+            } else {
+                autoLoginMode = nil
+            }
             let supabase = PTSupabaseClient.shared
             await MainActor.run {
                 supabase.userId = userId
@@ -295,9 +303,14 @@ struct RootView: View {
                 hasAcceptedPrivacyNotice = true
                 hasCompletedQuickSetup = true
                 isCheckingSession = false
+                // Set patient mode if provided, so mode-specific tabs render correctly
+                // without needing a database query (which requires a real auth session)
+                if let mode = autoLoginMode {
+                    modeService.currentMode = mode
+                }
                 SessionManager.shared.startMonitoring()
             }
-            DebugLogger.shared.info("UITest", "Auto-login as \(role) user: \(userId)")
+            DebugLogger.shared.info("UITest", "Auto-login as \(role) user: \(userId)" + (autoLoginMode.map { ", mode: \($0.rawValue)" } ?? ""))
             return
         }
         #endif

@@ -79,14 +79,9 @@ ls -lh ./build/PTPerformance.xcarchive
 ```bash
 # Create .env file with credentials
 cd ~/Code/expo/clients/linear-bootstrap/ios-app/PTPerformance
-cat > .env.fastlane <<'EOF'
-APP_STORE_CONNECT_API_KEY_ID="your-key-id"
-APP_STORE_CONNECT_API_ISSUER_ID="your-issuer-id"
-APP_STORE_CONNECT_API_KEY_CONTENT="base64-encoded-key"
-FASTLANE_APPLE_ID="your@email.com"
-EOF
-
-chmod 600 .env.fastlane
+# Store credentials in .env file (see .env.example)
+cp .env.example .env
+# Edit .env with actual credentials
 ```
 
 **Get App Store Connect API Key:**
@@ -98,18 +93,12 @@ chmod 600 .env.fastlane
 **Upload command:**
 
 ```bash
-# Source credentials
-source .env.fastlane
-
-# Upload using fastlane
-fastlane pilot upload \
-  --ipa ./build/PTPerformance.ipa \
-  --skip_waiting_for_build_processing
-
-# OR upload archive directly
-fastlane pilot upload \
-  --build_number $(agvtool what-version | tail -1) \
-  --skip_waiting_for_build_processing
+# Upload via xcodebuild export (uses ExportOptions.plist)
+xcodebuild -exportArchive \
+  -archivePath ./build/PTPerformance.xcarchive \
+  -exportOptionsPlist ./build/ExportOptions.plist \
+  -exportPath ./build/export \
+  -allowProvisioningUpdates
 ```
 
 ### Method C: Upload Script (Run After Build)
@@ -235,9 +224,7 @@ open -a Xcode PTPerformance.xcodeproj
 ```
 build/PTPerformance.xcarchive     - Archive (created by xcodebuild)
 build/PTPerformance.ipa            - IPA (exported from archive)
-fastlane/logs/                     - Build logs
 ExportOptions.plist                - Export configuration
-.env.fastlane                      - Upload credentials (DO NOT COMMIT)
 ```
 
 ---
@@ -245,13 +232,11 @@ ExportOptions.plist                - Export configuration
 ## Credentials Storage
 
 **NEVER commit these files:**
-- `.env.fastlane` - Has API keys
 - `AuthKey_*.p8` - App Store Connect API key file
 - `*.mobileprovision` - Provisioning profiles
 
 **Add to .gitignore:**
 ```bash
-echo ".env.fastlane" >> .gitignore
 echo "AuthKey_*.p8" >> .gitignore
 echo "*.mobileprovision" >> .gitignore
 ```

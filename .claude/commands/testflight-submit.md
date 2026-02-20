@@ -1,6 +1,6 @@
 # Submit a new build to TestFlight
 
-Increments the build number, archives, and uploads to TestFlight.
+Archives, signs, and uploads the app to TestFlight using xcodebuild.
 
 ## Arguments
 - `$ARGUMENTS`: Optional build number override (default: increment by 1)
@@ -12,30 +12,69 @@ Increments the build number, archives, and uploads to TestFlight.
 grep CURRENT_PROJECT_VERSION /Users/expo/pt-performance/ios-app/PTPerformance/PTPerformance.xcodeproj/project.pbxproj | head -1
 ```
 
-2. Verify clean build:
+2. Check recent git log to avoid reusing a build number:
 ```bash
-cd /Users/expo/pt-performance/ios-app/PTPerformance && \
-xcodebuild -scheme PTPerformance -destination 'platform=iOS Simulator,name=iPhone 16 Pro' build 2>&1 | tail -5
+git log --oneline -5
 ```
 
-3. Check no pending migrations:
+3. Verify clean build:
 ```bash
-ls /Users/expo/pt-performance/supabase/migrations/_pending/ 2>/dev/null
+cd /Users/expo/pt-performance/ios-app/PTPerformance && \
+xcodebuild -scheme PTPerformance -destination 'platform=iOS Simulator,name=iPhone 17 Pro' build 2>&1 | tail -5
 ```
 
 ## Step 1: Bump Build Number
 
-Update ALL occurrences of `CURRENT_PROJECT_VERSION` in `project.pbxproj` (Debug + Release). Also update `Config.swift` buildNumber if present.
+Increment `CURRENT_PROJECT_VERSION` in `project.pbxproj` (both Debug + Release occurrences). Use `$ARGUMENTS` if provided, otherwise increment by 1 from the highest of (current pbxproj value, recent git log build numbers).
 
-## Step 2: Archive and Upload
+## Step 2: Archive
 
-**Fastlane (preferred):**
 ```bash
-cd /Users/expo/pt-performance/ios-app/PTPerformance && bundle exec fastlane beta
+cd /Users/expo/pt-performance/ios-app/PTPerformance && \
+xcodebuild archive \
+  -scheme PTPerformance \
+  -archivePath ./build/PTPerformance.xcarchive \
+  -allowProvisioningUpdates \
+  2>&1 | tail -10
 ```
 
-**Manual:** Open Xcode > Product > Archive > Distribute App > TestFlight & App Store.
+## Step 3: Export and Upload to TestFlight
 
-## Step 3: Verify
+Create `build/ExportOptions.plist` if it doesn't exist:
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>method</key>
+	<string>app-store-connect</string>
+	<key>destination</key>
+	<string>upload</string>
+	<key>signingStyle</key>
+	<string>automatic</string>
+	<key>teamID</key>
+	<string>5NNLBL74XR</string>
+	<key>uploadSymbols</key>
+	<true/>
+</dict>
+</plist>
+```
 
-Report the new build number and confirm upload success. Processing takes 5-15 minutes in App Store Connect.
+Then export and upload:
+```bash
+cd /Users/expo/pt-performance/ios-app/PTPerformance && \
+xcodebuild -exportArchive \
+  -archivePath ./build/PTPerformance.xcarchive \
+  -exportOptionsPlist ./build/ExportOptions.plist \
+  -exportPath ./build/export \
+  -allowProvisioningUpdates \
+  2>&1 | tail -20
+```
+
+## Step 4: Commit and Push
+
+Commit with message format: `Build NNN: <summary of changes since last build>`
+
+## Step 5: Verify
+
+Confirm output contains `EXPORT SUCCEEDED` and `Upload succeeded`. Report the build number. Processing takes 5-15 minutes in App Store Connect.

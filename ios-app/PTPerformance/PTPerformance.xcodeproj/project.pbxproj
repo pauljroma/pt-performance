@@ -405,6 +405,9 @@
 		4FB3DA2D1FC127D40C1CE92D /* MealPlan.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04A6FC8122EACDF4062027DF /* MealPlan.swift */; };
 		A1B2C3D4E5F6789012345679 /* ApprovalRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6789012345678 /* ApprovalRequest.swift */; };
 		A1B2C3D4E5F678901234567B /* ApprovalRequestViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F678901234567A /* ApprovalRequestViewModel.swift */; };
+		B1C2D3E4F5A6789012340002 /* ApprovalQueueView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1C2D3E4F5A6789012340001 /* ApprovalQueueView.swift */; };
+		B1C2D3E4F5A6789012340004 /* ApprovalRequestDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1C2D3E4F5A6789012340003 /* ApprovalRequestDetailView.swift */; };
+		B1C2D3E4F5A6789012340006 /* ApprovalRequestRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1C2D3E4F5A6789012340005 /* ApprovalRequestRow.swift */; };
 		503090A819CA64E900CF2B5E /* PhaseEditorSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 584FAA50014015B30A8E2158 /* PhaseEditorSheet.swift */; };
 		50704DF7597A9C23D31C4341 /* SessionToObjectiveFormatterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 608E32AD50B18DDC1BC08CA4 /* SessionToObjectiveFormatterTests.swift */; };
 		508381113391258309060EF7 /* RTSProtocolEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6AED341E3403FD58EF002477 /* RTSProtocolEditorView.swift */; };
@@ -1214,6 +1217,9 @@
 		04A6FC8122EACDF4062027DF /* MealPlan.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = MealPlan.swift; path = Models/MealPlan.swift; sourceTree = "<group>"; };
 		A1B2C3D4E5F6789012345678 /* ApprovalRequest.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ApprovalRequest.swift; path = Models/ApprovalRequest.swift; sourceTree = "<group>"; };
 		A1B2C3D4E5F678901234567A /* ApprovalRequestViewModel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ViewModels/ApprovalRequestViewModel.swift; sourceTree = SOURCE_ROOT; };
+		B1C2D3E4F5A6789012340001 /* ApprovalQueueView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ApprovalQueueView.swift; path = Views/Therapist/ApprovalQueueView.swift; sourceTree = "<group>"; };
+		B1C2D3E4F5A6789012340003 /* ApprovalRequestDetailView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ApprovalRequestDetailView.swift; path = Views/Therapist/ApprovalRequestDetailView.swift; sourceTree = "<group>"; };
+		B1C2D3E4F5A6789012340005 /* ApprovalRequestRow.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ApprovalRequestRow.swift; path = Components/ApprovalRequestRow.swift; sourceTree = "<group>"; };
 		04CD36A6F6E7E8A2977A8D14 /* NextAchievementCardTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = NextAchievementCardTests.swift; path = PTPerformanceTests/Views/NextAchievementCardTests.swift; sourceTree = "<group>"; };
 		04DB5379CC01A56DAC20C2A3 /* AnalyticsEventQueue.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AnalyticsEventQueue.swift; sourceTree = "<group>"; };
 		0527B0A31E85CC13C72CBB27 /* TimerPickerViewModel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = TimerPickerViewModel.swift; path = ViewModels/TimerPickerViewModel.swift; sourceTree = "<group>"; };
@@ -3201,6 +3207,8 @@
 				455A1EE954020D691F5AC585 /* TherapistReportingView.swift */,
 				39176021B9C358458ED1DC89 /* Coaching */,
 				17566C434D34585D307A8D4E /* EscalationQueueView.swift */,
+				B1C2D3E4F5A6789012340001 /* ApprovalQueueView.swift */,
+				B1C2D3E4F5A6789012340003 /* ApprovalRequestDetailView.swift */,
 				47468497B56C4F2E868225CC /* SafetyAlertCard.swift */,
 				E4F083DC9E96A2AB4F527AB7 /* ReportHistoryView.swift */,
 				521541E0FB5A001C9DAD5D02 /* GenerateWeeklyReportSheet.swift */,
@@ -4452,6 +4460,7 @@
 				4DEB69DEF63C3523028C352E /* ExerciseCompactRow.swift */,
 				459AAAB93876439BA058FD02 /* AIRecommendationTransparencyCard.swift */,
 				91650331AF26B4FBBE9FA42B /* SmartSchedulingSuggestionCard.swift */,
+				B1C2D3E4F5A6789012340005 /* ApprovalRequestRow.swift */,
 			);
 			name = Components;
 			sourceTree = "<group>";
@@ -4865,7 +4874,6 @@
 			packageProductDependencies = (
 				AA2222222222222222222222 /* Supabase */,
 				BB4444444444444444444444 /* Sentry */,
-				BB5555555555555555555555 /* SentrySwiftUI */,
 			);
 			productName = PTPerformance;
 			productReference = FDE3C68F9A1C2FB6F12879FD /* PTPerformance.app */;
@@ -5138,6 +5146,9 @@
 				4FB3DA2D1FC127D40C1CE92D /* MealPlan.swift in Sources */,
 				A1B2C3D4E5F6789012345679 /* ApprovalRequest.swift in Sources */,
 				A1B2C3D4E5F678901234567B /* ApprovalRequestViewModel.swift in Sources */,
+				B1C2D3E4F5A6789012340002 /* ApprovalQueueView.swift in Sources */,
+				B1C2D3E4F5A6789012340004 /* ApprovalRequestDetailView.swift in Sources */,
+				B1C2D3E4F5A6789012340006 /* ApprovalRequestRow.swift in Sources */,
 				B1F58B5D28A1D92035F06DCD /* NutritionAnalytics.swift in Sources */,
 				77C3D3B1F9BE1FDFE6D7CBD9 /* NutritionService.swift in Sources */,
 				BDED2E9514B21CACC1259ED3 /* FoodDatabaseService.swift in Sources */,
@@ -6383,11 +6394,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = BB3333333333333333333333 /* XCRemoteSwiftPackageReference "sentry-cocoa" */;
 			productName = Sentry;
-		};
-		BB5555555555555555555555 /* SentrySwiftUI */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = BB3333333333333333333333 /* XCRemoteSwiftPackageReference "sentry-cocoa" */;
-			productName = SentrySwiftUI;
 		};
 		BB6666666666666666666666 /* Sentry */ = {
 			isa = XCSwiftPackageProductDependency;

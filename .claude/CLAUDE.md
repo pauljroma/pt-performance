@@ -90,7 +90,6 @@ cd ios-app/PTPerformance && xcodebuild test -scheme PTPerformance -destination '
 | Supabase client | `ios-app/PTPerformance/Services/SupabaseClient.swift` |
 | Config/secrets | `ios-app/PTPerformance/Config.swift` |
 | SwiftLint config | `ios-app/PTPerformance/.swiftlint.yml` |
-| Fastfile | `ios-app/PTPerformance/fastlane/Fastfile` |
 | Xcode project | `ios-app/PTPerformance/PTPerformance.xcodeproj/project.pbxproj` |
 | Edge functions | `supabase/functions/` |
 | Migrations | `supabase/migrations/` |
