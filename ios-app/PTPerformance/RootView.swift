@@ -271,6 +271,37 @@ struct RootView: View {
     /// ACP-932: Restore existing Supabase session on app launch
     /// Optimized to minimize time to first meaningful paint
     private func restoreSession() async {
+        #if DEBUG
+        // XCUITest auto-login: --auto-login-user-id <UUID> [--auto-login-role patient|therapist]
+        // Bypasses auth, privacy notice, onboarding, and quick setup for test automation
+        if let idx = CommandLine.arguments.firstIndex(of: "--auto-login-user-id"),
+           idx + 1 < CommandLine.arguments.count {
+            let userId = CommandLine.arguments[idx + 1]
+            let role: UserRole
+            if let roleIdx = CommandLine.arguments.firstIndex(of: "--auto-login-role"),
+               roleIdx + 1 < CommandLine.arguments.count,
+               CommandLine.arguments[roleIdx + 1] == "therapist" {
+                role = .therapist
+            } else {
+                role = .patient
+            }
+            let supabase = PTSupabaseClient.shared
+            await MainActor.run {
+                supabase.userId = userId
+                supabase.userRole = role
+                appState.userId = userId
+                appState.userRole = role
+                appState.isAuthenticated = true
+                hasAcceptedPrivacyNotice = true
+                hasCompletedQuickSetup = true
+                isCheckingSession = false
+                SessionManager.shared.startMonitoring()
+            }
+            DebugLogger.shared.info("UITest", "Auto-login as \(role) user: \(userId)")
+            return
+        }
+        #endif
+
         // Skip normal session restore during password reset flow
         // SetNewPasswordView handles its own authentication
         if appState.showSetNewPassword {

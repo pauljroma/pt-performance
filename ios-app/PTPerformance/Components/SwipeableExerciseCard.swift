@@ -169,7 +169,7 @@ struct SwipeableExerciseCard: View {
                     .offset(x: offset)
                     .scaleEffect(completionScale)
                     .opacity(completionOpacity)
-                    .gesture(isDisabled ? nil : dragGesture)
+                    .simultaneousGesture(isDisabled ? nil : dragGesture)
                     .onTapGesture {
                         if !isDisabled {
                             onTap?()

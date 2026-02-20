@@ -141,12 +141,22 @@ struct SwipeableWeightControl: View {
                         .transition(.opacity.combined(with: .scale))
                 }
             }
-            .gesture(
-                DragGesture()
+            .simultaneousGesture(
+                DragGesture(minimumDistance: 20)
                     .onChanged { value in
+                        // Only capture primarily vertical gestures on this small control
+                        guard abs(value.translation.height) > abs(value.translation.width) * 1.5 else { return }
                         dragOffset = value.translation.height
                     }
                     .onEnded { value in
+                        // Only act if the drag was primarily vertical
+                        guard abs(value.translation.height) > abs(value.translation.width) * 1.5 else {
+                            withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                                dragOffset = 0
+                            }
+                            return
+                        }
+
                         if value.translation.height < -threshold {
                             // Swiped up = increase weight
                             withAnimation(.spring(response: 0.2, dampingFraction: 0.7)) {
@@ -429,12 +439,12 @@ struct SwipeableExerciseRow<Content: View>: View {
             // Main content
             content()
                 .offset(x: offset)
-                .gesture(
+                .simultaneousGesture(
                     isCompleted || isSkipped ? nil :
-                    DragGesture()
+                    DragGesture(minimumDistance: 20)
                         .onChanged { value in
                             // Only allow horizontal swipes
-                            if abs(value.translation.width) > abs(value.translation.height) {
+                            if abs(value.translation.width) > abs(value.translation.height) * 1.5 {
                                 withAnimation(.interactiveSpring()) {
                                     offset = value.translation.width
                                 }

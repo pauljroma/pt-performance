@@ -1,0 +1,68 @@
+{
+  "hooks": {
+    "pre-commit": [
+      {
+        "name": "swiftlint-check",
+        "description": "Run SwiftLint on changed Swift files to catch violations before commit",
+        "command": "cd ios-app/PTPerformance && swiftlint lint --config .swiftlint.yml --quiet --reporter emoji 2>&1 | head -20",
+        "fail_on_error": true
+      },
+      {
+        "name": "no-hardcoded-credentials",
+        "description": "Scan for hardcoded secrets, API keys, or passwords in staged Swift files",
+        "command": "git diff --cached --name-only -- '*.swift' | xargs grep -n -i -E '(password|secret|private_key|api_key|bearer|token)\\s*[:=]\\s*\"[^\"]{8,}\"' 2>/dev/null && echo 'FAIL: Hardcoded credentials detected in staged files' && exit 1 || true",
+        "fail_on_error": true
+      },
+      {
+        "name": "no-env-files",
+        "description": "Prevent .env files from being committed",
+        "command": "git diff --cached --name-only | grep -E '^\\.env$|\\.env\\.local$|\\.env\\..+\\.local$' && echo 'FAIL: .env file staged for commit' && exit 1 || true",
+        "fail_on_error": true
+      },
+      {
+        "name": "no-phi-in-logs",
+        "description": "Check for patient health information in print/NSLog statements",
+        "command": "git diff --cached -- '*.swift' | grep -E '^\\+.*((print|NSLog|os_log)\\(.*(email|firstName|lastName|patient\\.name|healthData))' && echo 'FAIL: PHI detected in logging statement' && exit 1 || true",
+        "fail_on_error": true
+      }
+    ],
+    "pre-testflight": [
+      {
+        "name": "verify-build-succeeds",
+        "description": "Full Xcode build must succeed before TestFlight upload",
+        "command": "cd ios-app/PTPerformance && xcodebuild -scheme PTPerformance -destination 'platform=iOS Simulator,name=iPhone 16 Pro' build 2>&1 | tail -3 | grep -q 'BUILD SUCCEEDED'",
+        "fail_on_error": true
+      },
+      {
+        "name": "unit-tests-pass",
+        "description": "All unit tests must pass before TestFlight upload",
+        "command": "cd ios-app/PTPerformance && xcodebuild test -scheme PTPerformance -destination 'platform=iOS Simulator,name=iPhone 16 Pro' -only-testing:PTPerformanceTests 2>&1 | tail -3 | grep -q 'TEST SUCCEEDED\\|\\*\\* TEST SUCCEEDED \\*\\*'",
+        "fail_on_error": true
+      },
+      {
+        "name": "ui-tests-pass",
+        "description": "All XCUITests must pass before TestFlight upload",
+        "command": "cd ios-app/PTPerformance && xcodebuild test -scheme PTPerformance -destination 'platform=iOS Simulator,name=iPhone 16 Pro' -only-testing:PTPerformanceUITests 2>&1 | tail -3 | grep -q 'TEST SUCCEEDED\\|\\*\\* TEST SUCCEEDED \\*\\*'",
+        "fail_on_error": true
+      },
+      {
+        "name": "version-bumped",
+        "description": "Build number must be higher than the last TestFlight build",
+        "command": "CURRENT=$(grep -m1 'CURRENT_PROJECT_VERSION' ios-app/PTPerformance/PTPerformance.xcodeproj/project.pbxproj | tr -dc '0-9') && echo \"Build number: $CURRENT\" && [ \"$CURRENT\" -gt 0 ]",
+        "fail_on_error": true
+      },
+      {
+        "name": "no-pending-migrations",
+        "description": "All Supabase migrations must be applied before TestFlight",
+        "command": "ls supabase/migrations/_pending/*.sql 2>/dev/null && echo 'FAIL: Pending migrations found in supabase/migrations/_pending/' && exit 1 || echo 'OK: No pending migrations'",
+        "fail_on_error": true
+      },
+      {
+        "name": "swiftlint-clean",
+        "description": "No SwiftLint violations in the full codebase",
+        "command": "cd ios-app/PTPerformance && swiftlint lint --config .swiftlint.yml --quiet 2>&1 | grep -c 'error\\|warning' | grep -q '^0$' || (echo 'FAIL: SwiftLint violations found' && exit 1)",
+        "fail_on_error": true
+      }
+    ]
+  }
+}
