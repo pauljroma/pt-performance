@@ -655,6 +655,8 @@ struct ActionButton: View {
             .background(Color(.secondarySystemGroupedBackground))
             .cornerRadius(CornerRadius.md)
         }
+        .accessibilityLabel(title)
+        .accessibilityIdentifier("quick_action_\(title.lowercased().replacingOccurrences(of: " ", with: "_"))")
     }
 }
 

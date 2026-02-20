@@ -258,6 +258,7 @@ struct NutritionDashboardView: View {
         .background(Color(.systemBackground))
         .cornerRadius(CornerRadius.lg)
         .adaptiveShadow(Shadow.subtle)
+        .accessibilityIdentifier("nutrition_calorie_progress")
     }
 
     // MARK: - Legacy Today's Progress (kept for reference)
@@ -475,6 +476,7 @@ struct NutritionDashboardView: View {
                 }
             }
         }
+        .accessibilityIdentifier("nutrition_log_meal")
     }
 
     // MARK: - Today's Meals (Enhanced - ACP-1018)

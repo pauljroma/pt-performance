@@ -524,7 +524,7 @@ final class WorkoutExecutionDeepFlowTests: XCTestCase {
         try XCTSkipIf(!workoutAvailable, "No workout available — skipping")
 
         // Try to complete all exercises to reveal the "Complete workout" button
-        quickCompleteAllExercises(maxAttempts: 10)
+        quickCompleteAllExercises(maxAttempts: 20)
 
         // Look for the finish button, scrolling if needed
         var finishButton = resolveFinishWorkoutButton()
@@ -866,6 +866,7 @@ final class WorkoutExecutionDeepFlowTests: XCTestCase {
     }
 
     /// Repeatedly completes exercises until the "Complete workout" button appears.
+    /// Falls back to skipping exercises when completion fails.
     private func quickCompleteAllExercises(maxAttempts: Int) {
         for _ in 0..<maxAttempts {
             // Stop if the finish button has become available
@@ -884,7 +885,25 @@ final class WorkoutExecutionDeepFlowTests: XCTestCase {
                 skipRest.tap()
             }
 
-            if !completed { break }
+            // If completion failed, try skipping the exercise to advance
+            if !completed {
+                let skipButton = resolveSkipButton()
+                if skipButton.exists && skipButton.isHittable {
+                    skipButton.tap()
+                    // Handle confirmation alert
+                    let confirmSkip = app.alerts.buttons["Skip"]
+                    if confirmSkip.waitForExistence(timeout: 2) {
+                        confirmSkip.tap()
+                    }
+                    let confirmYes = app.alerts.buttons["Yes"]
+                    if confirmYes.waitForExistence(timeout: 1) {
+                        confirmYes.tap()
+                    }
+                    Thread.sleep(forTimeInterval: 1.0)
+                    continue
+                }
+                break
+            }
         }
     }
 

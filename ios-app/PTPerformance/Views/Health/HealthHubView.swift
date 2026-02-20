@@ -351,6 +351,7 @@ struct HealthHubView: View {
                 onAction: handleQuickAction
             )
         }
+        .accessibilityIdentifier("health_hub_quick_actions")
     }
 
     private func handleQuickAction(_ action: QuickAction.QuickActionType) {

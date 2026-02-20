@@ -221,6 +221,7 @@ struct StrengthModeDashboardView: View {
             .accessibilityElement(children: .combine)
             .accessibilityLabel("Estimated powerlifting total")
             .accessibilityValue(viewModel.formattedSBDTotal)
+            .accessibilityIdentifier("strength_sbd_total_card")
         }
     }
 
@@ -544,6 +545,7 @@ struct StrengthModeDashboardView: View {
             )
         }
         .buttonStyle(PlainButtonStyle())
+        .accessibilityIdentifier("strength_analytics_deep_dive")
         .navigationDestination(isPresented: $showDeepDive) {
             StrengthAnalyticsDeepDiveView(patientId: patientId.uuidString)
         }

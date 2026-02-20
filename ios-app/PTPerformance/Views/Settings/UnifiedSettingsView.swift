@@ -107,7 +107,7 @@ struct UnifiedSettingsView: View {
                     noResultsView
                 }
             }
-            .searchable(text: $searchText, prompt: "Search settings...")
+            .searchable(text: $searchText, placement: .navigationBarDrawer(displayMode: .always), prompt: "Search settings...")
             .navigationTitle("Settings")
             .navigationBarTitleDisplayMode(.large)
             .task {

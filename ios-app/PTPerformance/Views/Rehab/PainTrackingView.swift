@@ -16,6 +16,7 @@ struct PainTrackingView: View {
                 VStack(spacing: Spacing.lg) {
                     // Interactive pain body diagram
                     PainBodyDiagramView(painLocations: $painLocations)
+                        .accessibilityIdentifier("pain_body_diagram")
                         .padding(.horizontal)
 
                     // Save button (visible when there are pain locations)
@@ -41,6 +42,7 @@ struct PainTrackingView: View {
                                 .cornerRadius(CornerRadius.md)
                             }
                             .disabled(isSaving)
+                            .accessibilityIdentifier("pain_save_log")
                             .padding(.horizontal)
 
                             Text("\(painLocations.count) location\(painLocations.count == 1 ? "" : "s") selected")

@@ -211,6 +211,7 @@ struct SOAPNoteEditorView: View {
                 text: $viewModel.subjective,
                 isLocked: viewModel.isSigned
             )
+            .accessibilityIdentifier("soap_subjective_editor")
 
             // Objective with Session Import
             SOAPSectionEditor(
@@ -241,6 +242,7 @@ struct SOAPNoteEditorView: View {
                     .accessibilityHint("Opens session data importer to auto-fill objective metrics from recent sessions")
                 ) : nil
             )
+            .accessibilityIdentifier("soap_objective_editor")
 
             // Assessment
             SOAPSectionEditor(
@@ -251,6 +253,7 @@ struct SOAPNoteEditorView: View {
                 text: $viewModel.assessment,
                 isLocked: viewModel.isSigned
             )
+            .accessibilityIdentifier("soap_assessment_editor")
 
             // Plan with AI suggestions
             SOAPSectionEditor(
@@ -281,6 +284,7 @@ struct SOAPNoteEditorView: View {
                     .accessibilityHint("Opens AI-powered suggestions based on your note content")
                 ) : nil
             )
+            .accessibilityIdentifier("soap_plan_editor")
         }
     }
 

@@ -144,6 +144,7 @@ struct AchievementsDashboardView: View {
         }
         .accessibilityElement(children: .contain)
         .accessibilityLabel("Dashboard tabs")
+        .accessibilityIdentifier("achievements_tab_picker")
     }
 
     // MARK: - Achievements Content

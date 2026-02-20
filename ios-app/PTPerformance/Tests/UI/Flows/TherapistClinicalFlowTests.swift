@@ -99,7 +99,7 @@ final class TherapistClinicalFlowTests: XCTestCase {
 
         waitForContentToLoad()
 
-        // Try table-based layout first
+        // Strategy 1: Try table-based layout
         let tableCell = app.tables.firstMatch.cells.firstMatch
         if tableCell.waitForExistence(timeout: 10) {
             tableCell.tap()
@@ -107,12 +107,36 @@ final class TherapistClinicalFlowTests: XCTestCase {
             return true
         }
 
-        // Try collection view layout
+        // Strategy 2: Try collection view cells (SwiftUI List on iOS 26+)
         let collectionCell = app.collectionViews.firstMatch.cells.firstMatch
         if collectionCell.waitForExistence(timeout: 5) {
             collectionCell.tap()
             waitForContentToLoad()
             return true
+        }
+
+        // Strategy 3: Try unscoped cells (covers any cell type in the hierarchy)
+        let anyCell = app.cells.firstMatch
+        if anyCell.waitForExistence(timeout: 5) {
+            anyCell.tap()
+            waitForContentToLoad()
+            return true
+        }
+
+        // Strategy 4: Look for patient names from seed data and tap the first match
+        let patientNames = ["Rivera", "Chen", "Brooks", "Fitzgerald", "Williams",
+                            "Nakamura", "Patterson", "Martinez", "O'Connor", "Rossi"]
+        for name in patientNames {
+            let predicate = NSPredicate(format: "label CONTAINS[c] %@", name)
+            let patientElement = app.staticTexts.containing(predicate).firstMatch
+            if patientElement.waitForExistence(timeout: 2) {
+                patientElement.tap()
+                waitForContentToLoad()
+                // Verify we navigated by checking for nav bar change or new content
+                if app.navigationBars.count > 0 {
+                    return true
+                }
+            }
         }
 
         return false

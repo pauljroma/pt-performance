@@ -10,6 +10,13 @@
 		4968239D075CC535AAFEB4D4 /* MultiPersonaE2ETests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1AB0B3BCAE71A7D90EF584C /* MultiPersonaE2ETests.swift */; };
 		47ECE6178691A15806474A09 /* TherapistMultiPatientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABB2E7EECF154045B0C08BE6 /* TherapistMultiPatientTests.swift */; };
 		C1A2B3D4E5F60001AABB0001 /* ModeSpecificTabTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1A2B3D4E5F60001AABB0010 /* ModeSpecificTabTests.swift */; };
+		E2E70001000000000000CC01 /* StrengthModeDashboardTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2E70001000000000000CC10 /* StrengthModeDashboardTests.swift */; };
+		E2E70002000000000000CC01 /* NutritionModuleFlowTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2E70002000000000000CC10 /* NutritionModuleFlowTests.swift */; };
+		E2E70003000000000000CC01 /* PainAndROMTrackingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2E70003000000000000CC10 /* PainAndROMTrackingTests.swift */; };
+		E2E70004000000000000CC01 /* TherapistDocumentationFlowTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2E70004000000000000CC10 /* TherapistDocumentationFlowTests.swift */; };
+		E2E70005000000000000CC01 /* PerformanceModeAnalyticsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2E70005000000000000CC10 /* PerformanceModeAnalyticsTests.swift */; };
+		E2E70006000000000000CC01 /* AchievementAndStreakTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2E70006000000000000CC10 /* AchievementAndStreakTests.swift */; };
+		E2E70007000000000000CC01 /* HealthHubAndRecoveryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2E70007000000000000CC10 /* HealthHubAndRecoveryTests.swift */; };
 		C1A2B3D4E5F60001AABB0002 /* TherapistClinicalFlowTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1A2B3D4E5F60001AABB0020 /* TherapistClinicalFlowTests.swift */; };
 		C1A2B3D4E5F60001AABB0003 /* WorkoutExecutionDeepFlowTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1A2B3D4E5F60001AABB0030 /* WorkoutExecutionDeepFlowTests.swift */; };
 		C1A2B3D4E5F60001AABB0004 /* ReadinessCheckInFlowTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1A2B3D4E5F60001AABB0040 /* ReadinessCheckInFlowTests.swift */; };
@@ -1187,6 +1194,13 @@
 		B1AB0B3BCAE71A7D90EF584C /* MultiPersonaE2ETests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = MultiPersonaE2ETests.swift; path = Tests/UI/Flows/MultiPersonaE2ETests.swift; sourceTree = "<group>"; };
 		ABB2E7EECF154045B0C08BE6 /* TherapistMultiPatientTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = TherapistMultiPatientTests.swift; path = Tests/UI/Flows/TherapistMultiPatientTests.swift; sourceTree = "<group>"; };
 		C1A2B3D4E5F60001AABB0010 /* ModeSpecificTabTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ModeSpecificTabTests.swift; path = Tests/UI/Flows/ModeSpecificTabTests.swift; sourceTree = "<group>"; };
+		E2E70001000000000000CC10 /* StrengthModeDashboardTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = StrengthModeDashboardTests.swift; path = Tests/UI/Flows/StrengthModeDashboardTests.swift; sourceTree = "<group>"; };
+		E2E70002000000000000CC10 /* NutritionModuleFlowTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = NutritionModuleFlowTests.swift; path = Tests/UI/Flows/NutritionModuleFlowTests.swift; sourceTree = "<group>"; };
+		E2E70003000000000000CC10 /* PainAndROMTrackingTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = PainAndROMTrackingTests.swift; path = Tests/UI/Flows/PainAndROMTrackingTests.swift; sourceTree = "<group>"; };
+		E2E70004000000000000CC10 /* TherapistDocumentationFlowTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = TherapistDocumentationFlowTests.swift; path = Tests/UI/Flows/TherapistDocumentationFlowTests.swift; sourceTree = "<group>"; };
+		E2E70005000000000000CC10 /* PerformanceModeAnalyticsTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = PerformanceModeAnalyticsTests.swift; path = Tests/UI/Flows/PerformanceModeAnalyticsTests.swift; sourceTree = "<group>"; };
+		E2E70006000000000000CC10 /* AchievementAndStreakTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = AchievementAndStreakTests.swift; path = Tests/UI/Flows/AchievementAndStreakTests.swift; sourceTree = "<group>"; };
+		E2E70007000000000000CC10 /* HealthHubAndRecoveryTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = HealthHubAndRecoveryTests.swift; path = Tests/UI/Flows/HealthHubAndRecoveryTests.swift; sourceTree = "<group>"; };
 		C1A2B3D4E5F60001AABB0020 /* TherapistClinicalFlowTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = TherapistClinicalFlowTests.swift; path = Tests/UI/Flows/TherapistClinicalFlowTests.swift; sourceTree = "<group>"; };
 		C1A2B3D4E5F60001AABB0030 /* WorkoutExecutionDeepFlowTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = WorkoutExecutionDeepFlowTests.swift; path = Tests/UI/Flows/WorkoutExecutionDeepFlowTests.swift; sourceTree = "<group>"; };
 		C1A2B3D4E5F60001AABB0040 /* ReadinessCheckInFlowTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ReadinessCheckInFlowTests.swift; path = Tests/UI/Flows/ReadinessCheckInFlowTests.swift; sourceTree = "<group>"; };
@@ -4576,6 +4590,13 @@
 				B1AB0B3BCAE71A7D90EF584C /* MultiPersonaE2ETests.swift */,
 				ABB2E7EECF154045B0C08BE6 /* TherapistMultiPatientTests.swift */,
 				C1A2B3D4E5F60001AABB0010 /* ModeSpecificTabTests.swift */,
+				E2E70001000000000000CC10 /* StrengthModeDashboardTests.swift */,
+				E2E70002000000000000CC10 /* NutritionModuleFlowTests.swift */,
+				E2E70003000000000000CC10 /* PainAndROMTrackingTests.swift */,
+				E2E70004000000000000CC10 /* TherapistDocumentationFlowTests.swift */,
+				E2E70005000000000000CC10 /* PerformanceModeAnalyticsTests.swift */,
+				E2E70006000000000000CC10 /* AchievementAndStreakTests.swift */,
+				E2E70007000000000000CC10 /* HealthHubAndRecoveryTests.swift */,
 				C1A2B3D4E5F60001AABB0020 /* TherapistClinicalFlowTests.swift */,
 				C1A2B3D4E5F60001AABB0030 /* WorkoutExecutionDeepFlowTests.swift */,
 				C1A2B3D4E5F60001AABB0040 /* ReadinessCheckInFlowTests.swift */,
@@ -4999,6 +5020,13 @@
 				4968239D075CC535AAFEB4D4 /* MultiPersonaE2ETests.swift in Sources */,
 				47ECE6178691A15806474A09 /* TherapistMultiPatientTests.swift in Sources */,
 				C1A2B3D4E5F60001AABB0001 /* ModeSpecificTabTests.swift in Sources */,
+				E2E70001000000000000CC01 /* StrengthModeDashboardTests.swift in Sources */,
+				E2E70002000000000000CC01 /* NutritionModuleFlowTests.swift in Sources */,
+				E2E70003000000000000CC01 /* PainAndROMTrackingTests.swift in Sources */,
+				E2E70004000000000000CC01 /* TherapistDocumentationFlowTests.swift in Sources */,
+				E2E70005000000000000CC01 /* PerformanceModeAnalyticsTests.swift in Sources */,
+				E2E70006000000000000CC01 /* AchievementAndStreakTests.swift in Sources */,
+				E2E70007000000000000CC01 /* HealthHubAndRecoveryTests.swift in Sources */,
 				C1A2B3D4E5F60001AABB0002 /* TherapistClinicalFlowTests.swift in Sources */,
 				C1A2B3D4E5F60001AABB0003 /* WorkoutExecutionDeepFlowTests.swift in Sources */,
 				C1A2B3D4E5F60001AABB0004 /* ReadinessCheckInFlowTests.swift in Sources */,
