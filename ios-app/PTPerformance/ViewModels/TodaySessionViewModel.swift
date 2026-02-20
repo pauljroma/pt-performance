@@ -239,9 +239,7 @@ class TodaySessionViewModel: ObservableObject {
             throw URLError(.badServerResponse)
         }
 
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
-        return try decoder.decode(TodaySessionResponse.self, from: data)
+        return try PTSupabaseClient.flexibleDecoder.decode(TodaySessionResponse.self, from: data)
     }
 
     /// Fetch directly from Supabase (fallback)
@@ -324,9 +322,7 @@ class TodaySessionViewModel: ObservableObject {
                     .limit(1)
                     .execute()
 
-                let decoder = JSONDecoder()
-                decoder.dateDecodingStrategy = .iso8601
-                let sessions = try decoder.decode([Session].self, from: response.data)
+                let sessions = try PTSupabaseClient.flexibleDecoder.decode([Session].self, from: response.data)
 
                 guard let session = sessions.first else {
                     logger.log("⚠️ No session found with ID: \(sessionId)", level: .warning)
@@ -380,9 +376,7 @@ class TodaySessionViewModel: ObservableObject {
                 logger.log("📱 Raw JSON: \(jsonString.prefix(1000))")
             }
 
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
-            let sessionsResponse = try decoder.decode([Session].self, from: response.data)
+            let sessionsResponse = try PTSupabaseClient.flexibleDecoder.decode([Session].self, from: response.data)
 
             logger.log("📱 Supabase returned \(sessionsResponse.count) sessions")
 
@@ -465,9 +459,7 @@ class TodaySessionViewModel: ObservableObject {
             logger.log("📱 RPC response: \(jsonString)")
         }
 
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
-        let rows = try decoder.decode([EnrolledSessionRow].self, from: response.data)
+        let rows = try PTSupabaseClient.flexibleDecoder.decode([EnrolledSessionRow].self, from: response.data)
 
         guard let row = rows.first else {
             logger.log("⚠️ RPC returned no enrolled sessions", level: .warning)
@@ -538,9 +530,7 @@ class TodaySessionViewModel: ObservableObject {
             logger.log("📱 Template response: \(jsonString.prefix(500))")
         }
 
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
-        let templates = try decoder.decode([WorkoutTemplate].self, from: response.data)
+        let templates = try PTSupabaseClient.flexibleDecoder.decode([WorkoutTemplate].self, from: response.data)
 
         guard let template = templates.first else {
             logger.log("⚠️ No template found with ID: \(templateId)", level: .warning)
@@ -656,9 +646,7 @@ class TodaySessionViewModel: ObservableObject {
             logger.log("📱 Exercises JSON: \(jsonString.prefix(500))")
         }
 
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
-        let exercisesResponse = try decoder.decode([Exercise].self, from: response.data)
+        let exercisesResponse = try PTSupabaseClient.flexibleDecoder.decode([Exercise].self, from: response.data)
 
         logger.log("✅ Found \(exercisesResponse.count) exercises", level: .success)
         self.exercises = exercisesResponse
@@ -888,9 +876,7 @@ class TodaySessionViewModel: ObservableObject {
                 .eq("patient_id", value: patientId)
                 .execute()
 
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
-            let exerciseLogs = try decoder.decode([ExerciseLogRecord].self, from: response.data)
+            let exerciseLogs = try PTSupabaseClient.flexibleDecoder.decode([ExerciseLogRecord].self, from: response.data)
 
             logger.log("📊 Found \(exerciseLogs.count) exercise logs")
 

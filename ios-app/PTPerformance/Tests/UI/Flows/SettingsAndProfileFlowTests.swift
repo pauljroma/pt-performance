@@ -28,7 +28,8 @@ final class SettingsAndProfileFlowTests: XCTestCase {
         app = XCUIApplication()
         app.launchArguments = [
             "--uitesting",
-            "--auto-login-user-id", marcusUserId
+            "--auto-login-user-id", marcusUserId,
+            "--auto-login-mode", "rehab"
         ]
         app.launchEnvironment = [
             "IS_RUNNING_UITEST": "1"

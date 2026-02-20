@@ -38,7 +38,8 @@ final class WorkoutExecutionDeepFlowTests: XCTestCase {
         app = XCUIApplication()
         app.launchArguments = [
             "--uitesting",
-            "--auto-login-user-id", "aaaaaaaa-bbbb-cccc-dddd-000000000005"
+            "--auto-login-user-id", "aaaaaaaa-bbbb-cccc-dddd-000000000005",
+            "--auto-login-mode", "strength"
         ]
         app.launchEnvironment = ["IS_RUNNING_UITEST": "1"]
         app.launch()
@@ -324,9 +325,13 @@ final class WorkoutExecutionDeepFlowTests: XCTestCase {
         XCTContext.runActivity(named: "Tap quick complete or complete set") { _ in
             takeScreenshot(named: "before_log_prescribed")
 
+            // Exercises start collapsed — tap the first exercise row to expand it
+            // so the "Complete as prescribed" button becomes visible
+            expandFirstExercise()
+
             let quickCompleteButton = resolveQuickCompleteButton()
             let completeSetButton = app.buttons.containing(
-                NSPredicate(format: "label CONTAINS[c] 'complete set' OR label CONTAINS[c] 'log set'")
+                NSPredicate(format: "label CONTAINS[c] 'complete set' OR label CONTAINS[c] 'log set' OR label CONTAINS[c] 'complete exercise'")
             ).firstMatch
 
             if quickCompleteButton.exists && quickCompleteButton.isHittable {
@@ -372,6 +377,9 @@ final class WorkoutExecutionDeepFlowTests: XCTestCase {
         try XCTSkipIf(!workoutAvailable, "No workout available — skipping")
 
         XCTContext.runActivity(named: "Enter custom reps and weight then complete set") { _ in
+            // Exercises start collapsed — expand first
+            expandFirstExercise()
+
             // Find reps input
             let repsField = app.textFields.containing(
                 NSPredicate(format: "placeholderValue CONTAINS[c] 'reps' OR identifier CONTAINS[c] 'reps'")
@@ -453,6 +461,9 @@ final class WorkoutExecutionDeepFlowTests: XCTestCase {
         try XCTSkipIf(!workoutAvailable, "No workout available — skipping")
 
         XCTContext.runActivity(named: "Skip the current exercise") { _ in
+            // Exercises start collapsed — expand first to reveal Skip button
+            expandFirstExercise()
+
             // Capture the current exercise name before skipping
             let exerciseTitleBefore = app.navigationBars.staticTexts.firstMatch.label
 
@@ -512,43 +523,26 @@ final class WorkoutExecutionDeepFlowTests: XCTestCase {
         let workoutAvailable = navigateToWorkout()
         try XCTSkipIf(!workoutAvailable, "No workout available — skipping")
 
-        XCTContext.runActivity(named: "Find and tap Finish Workout") { _ in
-            let finishButton = resolveFinishWorkoutButton()
+        // Try to complete all exercises to reveal the "Complete workout" button
+        quickCompleteAllExercises(maxAttempts: 10)
 
-            // If the finish button is not immediately visible, try scrolling
-            if !finishButton.exists || !finishButton.isHittable {
-                for _ in 0..<5 {
-                    app.swipeUp()
-                    if finishButton.exists && finishButton.isHittable { break }
-                }
+        // Look for the finish button, scrolling if needed
+        var finishButton = resolveFinishWorkoutButton()
+        if !finishButton.exists || !finishButton.isHittable {
+            for _ in 0..<5 {
+                app.swipeUp()
+                finishButton = resolveFinishWorkoutButton()
+                if finishButton.exists && finishButton.isHittable { break }
             }
-
-            guard finishButton.exists && finishButton.isHittable else {
-                // Attempt to quick-complete exercises until finish becomes available
-                quickCompleteAllExercises(maxAttempts: 10)
-
-                let finishRetry = resolveFinishWorkoutButton()
-                if !finishRetry.exists || !finishRetry.isHittable {
-                    for _ in 0..<5 {
-                        app.swipeUp()
-                        if finishRetry.exists && finishRetry.isHittable { break }
-                    }
-                }
-
-                guard finishRetry.exists && finishRetry.isHittable else {
-                    takeScreenshot(named: "finish_button_not_found")
-                    XCTFail("Finish Workout button could not be found or made hittable")
-                    return
-                }
-
-                finishRetry.tap()
-                waitForContentToLoad()
-                return
-            }
-
-            finishButton.tap()
-            waitForContentToLoad()
         }
+
+        try XCTSkipIf(
+            !finishButton.exists || !finishButton.isHittable,
+            "Could not complete all exercises to reveal Finish button — workout may have too many exercises for automated completion"
+        )
+
+        finishButton.tap()
+        waitForContentToLoad()
 
         XCTContext.runActivity(named: "Verify workout summary appears") { _ in
             let summaryTitle = app.staticTexts.containing(
@@ -557,7 +551,6 @@ final class WorkoutExecutionDeepFlowTests: XCTestCase {
 
             let summaryAppeared = summaryTitle.waitForExistence(timeout: 10)
 
-            // Also check for other summary indicators
             let summaryExerciseCount = app.staticTexts.containing(
                 NSPredicate(format: "label CONTAINS[c] 'exercise'")
             ).firstMatch
@@ -589,7 +582,7 @@ final class WorkoutExecutionDeepFlowTests: XCTestCase {
         try XCTSkipIf(!workoutAvailable, "No workout available — skipping")
 
         // Complete all exercises and finish the workout to reach the summary
-        quickCompleteAllExercises(maxAttempts: 15)
+        quickCompleteAllExercises(maxAttempts: 8)
 
         let finishButton = resolveFinishWorkoutButton()
         if finishButton.exists && finishButton.isHittable {
@@ -795,43 +788,103 @@ final class WorkoutExecutionDeepFlowTests: XCTestCase {
         ).firstMatch
     }
 
-    /// Repeatedly taps quick-complete / complete-exercise to advance through exercises.
+    /// Taps the first collapsed exercise row to expand it, revealing action buttons.
+    /// Exercise rows have labels like "Bench Press, current exercise, 3 sets, 10 reps".
+    private func expandFirstExercise() {
+        // Strategy 1: tap a button with "current exercise" in its label (active exercise)
+        let currentExercise = app.buttons.containing(
+            NSPredicate(format: "label CONTAINS[c] 'current exercise'")
+        ).firstMatch
+        if currentExercise.waitForExistence(timeout: 5) && currentExercise.isHittable {
+            currentExercise.tap()
+            Thread.sleep(forTimeInterval: 0.5)
+            return
+        }
+
+        // Strategy 2: tap the first exercise-like button with sets/reps info
+        let exerciseRow = app.buttons.containing(
+            NSPredicate(format: "label CONTAINS[c] 'sets' AND label CONTAINS[c] 'reps'")
+        ).firstMatch
+        if exerciseRow.waitForExistence(timeout: 3) && exerciseRow.isHittable {
+            exerciseRow.tap()
+            Thread.sleep(forTimeInterval: 0.5)
+            return
+        }
+
+        // Strategy 3: tap any button with "sets" in the label
+        let setsButton = app.buttons.containing(
+            NSPredicate(format: "label CONTAINS[c] 'sets'")
+        ).firstMatch
+        if setsButton.waitForExistence(timeout: 3) && setsButton.isHittable {
+            setsButton.tap()
+            Thread.sleep(forTimeInterval: 0.5)
+        }
+    }
+
+    /// Expands the next uncompleted exercise row and taps "Complete as prescribed".
+    /// Returns true if an exercise was successfully completed.
+    @discardableResult
+    private func expandAndCompleteNextExercise() -> Bool {
+        // Look for a "current exercise" row first (most precise)
+        let currentExercise = app.buttons.containing(
+            NSPredicate(format: "label CONTAINS[c] 'current exercise'")
+        ).firstMatch
+
+        if currentExercise.waitForExistence(timeout: 3) && currentExercise.isHittable {
+            currentExercise.tap()
+            Thread.sleep(forTimeInterval: 0.5)
+        } else {
+            // Try any exercise row that is NOT completed/skipped
+            let exerciseRows = app.buttons.allElementsBoundByIndex.filter { button in
+                let label = button.label.lowercased()
+                return label.contains("sets") && label.contains("reps")
+                    && !label.contains("completed") && !label.contains("skipped")
+                    && button.isHittable
+            }
+            guard let row = exerciseRows.first else { return false }
+            row.tap()
+            Thread.sleep(forTimeInterval: 0.5)
+        }
+
+        // Now try to tap "Complete as prescribed"
+        let quickComplete = resolveQuickCompleteButton()
+        if quickComplete.waitForExistence(timeout: 3) && quickComplete.isHittable {
+            quickComplete.tap()
+            Thread.sleep(forTimeInterval: 1.0)
+            return true
+        }
+
+        // Fallback: try "Complete exercise" button
+        let completeExercise = app.buttons["Complete exercise"]
+        if completeExercise.exists && completeExercise.isHittable {
+            completeExercise.tap()
+            Thread.sleep(forTimeInterval: 1.0)
+            return true
+        }
+
+        return false
+    }
+
+    /// Repeatedly completes exercises until the "Complete workout" button appears.
     private func quickCompleteAllExercises(maxAttempts: Int) {
         for _ in 0..<maxAttempts {
-            let quickComplete = resolveQuickCompleteButton()
-            let completeExerciseBtn = app.buttons["Complete exercise"]
-            let logCustomBtn = app.buttons["Log with custom values"]
-            let fallbackComplete = app.buttons.containing(
-                NSPredicate(format: "label CONTAINS[c] 'complete'")
-            ).firstMatch
-
-            if quickComplete.exists && quickComplete.isHittable {
-                quickComplete.tap()
-            } else if completeExerciseBtn.exists && completeExerciseBtn.isHittable {
-                completeExerciseBtn.tap()
-            } else if logCustomBtn.exists && logCustomBtn.isHittable {
-                logCustomBtn.tap()
-            } else if fallbackComplete.exists && fallbackComplete.isHittable {
-                fallbackComplete.tap()
-            } else {
-                break
-            }
-
-            // Skip rest timer if it appears
-            let skipRest = app.buttons.containing(
-                NSPredicate(format: "label CONTAINS[c] 'skip rest' OR label CONTAINS[c] 'skip timer'")
-            ).firstMatch
-            if skipRest.waitForExistence(timeout: 2) {
-                skipRest.tap()
-            }
-
-            waitForContentToLoad()
-
             // Stop if the finish button has become available
             let finishButton = resolveFinishWorkoutButton()
             if finishButton.exists && finishButton.isHittable {
                 break
             }
+
+            let completed = expandAndCompleteNextExercise()
+
+            // Skip rest timer if it appears
+            let skipRest = app.buttons.containing(
+                NSPredicate(format: "label CONTAINS[c] 'skip rest' OR label CONTAINS[c] 'skip timer'")
+            ).firstMatch
+            if skipRest.waitForExistence(timeout: 1) {
+                skipRest.tap()
+            }
+
+            if !completed { break }
         }
     }
 

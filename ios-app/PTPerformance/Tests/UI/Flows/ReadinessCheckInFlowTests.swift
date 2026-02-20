@@ -31,7 +31,8 @@ final class ReadinessCheckInFlowTests: XCTestCase {
         app = XCUIApplication()
         app.launchArguments = [
             "--uitesting",
-            "--auto-login-user-id", "aaaaaaaa-bbbb-cccc-dddd-000000000001"
+            "--auto-login-user-id", "aaaaaaaa-bbbb-cccc-dddd-000000000001",
+            "--auto-login-mode", "rehab"
         ]
         app.launchEnvironment = ["IS_RUNNING_UITEST": "1"]
         app.launch()
@@ -220,20 +221,25 @@ final class ReadinessCheckInFlowTests: XCTestCase {
         // ReadinessCheckInView uses these accessibility labels:
         // - "Submit today's check-in" (new check-in)
         // - "Update today's check-in" (existing check-in)
-        let submitCheckIn = app.buttons.containing(
-            NSPredicate(format: "label CONTAINS[c] 'Submit today' OR label CONTAINS[c] 'Update today'")
-        ).firstMatch
-        if submitCheckIn.exists && submitCheckIn.isHittable {
-            submitCheckIn.tap()
-            return true
+        // The button is at the bottom of a ScrollView, so scroll down to reveal it.
+        let submitPredicate = NSPredicate(
+            format: "label CONTAINS[c] 'Submit today' OR label CONTAINS[c] 'Update today' OR label CONTAINS[c] 'Submit Check-In' OR label CONTAINS[c] 'Update Check-In'"
+        )
+        let submitCheckIn = app.buttons.containing(submitPredicate).firstMatch
+
+        // Scroll down to make the submit button visible
+        for _ in 0..<5 {
+            if submitCheckIn.exists && submitCheckIn.isHittable {
+                submitCheckIn.tap()
+                return true
+            }
+            app.swipeUp()
+            Thread.sleep(forTimeInterval: 0.5)
         }
 
-        // Fallback: button text "Submit Check-In" or "Update Check-In"
-        let submitTextButton = app.buttons.containing(
-            NSPredicate(format: "label CONTAINS[c] 'Submit Check-In' OR label CONTAINS[c] 'Update Check-In'")
-        ).firstMatch
-        if submitTextButton.exists && submitTextButton.isHittable {
-            submitTextButton.tap()
+        // Check once more after scrolling
+        if submitCheckIn.exists && submitCheckIn.isHittable {
+            submitCheckIn.tap()
             return true
         }
 

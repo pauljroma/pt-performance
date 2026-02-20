@@ -237,9 +237,7 @@ final class WorkoutPreloadService: ObservableObject {
                 .limit(1)
                 .execute()
 
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
-            let sessions = try decoder.decode([Session].self, from: sessionResponse.data)
+            let sessions = try PTSupabaseClient.flexibleDecoder.decode([Session].self, from: sessionResponse.data)
 
             if let session = sessions.first {
                 logger.log("[WorkoutPreloadService] Found scheduled session: \(session.name)", level: .diagnostic)
@@ -270,9 +268,7 @@ final class WorkoutPreloadService: ObservableObject {
             .limit(1)
             .execute()
 
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
-        let sessions = try decoder.decode([Session].self, from: response.data)
+        let sessions = try PTSupabaseClient.flexibleDecoder.decode([Session].self, from: response.data)
 
         if let session = sessions.first {
             logger.log("[WorkoutPreloadService] Found program session: \(session.name)", level: .diagnostic)
@@ -308,9 +304,7 @@ final class WorkoutPreloadService: ObservableObject {
             .order("id", ascending: true)
             .execute()
 
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
-        let exercises = try decoder.decode([Exercise].self, from: response.data)
+        let exercises = try PTSupabaseClient.flexibleDecoder.decode([Exercise].self, from: response.data)
 
         logger.log("[WorkoutPreloadService] Fetched \(exercises.count) exercises", level: .diagnostic)
         return exercises

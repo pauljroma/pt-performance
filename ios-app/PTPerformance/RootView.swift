@@ -303,6 +303,11 @@ struct RootView: View {
                 hasAcceptedPrivacyNotice = true
                 hasCompletedQuickSetup = true
                 isCheckingSession = false
+                // Suppress onboarding, consent, and welcome-back during UI tests
+                onboardingCoordinator.hasSeenOnboarding = true
+                onboardingCoordinator.shouldShowOnboarding = false
+                consentManager.acknowledgeConsentVersion()
+                reEngagementService.showWelcomeBack = false
                 // Set patient mode if provided, so mode-specific tabs render correctly
                 // without needing a database query (which requires a real auth session)
                 if let mode = autoLoginMode {
