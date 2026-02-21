@@ -272,6 +272,48 @@ struct RootView: View {
     /// Optimized to minimize time to first meaningful paint
     private func restoreSession() async {
         #if DEBUG
+        // XCUITest --reset-auth: Clear all auth state to show login screen
+        // Used by AuthFlowTests, DemoModeFlowTests to test login flows from scratch
+        if CommandLine.arguments.contains("--reset-auth") {
+            await MainActor.run {
+                appState.userId = nil
+                appState.userRole = nil
+                appState.isAuthenticated = false
+                PTSupabaseClient.shared.userId = nil
+                PTSupabaseClient.shared.userRole = nil
+                isCheckingSession = false
+                reEngagementService.showWelcomeBack = false
+                // SKIP_ONBOARDING env var suppresses onboarding/privacy/consent screens
+                if ProcessInfo.processInfo.environment["SKIP_ONBOARDING"] == "1" {
+                    onboardingCoordinator.hasSeenOnboarding = true
+                    onboardingCoordinator.shouldShowOnboarding = false
+                    hasAcceptedPrivacyNotice = true
+                    hasCompletedQuickSetup = true
+                    consentManager.acknowledgeConsentVersion()
+                }
+            }
+            DebugLogger.shared.info("UITest", "Auth state reset — showing login screen")
+            return
+        }
+
+        // XCUITest --reset-onboarding: Reset onboarding state so onboarding screens appear
+        // Used by OnboardingFlowTests to test the full onboarding experience
+        if CommandLine.arguments.contains("--reset-onboarding") {
+            await MainActor.run {
+                onboardingCoordinator.hasSeenOnboarding = false
+                onboardingCoordinator.shouldShowOnboarding = true
+                appState.isAuthenticated = false
+                isCheckingSession = false
+                reEngagementService.showWelcomeBack = false
+                // Skip privacy/consent so onboarding is the first thing shown
+                hasAcceptedPrivacyNotice = true
+                hasCompletedQuickSetup = true
+                consentManager.acknowledgeConsentVersion()
+            }
+            DebugLogger.shared.info("UITest", "Onboarding state reset — showing onboarding")
+            return
+        }
+
         // XCUITest auto-login: --auto-login-user-id <UUID> [--auto-login-role patient|therapist] [--auto-login-mode rehab|strength|performance]
         // Bypasses auth, privacy notice, onboarding, and quick setup for test automation
         if let idx = CommandLine.arguments.firstIndex(of: "--auto-login-user-id"),

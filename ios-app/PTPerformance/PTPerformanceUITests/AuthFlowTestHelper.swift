@@ -113,19 +113,23 @@ enum AuthFlowTestHelper {
 
     // MARK: - Logout Helpers
 
-    /// Perform logout flow from Profile tab
+    /// Perform logout flow from Settings tab
     /// - Parameter app: Application instance
     /// - Returns: True if logout succeeded
     @discardableResult
     static func logout(from app: XCUIApplication) -> Bool {
-        // Navigate to Profile tab
+        // Navigate to Settings tab (or Profile as fallback)
+        let settingsTab = app.tabBars.buttons[AccessibilityID.settingsTab]
         let profileTab = app.tabBars.buttons[AccessibilityID.profileTab]
-        guard profileTab.waitForExistence(timeout: AuthTimeout.standard) else {
-            print("ERROR: Profile tab not found")
+        if settingsTab.waitForExistence(timeout: AuthTimeout.standard) {
+            settingsTab.tap()
+        } else if profileTab.waitForExistence(timeout: AuthTimeout.immediate) {
+            profileTab.tap()
+        } else {
+            print("ERROR: Neither Settings nor Profile tab found")
             return false
         }
 
-        profileTab.tap()
         waitForLoadingToComplete(in: app)
 
         // Scroll to find Log Out button
@@ -170,8 +174,13 @@ enum AuthFlowTestHelper {
         let startTime = Date()
 
         while Date().timeIntervalSince(startTime) < timeout {
-            // Check for activity indicators
-            let spinners = app.activityIndicators.allElementsBoundByIndex.filter { $0.exists && $0.isHittable }
+            // Check for activity indicators (guard against invalid frames on iOS 26)
+            let spinners = app.activityIndicators.allElementsBoundByIndex.filter { element in
+                guard element.exists else { return false }
+                // Avoid isHittable on elements with degenerate frames
+                let frame = element.frame
+                return frame.width > 0 && frame.height > 0 && frame.origin.x.isFinite && frame.origin.y.isFinite
+            }
 
             // Check for "Setting up your account" text (magic link spinner issue)
             let settingUpText = app.staticTexts.containing(
@@ -244,11 +253,11 @@ enum AuthFlowTestHelper {
     /// - Returns: True if on patient home
     static func isOnPatientHomeScreen(in app: XCUIApplication) -> Bool {
         let todayTab = app.tabBars.buttons[AccessibilityID.todayTab]
-        let programsTab = app.tabBars.buttons[AccessibilityID.programsTab]
-        let profileTab = app.tabBars.buttons[AccessibilityID.profileTab]
+        let settingsTab = app.tabBars.buttons[AccessibilityID.settingsTab]
 
-        // Patient should have Today, Programs, and Profile tabs
-        return todayTab.exists && programsTab.exists && profileTab.exists
+        // Patient tab bar always has Today + Settings regardless of mode
+        // Mode-specific middle tabs: Pain/Progress/ROM (rehab), Workouts/PRs/Progress (strength), etc.
+        return todayTab.exists && settingsTab.exists
     }
 
     /// Verify navigation to therapist home screen (Patients tab)
