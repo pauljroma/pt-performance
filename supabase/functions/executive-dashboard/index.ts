@@ -24,10 +24,10 @@ serve(async (req) => {
     return new Response('ok', { headers: corsHeaders })
   }
 
-  // Only allow GET
-  if (req.method !== 'GET') {
+  // Only allow GET and POST
+  if (req.method !== 'GET' && req.method !== 'POST') {
     return new Response(
-      JSON.stringify({ error: 'Method not allowed. Use GET.' }),
+      JSON.stringify({ error: 'Method not allowed. Use GET or POST.' }),
       { status: 405, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
   }
@@ -59,10 +59,17 @@ serve(async (req) => {
     })
 
     // ========================================================================
-    // DETERMINE FORMAT
+    // DETERMINE FORMAT (GET: query string, POST: JSON body)
     // ========================================================================
-    const url = new URL(req.url)
-    const format = url.searchParams.get('format')
+    let format: string | null = null
+
+    if (req.method === 'POST') {
+      const body = await req.json()
+      format = body.format != null ? String(body.format) : null
+    } else {
+      const url = new URL(req.url)
+      format = url.searchParams.get('format')
+    }
 
     logger.info(`Request received`, { format: format || 'full' })
 

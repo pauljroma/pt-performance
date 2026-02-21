@@ -55,17 +55,28 @@ serve(async (req) => {
     return new Response('ok', { headers: corsHeaders })
   }
 
-  // Only accept GET requests
-  if (req.method !== 'GET') {
-    return errorResponse('Method not allowed. Use GET.', 405)
+  // Only accept GET and POST requests
+  if (req.method !== 'GET' && req.method !== 'POST') {
+    return errorResponse('Method not allowed. Use GET or POST.', 405)
   }
 
   try {
-    // Parse query parameters
-    const url = new URL(req.url)
-    const patientId = url.searchParams.get('patient_id')
-    const periodParam = url.searchParams.get('period')
-    const aggregateParam = url.searchParams.get('aggregate')
+    // Parse parameters (GET: query string, POST: JSON body)
+    let patientId: string | null = null
+    let periodParam: string | null = null
+    let aggregateParam: string | null = null
+
+    if (req.method === 'POST') {
+      const body = await req.json()
+      patientId = body.patient_id != null ? String(body.patient_id) : null
+      periodParam = body.period != null ? String(body.period) : null
+      aggregateParam = body.aggregate != null ? String(body.aggregate) : null
+    } else {
+      const url = new URL(req.url)
+      patientId = url.searchParams.get('patient_id')
+      periodParam = url.searchParams.get('period')
+      aggregateParam = url.searchParams.get('aggregate')
+    }
 
     // Validate the Authorization header
     const authHeader = req.headers.get('Authorization')

@@ -26,10 +26,10 @@ serve(async (req) => {
     return new Response('ok', { headers: corsHeaders })
   }
 
-  // Only allow GET requests
-  if (req.method !== 'GET') {
+  // Only allow GET and POST requests
+  if (req.method !== 'GET' && req.method !== 'POST') {
     return new Response(
-      JSON.stringify({ error: 'Method not allowed', message: 'Use GET with ?period=30' }),
+      JSON.stringify({ error: 'Method not allowed', message: 'Use GET with ?period=30 or POST with JSON body' }),
       { status: 405, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
   }
@@ -47,10 +47,17 @@ serve(async (req) => {
     }
 
     // ========================================================================
-    // PARSE QUERY PARAMETERS
+    // PARSE PARAMETERS (GET: query string, POST: JSON body)
     // ========================================================================
-    const url = new URL(req.url)
-    const periodParam = url.searchParams.get('period')
+    let periodParam: string | null = null
+
+    if (req.method === 'POST') {
+      const body = await req.json()
+      periodParam = body.period != null ? String(body.period) : null
+    } else {
+      const url = new URL(req.url)
+      periodParam = url.searchParams.get('period')
+    }
     let periodDays = 30
 
     if (periodParam !== null) {

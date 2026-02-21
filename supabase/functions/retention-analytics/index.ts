@@ -191,11 +191,22 @@ serve(async (req) => {
   }
 
   try {
-    // Parse query parameters
-    const url = new URL(req.url)
-    const monthsParam = url.searchParams.get('months')
-    const typeParam = url.searchParams.get('type')
-    const periodParam = url.searchParams.get('period')
+    // Parse parameters (GET: query string, POST: JSON body)
+    let monthsParam: string | null = null
+    let typeParam: string | null = null
+    let periodParam: string | null = null
+
+    if (req.method === 'POST') {
+      const body = await req.json()
+      monthsParam = body.months != null ? String(body.months) : null
+      typeParam = body.type != null ? String(body.type) : null
+      periodParam = body.period != null ? String(body.period) : null
+    } else {
+      const url = new URL(req.url)
+      monthsParam = url.searchParams.get('months')
+      typeParam = url.searchParams.get('type')
+      periodParam = url.searchParams.get('period')
+    }
 
     // Validate months parameter
     const months = monthsParam ? parseInt(monthsParam, 10) : 6

@@ -606,7 +606,8 @@ final class SubscriptionDashboardViewModel: ObservableObject {
 
     // MARK: - Loading
 
-    /// Load all dashboard data
+    /// Load all dashboard data.
+    /// Tries the revenue-analytics edge function first; falls back to SubscriptionAnalyticsService.
     func loadDashboard() async {
         guard !isLoading else { return }
         isLoading = true
@@ -614,28 +615,35 @@ final class SubscriptionDashboardViewModel: ObservableObject {
 
         logger.info("SubscriptionDashboard", "Loading dashboard data")
 
-        // Load metrics and revenue in parallel
-        async let metricsResult = analyticsService.fetchMetrics()
-        async let revenueResult = analyticsService.fetchRevenueHistory(days: selectedDateRange.days)
-        async let churnResult = analyticsService.fetchChurnEvents(limit: 10)
+        // Try edge function first
+        let efLoaded = await loadFromRevenueAnalyticsEF()
 
-        let fetchedMetrics = await metricsResult
-        let fetchedRevenue = await revenueResult
-        let fetchedChurn = await churnResult
+        if !efLoaded {
+            // Fall back to existing SubscriptionAnalyticsService
+            async let metricsResult = analyticsService.fetchMetrics()
+            async let revenueResult = analyticsService.fetchRevenueHistory(days: selectedDateRange.days)
+            async let churnResult = analyticsService.fetchChurnEvents(limit: 10)
 
-        metrics = fetchedMetrics
-        revenueHistory = fetchedRevenue
-        churnEvents = fetchedChurn
+            let fetchedMetrics = await metricsResult
+            let fetchedRevenue = await revenueResult
+            let fetchedChurn = await churnResult
+
+            metrics = fetchedMetrics
+            revenueHistory = fetchedRevenue
+            churnEvents = fetchedChurn
+        }
 
         // Generate churn sparkline from revenue history subscriber changes
         generateChurnSparkline()
 
         isLoading = false
 
-        if fetchedMetrics.totalSubscribers == 0 && fetchedMetrics.mrr == 0 && fetchedRevenue.isEmpty {
-            logger.info("SubscriptionDashboard", "Dashboard loaded with empty data")
-        } else {
-            logger.success("SubscriptionDashboard", "Dashboard loaded: MRR=\(fetchedMetrics.formattedMRR), \(fetchedRevenue.count) revenue points, \(fetchedChurn.count) churn events")
+        if let fetchedMetrics = metrics {
+            if fetchedMetrics.totalSubscribers == 0 && fetchedMetrics.mrr == 0 && revenueHistory.isEmpty {
+                logger.info("SubscriptionDashboard", "Dashboard loaded with empty data")
+            } else {
+                logger.success("SubscriptionDashboard", "Dashboard loaded: MRR=\(fetchedMetrics.formattedMRR), \(revenueHistory.count) revenue points, \(churnEvents.count) churn events")
+            }
         }
     }
 
@@ -651,6 +659,76 @@ final class SubscriptionDashboardViewModel: ObservableObject {
         errorMessage = nil
         logger.info("SubscriptionDashboard", "Refreshing dashboard data")
         await loadDashboard()
+    }
+
+    // MARK: - Edge Function Loading
+
+    /// Attempt to load subscription metrics from the revenue-analytics edge function.
+    /// Maps the EF response into the existing `SubscriptionMetrics` and revenue data.
+    /// Returns `true` if the EF call succeeded and populated the dashboard.
+    private func loadFromRevenueAnalyticsEF() async -> Bool {
+        do {
+            let response = try await EdgeFunctionAnalyticsService.shared.fetchRevenueAnalytics(
+                periodDays: selectedDateRange.days
+            )
+
+            guard let efMetrics = response.metrics else { return false }
+
+            // Map EF RevenueMetrics to existing SubscriptionMetrics model
+            let churnRate = efMetrics.churnRate ?? efMetrics.churnDetails?.ratePercent ?? 0
+            let totalSubscribers = efMetrics.activeSubscribers?.total ?? 0
+            let activeTrials = efMetrics.activeSubscribers?.trials ?? 0
+            let mrr = efMetrics.mrr ?? 0
+            let arr = efMetrics.arr ?? 0
+            let arpu = totalSubscribers > 0 ? mrr / Double(totalSubscribers) : 0
+
+            // Estimate LTV from the EF LTV data if available
+            let ltv: Double
+            if let ltvEstimates = response.ltvEstimates, !ltvEstimates.isEmpty {
+                ltv = ltvEstimates.compactMap { $0.estimatedLtv }.reduce(0, +) / Double(ltvEstimates.count)
+            } else {
+                ltv = churnRate > 0 ? arpu / (churnRate / 100.0) : arpu * 12
+            }
+
+            // Estimate conversion rate from forecasting inputs
+            let conversionRate: Double = 0 // Not directly available from revenue-analytics EF
+
+            metrics = SubscriptionMetrics(
+                mrr: mrr,
+                arr: arr,
+                totalSubscribers: totalSubscribers,
+                activeTrials: activeTrials,
+                churnRate: churnRate,
+                conversionRate: conversionRate,
+                avgRevenuePerUser: arpu,
+                ltv: ltv
+            )
+
+            // Map cohort analysis into revenue data points if available
+            if let cohorts = response.cohortAnalysis, !cohorts.isEmpty {
+                revenueHistory = cohorts.enumerated().compactMap { _, cohort in
+                    guard let cohortMonth = cohort.cohort else { return nil }
+                    let dateFormatter = DateFormatter()
+                    dateFormatter.dateFormat = "yyyy-MM"
+                    guard let date = dateFormatter.date(from: cohortMonth) else { return nil }
+                    return RevenueDataPoint(
+                        id: UUID(),
+                        date: date,
+                        revenue: cohort.currentMrrContribution ?? 0,
+                        subscribers: cohort.activeSubscriptions ?? 0
+                    )
+                }
+            }
+
+            // Churn events are not returned by revenue-analytics EF, load separately
+            churnEvents = await analyticsService.fetchChurnEvents(limit: 10)
+
+            logger.success("SubscriptionDashboard", "Loaded from revenue-analytics EF: MRR=\(mrr)")
+            return true
+        } catch {
+            logger.info("SubscriptionDashboard", "EF revenue-analytics failed, falling back: \(error.localizedDescription)")
+            return false
+        }
     }
 
     // MARK: - Private Helpers

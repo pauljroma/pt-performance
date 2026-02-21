@@ -222,8 +222,8 @@ final class TherapistIntelligenceViewModel: ObservableObject {
             // Load patients
             try await loadPatients(therapistId: therapistId)
 
-            // Calculate at-risk patients
-            calculateAtRiskPatients()
+            // Calculate at-risk patients (try EF first, fall back to local)
+            await loadAtRiskPatientsFromEF()
 
             // Load recent activity
             await loadRecentActivity(therapistId: therapistId)
@@ -303,6 +303,43 @@ final class TherapistIntelligenceViewModel: ObservableObject {
             ErrorLogger.shared.logWarning("Failed to load previous period data: \(error.localizedDescription)")
             previousPeriodAdherence = nil
             previousPeriodPatientCount = nil
+        }
+    }
+
+    /// Load at-risk patients from the engagement-scoring edge function.
+    /// Falls back to local `calculateAtRiskPatients()` on failure or empty data.
+    private func loadAtRiskPatientsFromEF() async {
+        do {
+            let response = try await EdgeFunctionAnalyticsService.shared.fetchEngagementScores(atRisk: true, threshold: 50)
+            guard let scores = response.data, !scores.isEmpty else {
+                // Fall back to local calculation
+                calculateAtRiskPatients()
+                return
+            }
+            // Map EF scores to AtRiskPatient model
+            atRiskPatients = scores.compactMap { score in
+                guard let patientIdStr = score.patientId,
+                      let patientId = UUID(uuidString: patientIdStr),
+                      let patient = patients.first(where: { $0.id == patientId }) else { return nil }
+
+                let riskLevel: AtRiskPatient.RiskLevel
+                switch score.riskLevel {
+                case "high_risk": riskLevel = .critical
+                case "at_risk": riskLevel = .high
+                default: riskLevel = .moderate
+                }
+
+                return AtRiskPatient(
+                    id: patientId,
+                    patient: patient,
+                    adherencePercentage: score.score ?? 0,
+                    daysSinceLastActivity: score.components?.recency?.daysSinceLastActivity ?? 0,
+                    riskLevel: riskLevel
+                )
+            }.sorted { $0.riskLevel > $1.riskLevel }
+        } catch {
+            ErrorLogger.shared.logWarning("EF engagement-scoring failed, using local: \(error.localizedDescription)")
+            calculateAtRiskPatients()
         }
     }
 

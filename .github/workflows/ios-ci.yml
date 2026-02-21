@@ -1,0 +1,166 @@
+name: iOS CI Pipeline
+
+on:
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'ios-app/**'
+      - '.github/workflows/ios-ci.yml'
+  push:
+    branches: [main, develop]
+    paths:
+      - 'ios-app/**'
+  workflow_dispatch:
+
+jobs:
+  lint:
+    name: Lint Swift Code
+    runs-on: macos-26
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run SwiftLint
+        run: |
+          cd ios-app/PTPerformance
+          swiftlint lint --reporter github-actions-logging
+
+  unit-tests:
+    name: Unit Tests
+    runs-on: macos-26
+    timeout-minutes: 30
+    needs: [lint]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Cache Swift Packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            ios-app/PTPerformance/.build
+            ~/Library/Developer/Xcode/DerivedData
+          key: ${{ runner.os }}-spm-${{ hashFiles('ios-app/PTPerformance/PTPerformance.xcodeproj/project.pbxproj') }}
+          restore-keys: |
+            ${{ runner.os }}-spm-
+
+      - name: Resolve Swift Package Dependencies
+        run: |
+          cd ios-app/PTPerformance
+          xcodebuild -resolvePackageDependencies -project PTPerformance.xcodeproj -scheme PTPerformance
+
+      - name: Run Unit Tests
+        run: |
+          cd ios-app/PTPerformance
+          xcodebuild test \
+            -project PTPerformance.xcodeproj \
+            -scheme PTPerformance \
+            -destination 'platform=iOS Simulator,name=iPhone 17 Pro' \
+            -only-testing:PTPerformanceTests \
+            -enableCodeCoverage YES \
+            -resultBundlePath test_results.xcresult \
+            2>&1 | tail -50
+
+      - name: Upload Test Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: ios-app/PTPerformance/test_results.xcresult
+          retention-days: 30
+
+      - name: Extract Coverage Data
+        run: |
+          cd ios-app/PTPerformance
+          xcrun xccov view --report --json test_results.xcresult > coverage.json
+
+      - name: Check Coverage Threshold
+        run: |
+          cd ios-app/PTPerformance
+          python3 << 'EOF'
+          import json
+
+          with open('coverage.json', 'r') as f:
+              data = json.load(f)
+              coverage = data.get('lineCoverage', 0) * 100
+
+          print(f"Test Coverage: {coverage:.2f}%")
+
+          if coverage < 70.0:
+              print(f"WARNING: Coverage below threshold: {coverage:.2f}% < 70.0%")
+          else:
+              print(f"Coverage meets threshold: {coverage:.2f}% >= 70.0%")
+          EOF
+
+      - name: Upload Coverage Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: ios-app/PTPerformance/coverage.json
+          retention-days: 30
+
+      - name: Comment Coverage on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const coverage = JSON.parse(fs.readFileSync('ios-app/PTPerformance/coverage.json', 'utf8'));
+            const coveragePercent = (coverage.lineCoverage * 100).toFixed(2);
+            const status = coveragePercent >= 70 ? 'PASS' : 'WARNING';
+            const emoji = coveragePercent >= 70 ? 'PASS' : 'BELOW THRESHOLD';
+
+            const comment = `## Test Coverage Report
+
+            **Overall Coverage:** ${coveragePercent}%
+            **Threshold:** 70.0%
+            **Status:** ${emoji}
+
+            [View detailed coverage report](../actions/runs/${{ github.run_id }})
+            `;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+
+  build:
+    name: Build for Simulator
+    runs-on: macos-26
+    timeout-minutes: 30
+    needs: [lint]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Cache Swift Packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            ios-app/PTPerformance/.build
+            ~/Library/Developer/Xcode/DerivedData
+          key: ${{ runner.os }}-spm-${{ hashFiles('ios-app/PTPerformance/PTPerformance.xcodeproj/project.pbxproj') }}
+          restore-keys: |
+            ${{ runner.os }}-spm-
+
+      - name: Resolve Swift Package Dependencies
+        run: |
+          cd ios-app/PTPerformance
+          xcodebuild -resolvePackageDependencies -project PTPerformance.xcodeproj -scheme PTPerformance
+
+      - name: Build for Simulator
+        run: |
+          cd ios-app/PTPerformance
+          xcodebuild build \
+            -project PTPerformance.xcodeproj \
+            -scheme PTPerformance \
+            -destination 'platform=iOS Simulator,name=iPhone 17 Pro' \
+            -sdk iphonesimulator \
+            -configuration Debug \
+            2>&1 | tail -50

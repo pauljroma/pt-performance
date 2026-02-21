@@ -34,6 +34,7 @@ struct KPIDashboardView: View {
     @State private var showTrendCharts = true
     @State private var autoRefreshEnabled = true
     @State private var refreshCountdown: Int = 60
+    @State private var showProductHealth = false
 
     // Timer for auto-refresh countdown
     private let refreshTimer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
@@ -78,6 +79,9 @@ struct KPIDashboardView: View {
                         if !viewModel.openIncidents.isEmpty {
                             safetyIncidentsSection
                         }
+
+                        // Product Health link
+                        productHealthCard
 
                         // Last updated timestamp
                         lastUpdatedFooter
@@ -177,6 +181,9 @@ struct KPIDashboardView: View {
             }
             .sheet(isPresented: $showingExport) {
                 KPIExportSheet(dashboard: viewModel.dashboard, viewModel: viewModel)
+            }
+            .sheet(isPresented: $showProductHealth) {
+                ProductHealthDashboardView()
             }
         }
     }
@@ -658,6 +665,54 @@ struct KPIDashboardView: View {
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
         .cornerRadius(CornerRadius.md)
+    }
+
+    // MARK: - Product Health Card
+
+    private var productHealthCard: some View {
+        Button {
+            showProductHealth = true
+        } label: {
+            HStack(spacing: 12) {
+                ZStack {
+                    Circle()
+                        .fill(
+                            LinearGradient(
+                                colors: [Color.teal.opacity(0.8), Color.teal],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .frame(width: 40, height: 40)
+
+                    Image(systemName: "heart.text.square.fill")
+                        .font(.title3)
+                        .foregroundColor(.white)
+                }
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Product Health")
+                        .font(.headline)
+                        .foregroundColor(.primary)
+                    Text("DAU/WAU/MAU, feature adoption, satisfaction, safety")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .lineLimit(1)
+                }
+
+                Spacer()
+
+                Image(systemName: "chevron.right")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+            .padding()
+            .background(Color(.secondarySystemGroupedBackground))
+            .cornerRadius(CornerRadius.md)
+        }
+        .buttonStyle(PlainButtonStyle())
+        .accessibilityLabel("Product Health: DAU, WAU, MAU, feature adoption, satisfaction, safety")
+        .accessibilityHint("Double tap to open product health dashboard")
     }
 
     // MARK: - Helper Views

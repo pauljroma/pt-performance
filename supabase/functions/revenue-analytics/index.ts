@@ -218,21 +218,32 @@ serve(async (req) => {
   }
 
   try {
-    // Only allow GET requests for analytics reads
-    if (req.method !== 'GET') {
+    // Only allow GET and POST requests for analytics reads
+    if (req.method !== 'GET' && req.method !== 'POST') {
       return new Response(
-        JSON.stringify({ error: 'Method not allowed. Use GET.' }),
+        JSON.stringify({ error: 'Method not allowed. Use GET or POST.' }),
         { status: 405, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
     // ========================================================================
-    // PARSE QUERY PARAMS
+    // PARSE PARAMS (GET: query string, POST: JSON body)
     // ========================================================================
-    const url = new URL(req.url)
-    const periodParam = url.searchParams.get('period')
-    const cohortParam = url.searchParams.get('cohort')
-    const sectionsParam = url.searchParams.get('sections')
+    let periodParam: string | null = null
+    let cohortParam: string | null = null
+    let sectionsParam: string | null = null
+
+    if (req.method === 'POST') {
+      const body = await req.json()
+      periodParam = body.period != null ? String(body.period) : null
+      cohortParam = body.cohort != null ? String(body.cohort) : null
+      sectionsParam = body.sections != null ? String(body.sections) : null
+    } else {
+      const url = new URL(req.url)
+      periodParam = url.searchParams.get('period')
+      cohortParam = url.searchParams.get('cohort')
+      sectionsParam = url.searchParams.get('sections')
+    }
 
     const periodDays = clamp(
       periodParam ? parseInt(periodParam, 10) || 30 : 30,

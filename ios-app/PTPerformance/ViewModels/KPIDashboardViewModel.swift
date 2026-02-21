@@ -70,20 +70,25 @@ final class KPIDashboardViewModel: ObservableObject {
         lastError = nil
 
         do {
-            // Load dashboard and trends in parallel
-            async let dashboardTask = kpiService.getDashboardWithTrends(periodDays: period.days)
-            async let incidentsTask = safetyService.getOpenIncidents()
+            // Try executive-dashboard edge function first for overview data
+            let efLoaded = await loadFromExecutiveDashboardEF(period: period)
 
-            let (result, incidents) = try await (dashboardTask, incidentsTask)
+            if !efLoaded {
+                // Fall back to existing KPITrackingService + SafetyService
+                async let dashboardTask = kpiService.getDashboardWithTrends(periodDays: period.days)
+                async let incidentsTask = safetyService.getOpenIncidents()
 
-            dashboard = result.dashboard
-            openIncidents = incidents.sorted { $0.severity.sortOrder < $1.severity.sortOrder }
+                let (result, incidents) = try await (dashboardTask, incidentsTask)
 
-            // Update trends
-            ptWauTrend = result.trends.ptWauTrend
-            athleteWauTrend = result.trends.athleteWauTrend
-            citationTrend = result.trends.citationTrend
-            latencyTrend = result.trends.latencyTrend
+                dashboard = result.dashboard
+                openIncidents = incidents.sorted { $0.severity.sortOrder < $1.severity.sortOrder }
+
+                // Update trends
+                ptWauTrend = result.trends.ptWauTrend
+                athleteWauTrend = result.trends.athleteWauTrend
+                citationTrend = result.trends.citationTrend
+                latencyTrend = result.trends.latencyTrend
+            }
 
             lastRefreshDate = Date()
         } catch {
@@ -158,6 +163,91 @@ final class KPIDashboardViewModel: ObservableObject {
     /// Get incidents requiring escalation
     var incidentsNeedingEscalation: [SafetyIncident] {
         openIncidents.filter { !$0.isEscalated && $0.isHighSeverity }
+    }
+
+    // MARK: - Edge Function Loading
+
+    /// Attempt to load KPI overview from the executive-dashboard edge function.
+    /// Maps the EF response into the existing `KPIDashboard` and trend properties.
+    /// Returns `true` if the EF call succeeded and populated the dashboard.
+    private func loadFromExecutiveDashboardEF(period: DateRangePeriod) async -> Bool {
+        do {
+            let response = try await EdgeFunctionAnalyticsService.shared.fetchExecutiveDashboard()
+
+            guard let overview = response.overview else { return false }
+
+            // Build KPIDashboard from EF response
+            let ptMetrics = PTMetrics(
+                totalPTs: overview.totalUsers ?? 0,
+                weeklyActivePTs: overview.wau ?? 0,
+                wauPercentage: overview.dauMauRatio ?? 0,
+                avgPrepTimeSeconds: 0,
+                briefsOpened: 0,
+                plansAssigned: 0
+            )
+
+            let athleteMetrics = AthleteMetrics(
+                totalAthletes: overview.mau ?? 0,
+                weeklyActiveAthletes: overview.wau ?? 0,
+                wauPercentage: overview.mau ?? 0 > 0 ? Double(overview.wau ?? 0) / Double(overview.mau ?? 1) : 0,
+                checkInsCompleted: response.engagement?.totalSessionsThisWeek ?? 0,
+                taskCompletionRate: 0,
+                avgStreakDays: response.engagement?.avgStreakLength ?? 0
+            )
+
+            let aiMetrics = AIMetrics(
+                claimsGenerated: 0,
+                citationCoverage: 0,
+                avgConfidence: 0,
+                p95LatencyMs: 0,
+                abstentions: 0,
+                uncertaintyFlags: 0
+            )
+
+            let safetyMetrics = SafetyMetrics(
+                totalIncidents: response.safety?.totalThisMonth ?? 0,
+                unresolvedHighSeverity: response.safety?.totalOpen ?? 0,
+                escalationsTriggered: 0,
+                thresholdBreaches: 0
+            )
+
+            let periodEnd = Date()
+            let periodStart = Calendar.current.date(byAdding: .day, value: -period.days, to: periodEnd) ?? periodEnd
+
+            dashboard = KPIDashboard(
+                periodStart: periodStart,
+                periodEnd: periodEnd,
+                ptMetrics: ptMetrics,
+                athleteMetrics: athleteMetrics,
+                aiMetrics: aiMetrics,
+                safetyMetrics: safetyMetrics
+            )
+
+            // Map trends from EF response
+            if let trends = response.trends {
+                ptWauTrend = mapTrend(trends.dau)
+                athleteWauTrend = mapTrend(trends.sessions)
+                citationTrend = .stable
+                latencyTrend = .stable
+            }
+
+            // Load incidents via safety service (EF does not include full incident list)
+            let incidents = try await safetyService.getOpenIncidents()
+            openIncidents = incidents.sorted { $0.severity.sortOrder < $1.severity.sortOrder }
+
+            return true
+        } catch {
+            ErrorLogger.shared.logWarning("EF executive-dashboard failed, falling back to KPITrackingService: \(error.localizedDescription)")
+            return false
+        }
+    }
+
+    /// Map an EF TrendMetric to the existing KPITrend enum
+    private func mapTrend(_ metric: EFTrendMetric?) -> KPITrend {
+        guard let metric = metric, let changePct = metric.changePct else { return .stable }
+        if changePct > 1.0 { return .up }
+        if changePct < -1.0 { return .down }
+        return .stable
     }
 
     // MARK: - Export

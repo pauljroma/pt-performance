@@ -292,10 +292,73 @@ final class CohortAnalyticsService {
         return ProgramOutcomes(programs: programSummaries.sorted { $0.completionRate > $1.completionRate })
     }
 
-    /// Fetch patient retention curve over time
+    /// Fetch patient retention curve, trying the retention-analytics edge function first.
+    /// Falls back to direct-query logic (`fetchRetentionCurveLocal`) on failure.
     /// - Parameter therapistId: The therapist's UUID
     /// - Returns: Week-by-week retention data
     func fetchRetentionCurve(therapistId: String) async throws -> RetentionData {
+        guard !therapistId.isEmpty else {
+            throw CohortAnalyticsError.invalidTherapistId
+        }
+
+        // Try the edge function first
+        do {
+            let efResult = try await fetchRetentionCurveFromEF(months: 6)
+            return efResult
+        } catch {
+            errorLogger.logWarning("EF retention-analytics failed, using local query: \(error.localizedDescription)")
+        }
+
+        // Fall back to existing direct-query implementation
+        return try await fetchRetentionCurveLocal(therapistId: therapistId)
+    }
+
+    /// Load retention data from the retention-analytics edge function and map
+    /// the response into the existing `RetentionData` model.
+    /// - Parameter months: Number of months to analyze (default 6)
+    /// - Returns: Mapped `RetentionData`
+    @MainActor
+    private func fetchRetentionCurveFromEF(months: Int = 6) async throws -> RetentionData {
+        let response = try await EdgeFunctionAnalyticsService.shared.fetchRetentionAnalytics(months: months)
+
+        guard let cohorts = response.cohorts, !cohorts.isEmpty else {
+            throw CohortAnalyticsError.noData
+        }
+
+        // Map EF RetentionCohortRow to local RetentionDataPoint (one per cohort month)
+        let weeklyData: [RetentionDataPoint] = cohorts.enumerated().map { index, cohort in
+            RetentionDataPoint(
+                id: UUID(),
+                weekNumber: index + 1,
+                activePatients: cohort.d30Retained ?? 0,
+                retentionRate: cohort.d30RetentionPct ?? 0,
+                droppedThisWeek: (cohort.cohortSize ?? 0) - (cohort.d30Retained ?? 0)
+            )
+        }
+
+        // Calculate totals from EF summary or cohort data
+        let totalPatients = response.summary?.totalCohortUsers
+            ?? cohorts.compactMap { $0.cohortSize }.reduce(0, +)
+        let droppedPatients = totalPatients - (cohorts.last.flatMap { $0.d30Retained } ?? 0)
+        let completedPatients = max(0, totalPatients - droppedPatients)
+        let overallRetention = totalPatients > 0
+            ? Double(completedPatients) / Double(totalPatients) * 100
+            : 0
+
+        return RetentionData(
+            weeklyData: weeklyData,
+            overallRetentionRate: overallRetention,
+            averageDropOffWeek: nil,
+            completedPatients: completedPatients,
+            droppedPatients: droppedPatients,
+            totalPatients: totalPatients
+        )
+    }
+
+    /// Original direct-query implementation for the retention curve.
+    /// - Parameter therapistId: The therapist's UUID
+    /// - Returns: Week-by-week retention data
+    private func fetchRetentionCurveLocal(therapistId: String) async throws -> RetentionData {
         guard !therapistId.isEmpty else {
             throw CohortAnalyticsError.invalidTherapistId
         }

@@ -23,6 +23,8 @@ struct TherapistIntelligenceView: View {
     @State private var showClinicalDocumentation = false
     @State private var showRTSTracking = false
     @State private var showCoachingDashboard = false
+    @State private var showEngagementScores = false
+    @State private var showTrainingOutcomes = false
     @State private var selectedPatient: Patient?
     @State private var showAllAtRiskPatients = false
     @State private var showAllActivity = false
@@ -129,6 +131,12 @@ struct TherapistIntelligenceView: View {
             .sheet(isPresented: $showCoachingDashboard) {
                 CoachingDashboardView()
                     .environmentObject(appState)
+            }
+            .sheet(isPresented: $showEngagementScores) {
+                EngagementScoreDashboardView()
+            }
+            .sheet(isPresented: $showTrainingOutcomes) {
+                TrainingOutcomesDashboardView()
             }
             .sheet(isPresented: $showAllAtRiskPatients) {
                 AllAtRiskPatientsView(
@@ -264,6 +272,26 @@ struct TherapistIntelligenceView: View {
                 ) {
                     HapticFeedback.light()
                     showRTSTracking = true
+                }
+
+                QuickActionCard(
+                    title: "Engagement Scores",
+                    subtitle: "Patient risk levels",
+                    icon: "gauge.with.dots.needle.33percent",
+                    color: .red
+                ) {
+                    HapticFeedback.light()
+                    showEngagementScores = true
+                }
+
+                QuickActionCard(
+                    title: "Training Outcomes",
+                    subtitle: "Strength & adherence",
+                    icon: "chart.bar.fill",
+                    color: .mint
+                ) {
+                    HapticFeedback.light()
+                    showTrainingOutcomes = true
                 }
             }
         }

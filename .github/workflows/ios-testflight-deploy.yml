@@ -1,0 +1,160 @@
+name: Deploy to TestFlight
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'ios-app/**'
+  workflow_dispatch:
+    inputs:
+      build_number:
+        description: 'Build number (optional, auto-incremented if not provided)'
+        required: false
+        type: string
+
+jobs:
+  deploy-testflight:
+    name: Build and Deploy to TestFlight
+    runs-on: macos-26
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up App Store Connect API Key
+        run: |
+          mkdir -p ~/private_keys
+          echo "${{ secrets.APP_STORE_CONNECT_API_KEY_CONTENT }}" | base64 --decode > ~/private_keys/AuthKey_${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}.p8
+
+      - name: Cache Swift Packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            ios-app/PTPerformance/.build
+            ~/Library/Developer/Xcode/DerivedData
+          key: ${{ runner.os }}-spm-${{ hashFiles('ios-app/PTPerformance/PTPerformance.xcodeproj/project.pbxproj') }}
+
+      - name: Increment Build Number
+        id: build_number
+        run: |
+          cd ios-app/PTPerformance
+
+          if [ -n "${{ github.event.inputs.build_number }}" ]; then
+            BUILD_NUMBER="${{ github.event.inputs.build_number }}"
+          else
+            # Auto-increment build number based on Git commits
+            BUILD_NUMBER=$(git rev-list --count HEAD)
+          fi
+
+          echo "BUILD_NUMBER=$BUILD_NUMBER" >> $GITHUB_OUTPUT
+          echo "Build number: $BUILD_NUMBER"
+
+          # Update Info.plist
+          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $BUILD_NUMBER" Info.plist || true
+
+      - name: Resolve Swift Package Dependencies
+        run: |
+          cd ios-app/PTPerformance
+          xcodebuild -resolvePackageDependencies -project PTPerformance.xcodeproj -scheme PTPerformance
+
+      - name: Run Tests
+        run: |
+          cd ios-app/PTPerformance
+          xcodebuild test \
+            -project PTPerformance.xcodeproj \
+            -scheme PTPerformance \
+            -destination 'platform=iOS Simulator,name=iPhone 17 Pro' \
+            -enableCodeCoverage YES \
+            2>&1 | tail -50
+        continue-on-error: false
+
+      - name: Build and Archive
+        run: |
+          cd ios-app/PTPerformance
+          xcodebuild archive \
+            -project PTPerformance.xcodeproj \
+            -scheme PTPerformance \
+            -configuration Release \
+            -archivePath PTPerformance.xcarchive \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath ~/private_keys/AuthKey_${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}.p8 \
+            -authenticationKeyID ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }} \
+            -authenticationKeyIssuerID ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
+
+      - name: Export IPA
+        run: |
+          cd ios-app/PTPerformance
+          xcodebuild -exportArchive \
+            -archivePath PTPerformance.xcarchive \
+            -exportPath export \
+            -exportOptionsPlist ExportOptions.plist \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath ~/private_keys/AuthKey_${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}.p8 \
+            -authenticationKeyID ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }} \
+            -authenticationKeyIssuerID ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
+
+      - name: Upload Debug Symbols to Sentry
+        continue-on-error: true
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
+        run: |
+          # Install Sentry CLI
+          brew install getsentry/tools/sentry-cli
+
+          # Upload dSYMs
+          cd ios-app/PTPerformance
+          sentry-cli upload-dif \
+            --org ${SENTRY_ORG} \
+            --project ${SENTRY_PROJECT} \
+            PTPerformance.xcarchive/dSYMs
+
+      - name: Upload to TestFlight
+        env:
+          API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
+          API_KEY_PATH: ~/private_keys/AuthKey_${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}.p8
+        run: |
+          cd ios-app/PTPerformance/export
+
+          xcrun altool --upload-app \
+            --type ios \
+            --file PTPerformance.ipa \
+            --apiKey "$API_KEY_ID" \
+            --apiIssuer "$API_ISSUER_ID"
+
+      - name: Upload IPA Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: PTPerformance-Build-${{ steps.build_number.outputs.BUILD_NUMBER }}
+          path: ios-app/PTPerformance/export/PTPerformance.ipa
+          retention-days: 90
+
+      - name: Create GitHub Release
+        if: github.ref == 'refs/heads/main'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ios-build-${{ steps.build_number.outputs.BUILD_NUMBER }}
+          name: iOS Build ${{ steps.build_number.outputs.BUILD_NUMBER }}
+          body: |
+            ## iOS Build ${{ steps.build_number.outputs.BUILD_NUMBER }}
+
+            Automatically deployed to TestFlight.
+
+            ### What's Changed
+            - See commit history for details
+
+            ### TestFlight
+            Build will be available in TestFlight within 15-30 minutes after processing.
+          draft: false
+          prerelease: false
+
+      - name: Clean up
+        if: always()
+        run: |
+          rm -rf ~/private_keys
