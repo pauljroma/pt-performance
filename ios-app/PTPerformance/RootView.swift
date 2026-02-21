@@ -314,6 +314,10 @@ struct RootView: View {
                     modeService.currentMode = mode
                 }
                 SessionManager.shared.startMonitoring()
+                // Enable premium features during UI tests if requested
+                if CommandLine.arguments.contains("--premium-override") {
+                    StoreKitService.shared.debugPremiumOverride = true
+                }
             }
             DebugLogger.shared.info("UITest", "Auto-login as \(role) user: \(userId)" + (autoLoginMode.map { ", mode: \($0.rawValue)" } ?? ""))
             return

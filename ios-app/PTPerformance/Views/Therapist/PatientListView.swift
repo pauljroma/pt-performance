@@ -217,6 +217,7 @@ struct PatientListView: View {
                                 coachingAlertCount: alertCountForPatient(patient.id)
                             )
                         }
+                        .accessibilityIdentifier("patient_row_\(patient.id)")
                         .swipeActions(edge: .trailing, allowsFullSwipe: false) {
                             Button {
                                 HapticFeedback.medium()

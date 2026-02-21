@@ -196,6 +196,7 @@ struct BigLiftsScorecard: View {
             )
         )
         .cornerRadius(CornerRadius.md)
+        .accessibilityIdentifier("strength_sbd_total_card")
     }
 
     // MARK: - Lifts Grid Section
