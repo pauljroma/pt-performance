@@ -17,54 +17,21 @@ on:
 jobs:
   test-edge-functions:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 10
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Supabase CLI
-        uses: supabase/setup-cli@v1
-        with:
-          version: latest
-
-      - name: Start Supabase local instance
-        run: |
-          cd supabase
-          supabase start
-          supabase status
-
-      - name: Wait for Supabase to be ready
-        run: |
-          echo "Waiting for Supabase to be fully ready..."
-          sleep 10
-          curl -f http://localhost:54321/rest/v1/ || exit 1
-
-      - name: Start Edge Functions server
-        run: |
-          cd supabase
-          supabase functions serve &
-          FUNCTIONS_PID=$!
-          echo "FUNCTIONS_PID=$FUNCTIONS_PID" >> $GITHUB_ENV
-
-          # Wait for functions server to start
-          echo "Waiting for Edge Functions server..."
-          sleep 5
-          curl -f http://localhost:54321/functions/v1/ || exit 1
-
-      - name: Setup test environment
-        run: |
-          cd scripts/tests
-          ./setup_test_environment.sh
-
       - name: Run integration tests
         id: tests
         run: |
           cd scripts/tests
+          chmod +x ci_test_edge_functions.sh
           ./ci_test_edge_functions.sh --output test-results.json
         env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          SUPABASE_URL: http://localhost:54321
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
         continue-on-error: true
 
       - name: Upload test results
@@ -119,19 +86,6 @@ jobs:
             echo "::error ::Test results file not found"
             exit 1
           fi
-
-      - name: Stop Edge Functions server
-        if: always()
-        run: |
-          if [ -n "$FUNCTIONS_PID" ]; then
-            kill $FUNCTIONS_PID || true
-          fi
-
-      - name: Stop Supabase
-        if: always()
-        run: |
-          cd supabase
-          supabase stop
 
   # Optional: Notify on failure
   notify-failure:
