@@ -122,13 +122,17 @@ jobs:
             -authenticationKeyIssuerID ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
 
       - name: Upload Debug Symbols to Sentry
-        if: ${{ secrets.SENTRY_AUTH_TOKEN != '' }}
         continue-on-error: true
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
           SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
           SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
         run: |
+          if [ -z "$SENTRY_AUTH_TOKEN" ]; then
+            echo "SENTRY_AUTH_TOKEN not configured, skipping dSYM upload"
+            exit 0
+          fi
+
           # Install Sentry CLI
           brew install getsentry/tools/sentry-cli
 
