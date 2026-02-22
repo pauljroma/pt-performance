@@ -1,15 +1,214 @@
--- 20260218100006_training_outcome_analytics.sql
--- Training Outcome Analytics (ACP-981)
--- Correlates training inputs with outcomes: strength gains, body composition,
--- performance. Identifies most effective programs. Provides personalization
--- algorithm inputs.
+-- ============================================================================
+-- Fix Analytics RPC Bugs
+-- ============================================================================
+-- This migration corrects two runtime bugs in previously deployed stored
+-- procedures. The original migration files have already been patched in-tree,
+-- so this corrective migration brings deployed databases up to date.
+--
+-- Bug 1 (revenue-analytics): round(double precision, integer) does not exist
+--   Affected functions: get_revenue_by_cohort, get_ltv_by_tier
+--   Root cause: ROUND() requires a numeric first argument in PostgreSQL;
+--   several AVG / EXTRACT expressions returned double precision.
+--   Fix: explicit ::numeric casts before ROUND().
+--   Source: 20260218100001_revenue_analytics_rpcs.sql
+--
+-- Bug 2 (training-outcomes): column se.exercise_id does not exist
+--   Affected functions: get_training_outcomes, get_program_effectiveness
+--   Root cause: session_exercises uses exercise_template_id, not exercise_id.
+--   Fix: se.exercise_id -> se.exercise_template_id in JOIN clauses.
+--   Source: 20260218100006_training_outcome_analytics.sql
+-- ============================================================================
+
 
 -- ============================================================================
--- 1. FUNCTION: Get Training Outcomes for a Patient
+-- Bug 1, Fix 1: get_revenue_by_cohort  (::numeric casts)
 -- ============================================================================
--- Returns a comprehensive JSONB payload with volume progression, strength
--- gains, pain/RPE trends, adherence, and recovery-performance correlation
--- over a configurable period.
+
+CREATE OR REPLACE FUNCTION get_revenue_by_cohort(cohort_month TEXT DEFAULT NULL)
+RETURNS JSON AS $$
+DECLARE
+    result JSON;
+    v_now TIMESTAMPTZ := NOW();
+BEGIN
+    SELECT json_agg(cohort_row ORDER BY cohort_row.cohort)
+    INTO result
+    FROM (
+        SELECT
+            TO_CHAR(ups.started_at, 'YYYY-MM') AS cohort,
+            COUNT(DISTINCT ups.user_id) AS total_users,
+            COUNT(DISTINCT ups.user_id) FILTER (
+                WHERE ups.status = 'active'
+                AND (ups.expires_at IS NULL OR ups.expires_at > v_now)
+            ) AS retained_users,
+            ROUND(
+                COUNT(DISTINCT ups.user_id) FILTER (
+                    WHERE ups.status = 'active'
+                    AND (ups.expires_at IS NULL OR ups.expires_at > v_now)
+                )::NUMERIC
+                / NULLIF(COUNT(DISTINCT ups.user_id), 0) * 100,
+                2
+            ) AS retention_rate_percent,
+            COUNT(*) AS total_subscriptions,
+            COUNT(*) FILTER (WHERE ups.status = 'active') AS active_subscriptions,
+            COUNT(*) FILTER (WHERE ups.status IN ('cancelled', 'expired')) AS churned_subscriptions,
+            ROUND(
+                COALESCE(SUM(pp.base_price_monthly) FILTER (
+                    WHERE ups.status = 'active'
+                    AND (ups.expires_at IS NULL OR ups.expires_at > v_now)
+                ), 0),
+                2
+            ) AS current_mrr_contribution,
+            -- Average months retained for this cohort
+            ROUND(
+                AVG(
+                    EXTRACT(EPOCH FROM (
+                        COALESCE(ups.cancelled_at, ups.expires_at, v_now) - ups.started_at
+                    )) / (30.44 * 86400)
+                )::numeric,
+                1
+            ) AS avg_months_retained,
+            -- Revenue per user in this cohort (cumulative estimated)
+            ROUND(
+                (AVG(
+                    EXTRACT(EPOCH FROM (
+                        COALESCE(ups.cancelled_at, ups.expires_at, v_now) - ups.started_at
+                    )) / (30.44 * 86400)
+                ) * AVG(pp.base_price_monthly))::numeric,
+                2
+            ) AS avg_revenue_per_user
+        FROM user_pack_subscriptions ups
+        JOIN premium_packs pp ON pp.id = ups.pack_id
+        WHERE (cohort_month IS NULL OR TO_CHAR(ups.started_at, 'YYYY-MM') = cohort_month)
+        GROUP BY TO_CHAR(ups.started_at, 'YYYY-MM')
+    ) cohort_row;
+
+    RETURN COALESCE(result, '[]'::JSON);
+END;
+$$ LANGUAGE plpgsql STABLE SECURITY DEFINER;
+
+COMMENT ON FUNCTION get_revenue_by_cohort IS 'ACP-976: Returns revenue and retention metrics grouped by the month users first subscribed';
+
+
+-- ============================================================================
+-- Bug 1, Fix 2: get_ltv_by_tier  (::numeric casts)
+-- ============================================================================
+
+CREATE OR REPLACE FUNCTION get_ltv_by_tier()
+RETURNS JSON AS $$
+DECLARE
+    result JSON;
+    v_now TIMESTAMPTZ := NOW();
+BEGIN
+    SELECT json_agg(ltv_row ORDER BY ltv_row.estimated_ltv DESC)
+    INTO result
+    FROM (
+        SELECT
+            pp.code AS tier,
+            pp.name AS tier_name,
+            pp.base_price_monthly AS monthly_price,
+            COUNT(*) AS total_subscriptions,
+            COUNT(*) FILTER (WHERE ups.status = 'active') AS active_subscriptions,
+            COUNT(*) FILTER (WHERE ups.status IN ('cancelled', 'expired')) AS churned_subscriptions,
+
+            -- Average lifespan in months
+            ROUND(
+                AVG(
+                    EXTRACT(EPOCH FROM (
+                        COALESCE(ups.cancelled_at, ups.expires_at, v_now) - ups.started_at
+                    )) / (30.44 * 86400)
+                )::numeric,
+                1
+            ) AS avg_lifespan_months,
+
+            -- Median lifespan in months (approximated via percentile)
+            ROUND(
+                PERCENTILE_CONT(0.5) WITHIN GROUP (
+                    ORDER BY EXTRACT(EPOCH FROM (
+                        COALESCE(ups.cancelled_at, ups.expires_at, v_now) - ups.started_at
+                    )) / (30.44 * 86400)
+                )::numeric,
+                1
+            ) AS median_lifespan_months,
+
+            -- Monthly churn rate for this tier
+            ROUND(
+                (CASE
+                    WHEN COUNT(*) > 0 THEN
+                        COUNT(*) FILTER (WHERE ups.status IN ('cancelled', 'expired'))::NUMERIC
+                        / NULLIF(COUNT(*), 0)
+                        / NULLIF(
+                            AVG(
+                                EXTRACT(EPOCH FROM (
+                                    COALESCE(ups.cancelled_at, ups.expires_at, v_now) - ups.started_at
+                                )) / (30.44 * 86400)
+                            ),
+                            0
+                        )
+                    ELSE 0
+                END * 100)::numeric,
+                2
+            ) AS monthly_churn_rate_percent,
+
+            -- LTV estimate: price * average lifespan
+            ROUND(
+                (pp.base_price_monthly * AVG(
+                    EXTRACT(EPOCH FROM (
+                        COALESCE(ups.cancelled_at, ups.expires_at, v_now) - ups.started_at
+                    )) / (30.44 * 86400)
+                ))::numeric,
+                2
+            ) AS estimated_ltv,
+
+            -- LTV via churn method: ARPU / churn_rate (if churn > 0)
+            ROUND(
+                (CASE
+                    WHEN COUNT(*) FILTER (WHERE ups.status IN ('cancelled', 'expired')) > 0
+                    THEN pp.base_price_monthly / NULLIF(
+                        COUNT(*) FILTER (WHERE ups.status IN ('cancelled', 'expired'))::NUMERIC
+                        / NULLIF(COUNT(*), 0)
+                        / NULLIF(
+                            AVG(
+                                EXTRACT(EPOCH FROM (
+                                    COALESCE(ups.cancelled_at, ups.expires_at, v_now) - ups.started_at
+                                )) / (30.44 * 86400)
+                            ),
+                            0
+                        ),
+                        0
+                    )
+                    ELSE NULL
+                END)::numeric,
+                2
+            ) AS estimated_ltv_churn_method,
+
+            -- Trial conversion rate for this tier
+            ROUND(
+                CASE
+                    WHEN COUNT(*) FILTER (WHERE ups.status = 'trial' OR ups.status = 'active') > 0
+                    THEN COUNT(*) FILTER (WHERE ups.status = 'active')::NUMERIC
+                         / NULLIF(COUNT(*), 0) * 100
+                    ELSE 0
+                END,
+                2
+            ) AS conversion_rate_percent
+
+        FROM premium_packs pp
+        LEFT JOIN user_pack_subscriptions ups ON ups.pack_id = pp.id
+        WHERE pp.is_active = true
+        GROUP BY pp.code, pp.name, pp.base_price_monthly
+        HAVING COUNT(ups.id) > 0
+    ) ltv_row;
+
+    RETURN COALESCE(result, '[]'::JSON);
+END;
+$$ LANGUAGE plpgsql STABLE SECURITY DEFINER;
+
+COMMENT ON FUNCTION get_ltv_by_tier IS 'ACP-976: Estimates customer lifetime value per premium pack tier using average lifespan and churn-based methods';
+
+
+-- ============================================================================
+-- Bug 2, Fix 1: get_training_outcomes  (se.exercise_template_id)
+-- ============================================================================
 
 CREATE OR REPLACE FUNCTION get_training_outcomes(
     p_patient_id UUID,
@@ -364,10 +563,8 @@ COMMENT ON FUNCTION get_training_outcomes IS
 
 
 -- ============================================================================
--- 2. FUNCTION: Get Program Effectiveness Rankings
+-- Bug 2, Fix 2: get_program_effectiveness  (se.exercise_template_id)
 -- ============================================================================
--- Ranks programs by average adherence rate and average strength gain
--- percentage across all patients who completed them.
 
 CREATE OR REPLACE FUNCTION get_program_effectiveness()
 RETURNS JSONB
@@ -581,61 +778,3 @@ $$;
 
 COMMENT ON FUNCTION get_program_effectiveness IS
     'Ranks programs by adherence, strength gains, and pain reduction across all patients. ACP-981.';
-
-
--- ============================================================================
--- 3. INDEXES FOR PERFORMANCE
--- ============================================================================
-
--- Composite index for volume/strength queries by patient and date
-CREATE INDEX IF NOT EXISTS idx_exercise_logs_patient_load_date
-    ON exercise_logs(patient_id, logged_at DESC)
-    WHERE actual_load IS NOT NULL AND actual_load > 0;
-
--- Index to support joining exercise_logs to session_exercises for exercise names
-CREATE INDEX IF NOT EXISTS idx_exercise_logs_session_exercise_id
-    ON exercise_logs(session_exercise_id)
-    WHERE session_exercise_id IS NOT NULL;
-
--- Index to support joining exercise_logs to manual_session_exercises
-CREATE INDEX IF NOT EXISTS idx_exercise_logs_manual_exercise_id
-    ON exercise_logs(manual_session_exercise_id)
-    WHERE manual_session_exercise_id IS NOT NULL;
-
-
--- ============================================================================
--- 4. GRANT PERMISSIONS
--- ============================================================================
-
-GRANT EXECUTE ON FUNCTION get_training_outcomes TO authenticated;
-GRANT EXECUTE ON FUNCTION get_training_outcomes TO service_role;
-GRANT EXECUTE ON FUNCTION get_program_effectiveness TO authenticated;
-GRANT EXECUTE ON FUNCTION get_program_effectiveness TO service_role;
-
-
--- ============================================================================
--- 5. VALIDATION
--- ============================================================================
-
-DO $$
-DECLARE
-    fn_training_outcomes_exists BOOLEAN;
-    fn_program_effectiveness_exists BOOLEAN;
-BEGIN
-    SELECT EXISTS(
-        SELECT 1 FROM pg_proc WHERE proname = 'get_training_outcomes'
-    ) INTO fn_training_outcomes_exists;
-
-    SELECT EXISTS(
-        SELECT 1 FROM pg_proc WHERE proname = 'get_program_effectiveness'
-    ) INTO fn_program_effectiveness_exists;
-
-    RAISE NOTICE '';
-    RAISE NOTICE '============================================';
-    RAISE NOTICE 'TRAINING OUTCOME ANALYTICS MIGRATION (ACP-981)';
-    RAISE NOTICE '============================================';
-    RAISE NOTICE 'get_training_outcomes: %', CASE WHEN fn_training_outcomes_exists THEN 'CREATED' ELSE 'FAILED' END;
-    RAISE NOTICE 'get_program_effectiveness: %', CASE WHEN fn_program_effectiveness_exists THEN 'CREATED' ELSE 'FAILED' END;
-    RAISE NOTICE '============================================';
-    RAISE NOTICE '';
-END $$;

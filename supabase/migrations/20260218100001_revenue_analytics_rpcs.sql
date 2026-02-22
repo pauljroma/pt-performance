@@ -272,16 +272,16 @@ BEGIN
                     EXTRACT(EPOCH FROM (
                         COALESCE(ups.cancelled_at, ups.expires_at, v_now) - ups.started_at
                     )) / (30.44 * 86400)
-                ),
+                )::numeric,
                 1
             ) AS avg_months_retained,
             -- Revenue per user in this cohort (cumulative estimated)
             ROUND(
-                AVG(
+                (AVG(
                     EXTRACT(EPOCH FROM (
                         COALESCE(ups.cancelled_at, ups.expires_at, v_now) - ups.started_at
                     )) / (30.44 * 86400)
-                ) * AVG(pp.base_price_monthly),
+                ) * AVG(pp.base_price_monthly))::numeric,
                 2
             ) AS avg_revenue_per_user
         FROM user_pack_subscriptions ups
@@ -327,7 +327,7 @@ BEGIN
                     EXTRACT(EPOCH FROM (
                         COALESCE(ups.cancelled_at, ups.expires_at, v_now) - ups.started_at
                     )) / (30.44 * 86400)
-                ),
+                )::numeric,
                 1
             ) AS avg_lifespan_months,
 
@@ -337,13 +337,13 @@ BEGIN
                     ORDER BY EXTRACT(EPOCH FROM (
                         COALESCE(ups.cancelled_at, ups.expires_at, v_now) - ups.started_at
                     )) / (30.44 * 86400)
-                ),
+                )::numeric,
                 1
             ) AS median_lifespan_months,
 
             -- Monthly churn rate for this tier
             ROUND(
-                CASE
+                (CASE
                     WHEN COUNT(*) > 0 THEN
                         COUNT(*) FILTER (WHERE ups.status IN ('cancelled', 'expired'))::NUMERIC
                         / NULLIF(COUNT(*), 0)
@@ -356,23 +356,23 @@ BEGIN
                             0
                         )
                     ELSE 0
-                END * 100,
+                END * 100)::numeric,
                 2
             ) AS monthly_churn_rate_percent,
 
             -- LTV estimate: price * average lifespan
             ROUND(
-                pp.base_price_monthly * AVG(
+                (pp.base_price_monthly * AVG(
                     EXTRACT(EPOCH FROM (
                         COALESCE(ups.cancelled_at, ups.expires_at, v_now) - ups.started_at
                     )) / (30.44 * 86400)
-                ),
+                ))::numeric,
                 2
             ) AS estimated_ltv,
 
             -- LTV via churn method: ARPU / churn_rate (if churn > 0)
             ROUND(
-                CASE
+                (CASE
                     WHEN COUNT(*) FILTER (WHERE ups.status IN ('cancelled', 'expired')) > 0
                     THEN pp.base_price_monthly / NULLIF(
                         COUNT(*) FILTER (WHERE ups.status IN ('cancelled', 'expired'))::NUMERIC
@@ -388,7 +388,7 @@ BEGIN
                         0
                     )
                     ELSE NULL
-                END,
+                END)::numeric,
                 2
             ) AS estimated_ltv_churn_method,
 

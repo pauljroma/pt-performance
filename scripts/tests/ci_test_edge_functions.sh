@@ -300,7 +300,7 @@ run_test "training-outcomes" \
     "${FUNCTIONS_BASE}/training-outcomes" \
     "{\"patient_id\": \"${TEST_PATIENT_ID}\", \"period\": 90}" \
     "200" \
-    '"success"\|"error"' \
+    '"success"|"error"' \
     || true
 
 run_test "training-outcomes" \
