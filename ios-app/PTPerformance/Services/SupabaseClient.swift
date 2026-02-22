@@ -520,15 +520,17 @@ class PTSupabaseClient: ObservableObject {
             "role": role.rawValue,
         ]
 
-        let response = try await client.functions.invoke(
+        let responseData: Data = try await client.functions.invoke(
             "demo-auth",
             options: .init(body: body)
-        )
+        ) { data, _ in
+            data
+        }
 
         // Decode the response to get session tokens
         let demoAuth = try JSONDecoder().decode(
             DemoAuthResponse.self,
-            from: response.data
+            from: responseData
         )
 
         // Set the session on the Supabase client using the returned tokens.

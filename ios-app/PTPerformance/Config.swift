@@ -18,7 +18,7 @@ enum Config {
 
     static let supabaseAnonKey: String = {
         #if DEBUG
-        return ProcessInfo.processInfo.environment["SUPABASE_ANON_KEY"] ?? "sb_publishable_bvF02gZep-IdSHFNYVro3g_lNY8hfzr"
+        return ProcessInfo.processInfo.environment["SUPABASE_ANON_KEY"] ?? "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJwYnhlYXhsYW95b3Frb2h5dGx3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ5OTkwMTgsImV4cCI6MjA4MDU3NTAxOH0.7RHRs-pdfbqQf9SYvg5C0e5OGktuXHVrJtsm7-fXxLo"
         #else
         guard let key = ProcessInfo.processInfo.environment["SUPABASE_ANON_KEY"], !key.isEmpty else {
             fatalError("SUPABASE_ANON_KEY not configured for production build")
