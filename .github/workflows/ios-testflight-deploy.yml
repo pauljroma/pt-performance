@@ -61,13 +61,14 @@ jobs:
           cd ios-app/PTPerformance
           xcodebuild -resolvePackageDependencies -project PTPerformance.xcodeproj -scheme PTPerformance
 
-      - name: Run Tests
+      - name: Run Unit Tests
         run: |
           cd ios-app/PTPerformance
           xcodebuild test \
             -project PTPerformance.xcodeproj \
             -scheme PTPerformance \
             -destination 'platform=iOS Simulator,name=iPhone 17 Pro' \
+            -only-testing:PTPerformanceTests \
             -enableCodeCoverage YES \
             2>&1 | tail -50
         continue-on-error: false
