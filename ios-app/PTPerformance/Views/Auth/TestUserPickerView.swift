@@ -137,58 +137,81 @@ struct TestUserPickerView: View {
 
     var body: some View {
         NavigationStack {
-            List(testUsers) { user in
-                Button(action: {
-                    loginAsTestUser(user)
-                }) {
-                    HStack(spacing: Spacing.sm) {
-                        // Sport icon
-                        Image(systemName: user.sportIcon)
-                            .font(.title3)
-                            .foregroundColor(.modusCyan)
-                            .frame(width: 32, height: 32)
-                            .accessibilityHidden(true)
-
-                        // User details
-                        VStack(alignment: .leading, spacing: Spacing.xxs) {
-                            Text(user.name)
-                                .font(.body.weight(.semibold))
-                                .foregroundColor(.primary)
-
-                            HStack(spacing: Spacing.xxs + 2) {
-                                Text("\(user.sport) \u{2022} \(user.injury)")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                            }
-
-                            HStack(spacing: Spacing.xs) {
-                                // Mode badge
-                                Text(user.mode)
-                                    .font(.caption2.weight(.semibold))
-                                    .padding(.horizontal, Spacing.xs)
-                                    .padding(.vertical, 2)
-                                    .background(user.modeColor.opacity(0.15))
-                                    .foregroundColor(user.modeColor)
-                                    .cornerRadius(CornerRadius.xs)
-
-                                // Level
-                                Text(user.level)
-                                    .font(.caption2)
-                                    .foregroundColor(.secondary)
-                            }
+            List {
+                if let errorMessage = errorMessage {
+                    Section {
+                        HStack(spacing: Spacing.xxs + 2) {
+                            Image(systemName: "exclamationmark.triangle.fill")
+                                .foregroundColor(DesignTokens.statusError)
+                            Text(errorMessage)
+                                .font(.caption)
+                                .foregroundColor(DesignTokens.statusError)
                         }
-
-                        Spacer()
-
-                        Image(systemName: "chevron.right")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                            .accessibilityHidden(true)
                     }
-                    .padding(.vertical, Spacing.xxs)
                 }
-                .accessibilityLabel("\(user.name), \(user.sport), \(user.mode) mode")
-                .accessibilityHint("Log in as \(user.name)")
+
+                Section {
+                    ForEach(testUsers) { user in
+                        Button(action: {
+                            loginAsTestUser(user)
+                        }) {
+                            HStack(spacing: Spacing.sm) {
+                                // Sport icon
+                                Image(systemName: user.sportIcon)
+                                    .font(.title3)
+                                    .foregroundColor(.modusCyan)
+                                    .frame(width: 32, height: 32)
+                                    .accessibilityHidden(true)
+
+                                // User details
+                                VStack(alignment: .leading, spacing: Spacing.xxs) {
+                                    Text(user.name)
+                                        .font(.body.weight(.semibold))
+                                        .foregroundColor(.primary)
+
+                                    HStack(spacing: Spacing.xxs + 2) {
+                                        Text("\(user.sport) \u{2022} \(user.injury)")
+                                            .font(.caption)
+                                            .foregroundColor(.secondary)
+                                    }
+
+                                    HStack(spacing: Spacing.xs) {
+                                        // Mode badge
+                                        Text(user.mode)
+                                            .font(.caption2.weight(.semibold))
+                                            .padding(.horizontal, Spacing.xs)
+                                            .padding(.vertical, 2)
+                                            .background(user.modeColor.opacity(0.15))
+                                            .foregroundColor(user.modeColor)
+                                            .cornerRadius(CornerRadius.xs)
+
+                                        // Level
+                                        Text(user.level)
+                                            .font(.caption2)
+                                            .foregroundColor(.secondary)
+                                    }
+                                }
+
+                                Spacer()
+
+                                if loadingUserId == user.id {
+                                    ProgressView()
+                                        .progressViewStyle(.circular)
+                                } else {
+                                    Image(systemName: "chevron.right")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                        .accessibilityHidden(true)
+                                }
+                            }
+                            .padding(.vertical, Spacing.xxs)
+                        }
+                        .disabled(isLoading)
+                        .opacity(isLoading && loadingUserId != user.id ? 0.5 : 1.0)
+                        .accessibilityLabel("\(user.name), \(user.sport), \(user.mode) mode")
+                        .accessibilityHint("Log in as \(user.name)")
+                    }
+                }
             }
             .listStyle(.insetGrouped)
             .navigationTitle("Test Users")
@@ -199,30 +222,54 @@ struct TestUserPickerView: View {
                         HapticFeedback.light()
                         dismiss()
                     }
+                    .disabled(isLoading)
                 }
             }
         }
     }
 
+    @State private var isLoading = false
+    @State private var errorMessage: String?
+    @State private var loadingUserId: String?
+
     // MARK: - Login Function
 
     private func loginAsTestUser(_ user: TestUser) {
-        // Set both appState AND supabase client (view models read from supabase)
-        appState.userId = user.id
-        appState.userRole = .patient
-        appState.isAuthenticated = true
+        isLoading = true
+        loadingUserId = user.id
+        errorMessage = nil
 
-        supabase.userId = user.id
-        supabase.userRole = .patient
+        Task {
+            do {
+                try await supabase.signInAsDemoUser(demoUserId: user.id, role: .patient)
 
-        // Start session monitoring
-        SessionManager.shared.startMonitoring()
+                await MainActor.run {
+                    appState.userId = supabase.userId
+                    appState.userRole = .patient
+                    appState.isAuthenticated = true
+                    isLoading = false
+                    loadingUserId = nil
 
-        HapticFeedback.success()
+                    SessionManager.shared.startMonitoring()
+                    HapticFeedback.success()
 
-        DebugLogger.shared.info("Demo", "Logged in as test user: \(user.name) (\(user.id)) — \(user.sport), \(user.mode)")
+                    DebugLogger.shared.info(
+                        "Demo",
+                        "Logged in as test user via Supabase Auth: \(user.name) (\(user.id)) -- \(user.sport), \(user.mode)"
+                    )
 
-        dismiss()
+                    dismiss()
+                }
+            } catch {
+                await MainActor.run {
+                    isLoading = false
+                    loadingUserId = nil
+                    errorMessage = "Login failed: \(error.localizedDescription)"
+                    HapticFeedback.formSubmission(success: false)
+                }
+                DebugLogger.shared.error("Demo", "Test user login failed for \(user.name): \(error)")
+            }
+        }
     }
 }
 

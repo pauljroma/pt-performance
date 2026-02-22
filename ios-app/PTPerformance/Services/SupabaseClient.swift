@@ -488,6 +488,71 @@ class PTSupabaseClient: ObservableObject {
         }
     }
 
+    // MARK: - Demo Auth (DEBUG only)
+
+    #if DEBUG
+    /// Response model for the demo-auth edge function
+    private struct DemoAuthResponse: Codable {
+        let access_token: String
+        let refresh_token: String
+        let expires_in: Int
+        let expires_at: Int
+        let token_type: String
+        let demo_db_id: String
+        let demo_role: String
+    }
+
+    /// Signs in as a demo user by calling the `demo-auth` edge function,
+    /// which creates a real Supabase Auth session for the specified demo user.
+    ///
+    /// This replaces the old approach of directly setting `userId`/`isAuthenticated`
+    /// without going through Supabase Auth, which caused `auth.uid()` to return NULL
+    /// and forced all RLS policies to be opened to `USING(true)`.
+    ///
+    /// - Parameters:
+    ///   - demoUserId: The database UUID of the demo user (patient or therapist)
+    ///   - role: The role to assign ("patient" or "therapist")
+    ///
+    /// - Throws: If the edge function call fails or returns an error
+    func signInAsDemoUser(demoUserId: String, role: UserRole) async throws {
+        let body: [String: String] = [
+            "demo_user_id": demoUserId,
+            "role": role.rawValue,
+        ]
+
+        let response = try await client.functions.invoke(
+            "demo-auth",
+            options: .init(body: body)
+        )
+
+        // Decode the response to get session tokens
+        let demoAuth = try JSONDecoder().decode(
+            DemoAuthResponse.self,
+            from: response.data
+        )
+
+        // Set the session on the Supabase client using the returned tokens.
+        // This makes auth.uid() return the correct user ID for RLS policies.
+        let session = try await client.auth.setSession(
+            accessToken: demoAuth.access_token,
+            refreshToken: demoAuth.refresh_token
+        )
+
+        await MainActor.run {
+            self.currentSession = session
+            self.currentUser = session.user
+            self.userRole = role
+            self.userId = demoAuth.demo_db_id
+            UserDefaults.standard.set(true, forKey: "hasActiveSession")
+        }
+
+        DebugLogger.shared.success(
+            "SupabaseClient",
+            "Demo auth: signed in as \(role.rawValue) (db: \(demoAuth.demo_db_id), auth: \(session.user.id))"
+        )
+    }
+    #endif
+
     /// Sign out
     /// Clears Supabase session and all securely stored credentials.
     /// Local state is always cleared even if the server-side sign-out fails,

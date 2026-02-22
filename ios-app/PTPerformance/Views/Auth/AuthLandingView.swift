@@ -308,43 +308,75 @@ struct AuthLandingView: View {
 
     // MARK: - Demo Login Functions
 
-    /// Login as demo patient (John Brebbia) - bypasses auth for testing
+    #if DEBUG
+    /// Login as demo patient via real Supabase Auth session.
+    /// Calls the `demo-auth` edge function to get a proper JWT token,
+    /// so `auth.uid()` works correctly and RLS policies are enforced.
     private func loginAsDemoPatient() {
-        // Demo patient UUID from seed data
         let demoPatientId = "00000000-0000-0000-0000-000000000001"
+        isLoading = true
+        errorMessage = nil
 
-        // Set both appState AND supabase client (view models read from supabase)
-        appState.userId = demoPatientId
-        appState.userRole = .patient
-        appState.isAuthenticated = true
+        Task {
+            do {
+                try await supabase.signInAsDemoUser(demoUserId: demoPatientId, role: .patient)
 
-        supabase.userId = demoPatientId
-        supabase.userRole = .patient
+                await MainActor.run {
+                    appState.userId = supabase.userId
+                    appState.userRole = .patient
+                    appState.isAuthenticated = true
+                    isLoading = false
 
-        // Start session monitoring
-        SessionManager.shared.startMonitoring()
+                    SessionManager.shared.startMonitoring()
+                    HapticFeedback.success()
+                }
 
-        DebugLogger.shared.info("Demo", "Logged in as demo patient: John Brebbia (\(demoPatientId))")
+                DebugLogger.shared.info("Demo", "Logged in as demo patient via Supabase Auth (\(demoPatientId))")
+            } catch {
+                await MainActor.run {
+                    isLoading = false
+                    errorMessage = "Demo login failed: \(error.localizedDescription)"
+                    HapticFeedback.formSubmission(success: false)
+                }
+                DebugLogger.shared.error("Demo", "Demo patient login failed: \(error)")
+            }
+        }
     }
 
-    /// Login as demo therapist (Sarah Thompson) - bypasses auth for testing
+    /// Login as demo therapist via real Supabase Auth session.
+    /// Calls the `demo-auth` edge function to get a proper JWT token,
+    /// so `auth.uid()` works correctly and RLS policies are enforced.
     private func loginAsDemoTherapist() {
-        // Demo therapist UUID from seed data
         let demoTherapistId = "00000000-0000-0000-0000-000000000100"
+        isLoading = true
+        errorMessage = nil
 
-        // Set both appState AND supabase client (view models read from supabase)
-        appState.userId = demoTherapistId
-        appState.userRole = .therapist
-        appState.isAuthenticated = true
+        Task {
+            do {
+                try await supabase.signInAsDemoUser(demoUserId: demoTherapistId, role: .therapist)
 
-        supabase.userId = demoTherapistId
-        supabase.userRole = .therapist
+                await MainActor.run {
+                    appState.userId = supabase.userId
+                    appState.userRole = .therapist
+                    appState.isAuthenticated = true
+                    isLoading = false
 
-        // Start session monitoring
-        SessionManager.shared.startMonitoring()
+                    SessionManager.shared.startMonitoring()
+                    HapticFeedback.success()
+                }
 
-        DebugLogger.shared.info("Demo", "Logged in as demo therapist: Sarah Thompson (\(demoTherapistId))")
+                DebugLogger.shared.info("Demo", "Logged in as demo therapist via Supabase Auth (\(demoTherapistId))")
+            } catch {
+                await MainActor.run {
+                    isLoading = false
+                    errorMessage = "Demo login failed: \(error.localizedDescription)"
+                    HapticFeedback.formSubmission(success: false)
+                }
+                DebugLogger.shared.error("Demo", "Demo therapist login failed: \(error)")
+            }
+        }
     }
+    #endif
 }
 
 #Preview {
