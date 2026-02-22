@@ -4,11 +4,8 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+import { checkRateLimit, rateLimitResponse } from '../_shared/rate-limit.ts'
+import { corsHeaders, handleCors } from '../_shared/cors.ts'
 
 // Request interface
 interface GenerateSubstitutionRequest {
@@ -73,9 +70,11 @@ interface GenerateSubstitutionResponse {
 
 serve(async (req) => {
   // Handle CORS preflight
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
-  }
+  const corsResponse = handleCors(req)
+  if (corsResponse) return corsResponse
+
+  const origin = req.headers.get('Origin')
+  const headers = corsHeaders(origin)
 
   try {
     const {
@@ -88,11 +87,16 @@ serve(async (req) => {
       whoop_recovery_score
     } = await req.json() as GenerateSubstitutionRequest
 
+    // Rate limit: 10 requests/minute for AI endpoints
+    const rateLimitKey = patient_id || req.headers.get('x-forwarded-for') || 'anonymous'
+    const { allowed, resetMs } = checkRateLimit(`gen-equip-sub:${rateLimitKey}`, { windowMs: 60_000, maxRequests: 10 })
+    if (!allowed) return rateLimitResponse(resetMs)
+
     // Validate required fields
     if (!patient_id || !session_id || !scheduled_date || !equipment_available) {
       return new Response(
         JSON.stringify({ error: 'patient_id, session_id, scheduled_date, and equipment_available required' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 400, headers: { ...headers, 'Content-Type': 'application/json' } }
       )
     }
 
@@ -126,7 +130,7 @@ serve(async (req) => {
     if (!sessionExercises || sessionExercises.length === 0) {
       return new Response(
         JSON.stringify({ error: 'No exercises found for this session' }),
-        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 404, headers: { ...headers, 'Content-Type': 'application/json' } }
       )
     }
 
@@ -165,7 +169,7 @@ serve(async (req) => {
           message: 'No equipment mismatches detected - all exercises can be performed',
           exercises_checked: sessionExercises.length
         }),
-        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 200, headers: { ...headers, 'Content-Type': 'application/json' } }
       )
     }
 
@@ -204,7 +208,7 @@ serve(async (req) => {
           error: `No pre-vetted substitution candidates found for: ${names}`,
           exercises_without_candidates: exercisesWithoutCandidates.length
         }),
-        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 404, headers: { ...headers, 'Content-Type': 'application/json' } }
       )
     }
 
@@ -393,7 +397,7 @@ Respond with valid JSON ONLY:
         tokens_used: tokensUsed,
         exercises_substituted: patch.exercise_substitutions.length
       }),
-      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { status: 200, headers: { ...headers, 'Content-Type': 'application/json' } }
     )
 
   } catch (error) {
@@ -405,7 +409,7 @@ Respond with valid JSON ONLY:
         error: errorMsg,
         details: errorStack
       }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { status: 500, headers: { ...headers, 'Content-Type': 'application/json' } }
     )
   }
 })

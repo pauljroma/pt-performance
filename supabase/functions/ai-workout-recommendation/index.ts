@@ -4,11 +4,8 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+import { checkRateLimit, rateLimitResponse } from '../_shared/rate-limit.ts'
+import { corsHeaders, handleCors } from '../_shared/cors.ts'
 
 interface WorkoutRecommendationRequest {
   patient_id: string
@@ -74,18 +71,25 @@ function calculateReadinessBand(score: number | null): string | null {
 
 serve(async (req) => {
   // Handle CORS preflight
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
-  }
+  const corsResponse = handleCors(req)
+  if (corsResponse) return corsResponse
+
+  const origin = req.headers.get('Origin')
+  const headers = corsHeaders(origin)
 
   try {
     const requestBody: WorkoutRecommendationRequest = await req.json()
     const { patient_id, category_preferences, duration_preference, time_of_day } = requestBody
 
+    // Rate limit: 10 requests/minute for AI endpoints
+    const rateLimitKey = patient_id || req.headers.get('x-forwarded-for') || 'anonymous'
+    const { allowed, resetMs } = checkRateLimit(`ai-workout-rec:${rateLimitKey}`, { windowMs: 60_000, maxRequests: 10 })
+    if (!allowed) return rateLimitResponse(resetMs)
+
     if (!patient_id) {
       return new Response(
         JSON.stringify({ error: 'patient_id required' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 400, headers: { ...headers, 'Content-Type': 'application/json' } }
       )
     }
 
@@ -122,7 +126,7 @@ serve(async (req) => {
           },
           cached: true
         }),
-        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 200, headers: { ...headers, 'Content-Type': 'application/json' } }
       )
     }
 
@@ -209,7 +213,7 @@ serve(async (req) => {
             active_goals: activeGoals.map(g => g.category)
           }
         }),
-        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 200, headers: { ...headers, 'Content-Type': 'application/json' } }
       )
     }
 
@@ -429,7 +433,7 @@ Respond with valid JSON ONLY (no markdown, no explanation outside JSON):
 
     return new Response(
       JSON.stringify(response),
-      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { status: 200, headers: { ...headers, 'Content-Type': 'application/json' } }
     )
 
   } catch (error) {
@@ -439,7 +443,7 @@ Respond with valid JSON ONLY (no markdown, no explanation outside JSON):
         error: error.message || 'Internal server error',
         details: error.toString()
       }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { status: 500, headers: { ...headers, 'Content-Type': 'application/json' } }
     )
   }
 })

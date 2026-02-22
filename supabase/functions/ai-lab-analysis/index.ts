@@ -12,11 +12,8 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+import { checkRateLimit, rateLimitResponse } from '../_shared/rate-limit.ts'
+import { corsHeaders, handleCors } from '../_shared/cors.ts'
 
 // ============================================================================
 // TYPE DEFINITIONS
@@ -144,18 +141,25 @@ function calculateHealthScore(biomarkerAnalyses: BiomarkerAnalysis[]): number {
 
 serve(async (req) => {
   // Handle CORS preflight
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
-  }
+  const corsResponse = handleCors(req)
+  if (corsResponse) return corsResponse
+
+  const origin = req.headers.get('Origin')
+  const headers = corsHeaders(origin)
 
   try {
     const { patient_id, lab_result_id } = await req.json() as LabAnalysisRequest
+
+    // Rate limit: 10 requests/minute for AI endpoints
+    const rateLimitKey = patient_id || req.headers.get('x-forwarded-for') || 'anonymous'
+    const { allowed, resetMs } = checkRateLimit(`ai-lab-analysis:${rateLimitKey}`, { windowMs: 60_000, maxRequests: 10 })
+    if (!allowed) return rateLimitResponse(resetMs)
 
     // Validate required fields
     if (!patient_id || !lab_result_id) {
       return new Response(
         JSON.stringify({ error: 'patient_id and lab_result_id are required' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 400, headers: { ...headers, 'Content-Type': 'application/json' } }
       )
     }
 
@@ -163,14 +167,14 @@ serve(async (req) => {
     if (!isValidUUID(patient_id)) {
       return new Response(
         JSON.stringify({ error: 'Invalid patient_id format' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 400, headers: { ...headers, 'Content-Type': 'application/json' } }
       )
     }
 
     if (!isValidUUID(lab_result_id)) {
       return new Response(
         JSON.stringify({ error: 'Invalid lab_result_id format' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 400, headers: { ...headers, 'Content-Type': 'application/json' } }
       )
     }
 
@@ -211,7 +215,7 @@ serve(async (req) => {
           medical_disclaimer: cachedAnalysis.medical_disclaimer,
           cached: true
         } as LabAnalysisResponse),
-        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 200, headers: { ...headers, 'Content-Type': 'application/json' } }
       )
     }
 
@@ -229,7 +233,7 @@ serve(async (req) => {
       console.error('[ai-lab-analysis] Lab result not found:', labError)
       return new Response(
         JSON.stringify({ error: 'Lab result not found' }),
-        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 404, headers: { ...headers, 'Content-Type': 'application/json' } }
       )
     }
 
@@ -246,7 +250,7 @@ serve(async (req) => {
     if (!biomarkerValues || biomarkerValues.length === 0) {
       return new Response(
         JSON.stringify({ error: 'No biomarker values found for this lab result' }),
-        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 404, headers: { ...headers, 'Content-Type': 'application/json' } }
       )
     }
 
@@ -517,7 +521,7 @@ Respond with valid JSON ONLY:
 
     return new Response(
       JSON.stringify(response),
-      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { status: 200, headers: { ...headers, 'Content-Type': 'application/json' } }
     )
 
   } catch (error) {
@@ -530,7 +534,7 @@ Respond with valid JSON ONLY:
         error: errorMessage,
         medical_disclaimer: 'This service encountered an error. Please consult a healthcare provider for lab result interpretation.'
       }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { status: 500, headers: { ...headers, 'Content-Type': 'application/json' } }
     )
   }
 })

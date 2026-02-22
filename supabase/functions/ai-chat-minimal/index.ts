@@ -1,12 +1,27 @@
 // Minimal standalone AI Chat function - no external deps
+import { checkRateLimit, rateLimitResponse } from '../_shared/rate-limit.ts'
+import { corsHeaders, handleCors } from '../_shared/cors.ts'
+
 Deno.serve(async (req) => {
+  // Handle CORS preflight
+  const corsResponse = handleCors(req)
+  if (corsResponse) return corsResponse
+
+  const origin = req.headers.get('Origin')
+  const headers = corsHeaders(origin)
+
   try {
     const { message, athlete_id, session_id } = await req.json();
+
+    // Rate limit: 10 requests/minute for AI endpoints
+    const rateLimitKey = athlete_id || req.headers.get('x-forwarded-for') || 'anonymous';
+    const { allowed, resetMs } = checkRateLimit(`ai-chat-minimal:${rateLimitKey}`, { windowMs: 60_000, maxRequests: 10 });
+    if (!allowed) return rateLimitResponse(resetMs);
 
     const openaiKey = Deno.env.get('OPENAI_API_KEY');
     if (!openaiKey) {
       return new Response(JSON.stringify({success: false, error: 'API key not configured'}), {
-        headers: {'Content-Type': 'application/json'},
+        headers: {...headers, 'Content-Type': 'application/json'},
         status: 500
       });
     }
@@ -34,7 +49,7 @@ Deno.serve(async (req) => {
       session_id: session_id || crypto.randomUUID(),
       message: reply
     }), {
-      headers: {'Content-Type': 'application/json'}
+      headers: {...headers, 'Content-Type': 'application/json'}
     });
 
   } catch (error) {
@@ -42,7 +57,7 @@ Deno.serve(async (req) => {
       success: false,
       error: error.message
     }), {
-      headers: {'Content-Type': 'application/json'},
+      headers: {...headers, 'Content-Type': 'application/json'},
       status: 500
     });
   }

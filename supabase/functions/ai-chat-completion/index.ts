@@ -5,11 +5,8 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+import { checkRateLimit, rateLimitResponse } from '../_shared/rate-limit.ts'
+import { corsHeaders, handleCors } from '../_shared/cors.ts'
 
 interface ChatMessage {
   role: 'user' | 'assistant' | 'system'
@@ -113,17 +110,24 @@ async function fetchUserContext(
 
 serve(async (req) => {
   // Handle CORS preflight
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
-  }
+  const corsResponse = handleCors(req)
+  if (corsResponse) return corsResponse
+
+  const origin = req.headers.get('Origin')
+  const headers = corsHeaders(origin)
 
   try {
     const { athlete_id, message, session_id, user_context } = await req.json() as ChatRequest
 
+    // Rate limit: 10 requests/minute for AI endpoints
+    const rateLimitKey = athlete_id || req.headers.get('x-forwarded-for') || 'anonymous'
+    const { allowed, resetMs } = checkRateLimit(`ai-chat-completion:${rateLimitKey}`, { windowMs: 60_000, maxRequests: 10 })
+    if (!allowed) return rateLimitResponse(resetMs)
+
     if (!athlete_id || !message) {
       return new Response(
         JSON.stringify({ error: 'athlete_id and message required' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 400, headers: { ...headers, 'Content-Type': 'application/json' } }
       )
     }
 
@@ -298,13 +302,13 @@ You are helpful, supportive, safety-focused, and personalized.${combinedContext 
         // ACP-1023: Include follow-up suggestions in the response
         follow_up_suggestions: followUpSuggestions,
       }),
-      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { status: 200, headers: { ...headers, 'Content-Type': 'application/json' } }
     )
   } catch (error) {
     console.error('Error in ai-chat-completion:', error)
     return new Response(
       JSON.stringify({ error: error.message }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { status: 500, headers: { ...headers, 'Content-Type': 'application/json' } }
     )
   }
 })

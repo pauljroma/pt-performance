@@ -6,11 +6,8 @@
 // ============================================================================
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+import { checkRateLimit, rateLimitResponse } from '../_shared/rate-limit.ts'
+import { corsHeaders, handleCors } from '../_shared/cors.ts'
 
 // ============================================================================
 // TYPE DEFINITIONS
@@ -70,27 +67,7 @@ function generateUUID(): string {
   return crypto.randomUUID()
 }
 
-// Simple in-memory rate limiter
-const rateLimitMap = new Map<string, { count: number; resetTime: number }>()
-const RATE_LIMIT_WINDOW_MS = 60 * 1000 // 1 minute
-const RATE_LIMIT_MAX_REQUESTS = 10 // 10 requests per minute
-
-function checkRateLimit(identifier: string): boolean {
-  const now = Date.now()
-  const record = rateLimitMap.get(identifier)
-
-  if (!record || now > record.resetTime) {
-    rateLimitMap.set(identifier, { count: 1, resetTime: now + RATE_LIMIT_WINDOW_MS })
-    return true
-  }
-
-  if (record.count >= RATE_LIMIT_MAX_REQUESTS) {
-    return false
-  }
-
-  record.count++
-  return true
-}
+// Rate limiting is now handled by the shared rate-limit module
 
 // ============================================================================
 // CLINICAL PROMPT BUILDER
@@ -378,15 +355,17 @@ function parseAndValidateSuggestions(responseText: string): PlanSuggestion[] {
 
 serve(async (req) => {
   // Handle CORS preflight
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
-  }
+  const corsResponse = handleCors(req)
+  if (corsResponse) return corsResponse
+
+  const origin = req.headers.get('Origin')
+  const headers = corsHeaders(origin)
 
   // Only allow POST requests
   if (req.method !== 'POST') {
     return new Response(
       JSON.stringify({ success: false, error: 'Method not allowed' } as ErrorResponse),
-      { status: 405, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { status: 405, headers: { ...headers, 'Content-Type': 'application/json' } }
     )
   }
 
@@ -416,7 +395,7 @@ serve(async (req) => {
           error: 'At least one section (subjective, objective, or assessment) must contain content',
           code: 'ERR_INSUFFICIENT_INPUT'
         } as ErrorResponse),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 400, headers: { ...headers, 'Content-Type': 'application/json' } }
       )
     }
 
@@ -428,7 +407,7 @@ serve(async (req) => {
           error: 'Invalid patient_id format',
           code: 'ERR_INVALID_UUID'
         } as ErrorResponse),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 400, headers: { ...headers, 'Content-Type': 'application/json' } }
       )
     }
 
@@ -439,22 +418,14 @@ serve(async (req) => {
           error: 'Invalid therapist_id format',
           code: 'ERR_INVALID_UUID'
         } as ErrorResponse),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 400, headers: { ...headers, 'Content-Type': 'application/json' } }
       )
     }
 
-    // Rate limiting (use therapist_id or patient_id or IP as identifier)
+    // Rate limiting: 10 requests/minute for AI endpoints
     const rateLimitId = therapist_id || patient_id || req.headers.get('x-forwarded-for') || 'anonymous'
-    if (!checkRateLimit(rateLimitId)) {
-      return new Response(
-        JSON.stringify({
-          success: false,
-          error: 'Rate limit exceeded. Please wait before making more requests.',
-          code: 'ERR_RATE_LIMIT'
-        } as ErrorResponse),
-        { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
-    }
+    const { allowed, resetMs } = checkRateLimit(`ai-soap-plan:${rateLimitId}`, { windowMs: 60_000, maxRequests: 10 })
+    if (!allowed) return rateLimitResponse(resetMs)
 
     // Build the clinical prompt
     const prompt = buildClinicalPrompt(requestBody)
@@ -489,7 +460,7 @@ serve(async (req) => {
 
     return new Response(
       JSON.stringify(response),
-      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { status: 200, headers: { ...headers, 'Content-Type': 'application/json' } }
     )
 
   } catch (error) {
@@ -506,7 +477,7 @@ serve(async (req) => {
       } as ErrorResponse),
       {
         status: isRateLimit ? 429 : 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        headers: { ...headers, 'Content-Type': 'application/json' }
       }
     )
   }

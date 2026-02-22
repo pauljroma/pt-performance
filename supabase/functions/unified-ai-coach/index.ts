@@ -25,11 +25,8 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+import { checkRateLimit, rateLimitResponse } from '../_shared/rate-limit.ts'
+import { corsHeaders, handleCors } from '../_shared/cors.ts'
 
 // ============================================================================
 // TYPE DEFINITIONS
@@ -536,18 +533,25 @@ async function gatherPatientContext(
 
 serve(async (req) => {
   // Handle CORS preflight
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
-  }
+  const corsResponse = handleCors(req)
+  if (corsResponse) return corsResponse
+
+  const origin = req.headers.get('Origin')
+  const headers = corsHeaders(origin)
 
   try {
     const { patient_id, question, client_context } = await req.json() as UnifiedCoachRequest
+
+    // Rate limit: 10 requests/minute for AI endpoints
+    const rateLimitKey = patient_id || req.headers.get('x-forwarded-for') || 'anonymous'
+    const { allowed, resetMs } = checkRateLimit(`unified-ai-coach:${rateLimitKey}`, { windowMs: 60_000, maxRequests: 10 })
+    if (!allowed) return rateLimitResponse(resetMs)
 
     // Validate required fields
     if (!patient_id) {
       return new Response(
         JSON.stringify({ error: 'patient_id is required' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 400, headers: { ...headers, 'Content-Type': 'application/json' } }
       )
     }
 
@@ -555,7 +559,7 @@ serve(async (req) => {
     if (!isValidUUID(patient_id)) {
       return new Response(
         JSON.stringify({ error: 'Invalid patient_id format' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 400, headers: { ...headers, 'Content-Type': 'application/json' } }
       )
     }
 
@@ -850,7 +854,7 @@ IMPORTANT: Always include exactly 3 follow_up_questions that are personalized to
 
     return new Response(
       JSON.stringify(response),
-      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { status: 200, headers: { ...headers, 'Content-Type': 'application/json' } }
     )
 
   } catch (error) {
@@ -876,7 +880,7 @@ IMPORTANT: Always include exactly 3 follow_up_questions that are personalized to
         follow_up_questions: [],
         disclaimer: 'AI Coaching is temporarily unavailable. Please consult with a healthcare professional for guidance.'
       }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { status: 500, headers: { ...headers, 'Content-Type': 'application/json' } }
     )
   }
 })

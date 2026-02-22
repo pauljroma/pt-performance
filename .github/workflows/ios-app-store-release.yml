@@ -1,0 +1,492 @@
+name: App Store Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Semantic version (e.g. 1.0.0, 1.1.0, 2.0.0)'
+        required: true
+        type: string
+      release_notes:
+        description: "What's new in this version"
+        required: true
+        type: string
+      skip_tests:
+        description: 'Skip tests (emergency override only)'
+        required: false
+        default: false
+        type: boolean
+
+jobs:
+  validate-version:
+    name: Validate Version
+    runs-on: macos-26
+    timeout-minutes: 5
+
+    outputs:
+      build_number: ${{ steps.build_number.outputs.BUILD_NUMBER }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Validate semver format
+        run: |
+          VERSION="${{ github.event.inputs.version }}"
+          if ! echo "$VERSION" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "::error::Version '$VERSION' does not match semver format (X.Y.Z)"
+            exit 1
+          fi
+          echo "Version format valid: $VERSION"
+
+      - name: Check version is greater than current
+        run: |
+          cd ios-app/PTPerformance
+          CURRENT_VERSION=$(/usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" Info.plist 2>/dev/null || echo "0.0.0")
+
+          # If Info.plist uses $(MARKETING_VERSION), read from pbxproj
+          if echo "$CURRENT_VERSION" | grep -q 'MARKETING_VERSION'; then
+            CURRENT_VERSION=$(grep 'MARKETING_VERSION' PTPerformance.xcodeproj/project.pbxproj | head -1 | sed 's/.*= //;s/;.*//' | tr -d '[:space:]')
+          fi
+
+          NEW_VERSION="${{ github.event.inputs.version }}"
+
+          echo "Current version: $CURRENT_VERSION"
+          echo "New version:     $NEW_VERSION"
+
+          # Pad current version to 3 components if needed (e.g. "1.0" -> "1.0.0")
+          CURRENT_PADDED=$(echo "$CURRENT_VERSION" | awk -F. '{printf "%s.%s.%s", $1, ($2 != "" ? $2 : "0"), ($3 != "" ? $3 : "0")}')
+
+          # Compare versions using sort -V
+          HIGHER=$(printf '%s\n%s' "$CURRENT_PADDED" "$NEW_VERSION" | sort -V | tail -1)
+          if [ "$HIGHER" = "$CURRENT_PADDED" ] && [ "$CURRENT_PADDED" = "$NEW_VERSION" ]; then
+            echo "::error::Version $NEW_VERSION is equal to current version $CURRENT_PADDED"
+            exit 1
+          elif [ "$HIGHER" = "$CURRENT_PADDED" ]; then
+            echo "::error::Version $NEW_VERSION is not greater than current version $CURRENT_PADDED"
+            exit 1
+          fi
+
+          echo "Version $NEW_VERSION > $CURRENT_PADDED -- OK"
+
+      - name: Check git tag does not exist
+        run: |
+          VERSION="${{ github.event.inputs.version }}"
+          if git rev-parse "v${VERSION}" >/dev/null 2>&1; then
+            echo "::error::Git tag v${VERSION} already exists"
+            exit 1
+          fi
+          echo "Tag v${VERSION} does not exist -- OK"
+
+      - name: Compute build number
+        id: build_number
+        run: |
+          BUILD_NUMBER=$(git rev-list --count HEAD)
+          echo "BUILD_NUMBER=$BUILD_NUMBER" >> $GITHUB_OUTPUT
+          echo "Build number: $BUILD_NUMBER"
+
+  test:
+    name: Run Tests
+    runs-on: macos-26
+    timeout-minutes: 45
+    needs: [validate-version]
+    if: ${{ github.event.inputs.skip_tests != 'true' }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Cache Swift Packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            ios-app/PTPerformance/.build
+            ~/Library/Developer/Xcode/DerivedData
+          key: ${{ runner.os }}-spm-${{ hashFiles('ios-app/PTPerformance/PTPerformance.xcodeproj/project.pbxproj') }}
+          restore-keys: |
+            ${{ runner.os }}-spm-
+
+      - name: Resolve Swift Package Dependencies
+        run: |
+          cd ios-app/PTPerformance
+          xcodebuild -resolvePackageDependencies -project PTPerformance.xcodeproj -scheme PTPerformance
+
+      - name: Run Unit Tests
+        run: |
+          cd ios-app/PTPerformance
+          xcodebuild test \
+            -project PTPerformance.xcodeproj \
+            -scheme PTPerformance \
+            -destination 'platform=iOS Simulator,name=iPhone 17 Pro' \
+            -only-testing:PTPerformanceTests \
+            -enableCodeCoverage YES \
+            -resultBundlePath test_results.xcresult \
+            2>&1 | tail -50
+
+      - name: Run UI Tests
+        run: |
+          cd ios-app/PTPerformance
+          xcodebuild test \
+            -project PTPerformance.xcodeproj \
+            -scheme PTPerformance \
+            -destination 'platform=iOS Simulator,name=iPhone 17 Pro' \
+            -only-testing:PTPerformanceUITests \
+            -resultBundlePath ui_test_results.xcresult \
+            2>&1 | tail -50
+
+      - name: Check Coverage Threshold
+        run: |
+          cd ios-app/PTPerformance
+          xcrun xccov view --report --json test_results.xcresult > coverage.json
+
+          python3 << 'EOF'
+          import json, sys
+
+          with open('coverage.json', 'r') as f:
+              data = json.load(f)
+              coverage = data.get('lineCoverage', 0) * 100
+
+          print(f"Test Coverage: {coverage:.2f}%")
+
+          if coverage < 70.0:
+              print(f"::error::Coverage {coverage:.2f}% is below the 70% threshold required for App Store release")
+              sys.exit(1)
+          else:
+              print(f"Coverage meets threshold: {coverage:.2f}% >= 70.0%")
+          EOF
+
+      - name: Upload Test Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: |
+            ios-app/PTPerformance/test_results.xcresult
+            ios-app/PTPerformance/ui_test_results.xcresult
+          retention-days: 90
+
+  build-and-archive:
+    name: Build, Archive & Export
+    runs-on: macos-26
+    timeout-minutes: 60
+    needs: [validate-version, test]
+    if: |
+      always() &&
+      needs.validate-version.result == 'success' &&
+      (needs.test.result == 'success' || needs.test.result == 'skipped')
+
+    outputs:
+      build_number: ${{ needs.validate-version.outputs.build_number }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up App Store Connect API Key
+        run: |
+          mkdir -p ~/private_keys
+          echo "${{ secrets.APP_STORE_CONNECT_API_KEY_CONTENT }}" | base64 --decode > ~/private_keys/AuthKey_${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}.p8
+
+      - name: Cache Swift Packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            ios-app/PTPerformance/.build
+            ~/Library/Developer/Xcode/DerivedData
+          key: ${{ runner.os }}-spm-${{ hashFiles('ios-app/PTPerformance/PTPerformance.xcodeproj/project.pbxproj') }}
+          restore-keys: |
+            ${{ runner.os }}-spm-
+
+      - name: Update version and build number
+        run: |
+          cd ios-app/PTPerformance
+          VERSION="${{ github.event.inputs.version }}"
+          BUILD_NUMBER="${{ needs.validate-version.outputs.build_number }}"
+
+          echo "Setting version to $VERSION (build $BUILD_NUMBER)"
+
+          # Update MARKETING_VERSION in project.pbxproj
+          sed -i '' "s/MARKETING_VERSION = [^;]*;/MARKETING_VERSION = ${VERSION};/g" \
+            PTPerformance.xcodeproj/project.pbxproj
+
+          # Update Info.plist if it exists and has CFBundleShortVersionString
+          if [ -f Info.plist ]; then
+            /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $VERSION" Info.plist 2>/dev/null || true
+            /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $BUILD_NUMBER" Info.plist 2>/dev/null || true
+          fi
+
+          echo "Version set: $VERSION ($BUILD_NUMBER)"
+
+      - name: Resolve Swift Package Dependencies
+        run: |
+          cd ios-app/PTPerformance
+          xcodebuild -resolvePackageDependencies -project PTPerformance.xcodeproj -scheme PTPerformance
+
+      - name: Build and Archive
+        run: |
+          cd ios-app/PTPerformance
+          xcodebuild archive \
+            -project PTPerformance.xcodeproj \
+            -scheme PTPerformance \
+            -configuration Release \
+            -archivePath PTPerformance.xcarchive \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath ~/private_keys/AuthKey_${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}.p8 \
+            -authenticationKeyID ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }} \
+            -authenticationKeyIssuerID ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }} \
+            CURRENT_PROJECT_VERSION=${{ needs.validate-version.outputs.build_number }}
+
+      - name: Generate dSYMs for SPM Binary Frameworks
+        run: |
+          cd ios-app/PTPerformance
+          # Xcode does not auto-generate dSYMs for SPM binary targets (e.g. Sentry.xcframework).
+          # Run dsymutil on each embedded framework that lacks a dSYM in the archive.
+          ARCHIVE_FRAMEWORKS="PTPerformance.xcarchive/Products/Applications/PTPerformance.app/Frameworks"
+          ARCHIVE_DSYMS="PTPerformance.xcarchive/dSYMs"
+          if [ -d "$ARCHIVE_FRAMEWORKS" ]; then
+            for FW in "$ARCHIVE_FRAMEWORKS"/*.framework; do
+              FW_NAME=$(basename "$FW" .framework)
+              FW_BINARY="$FW/$FW_NAME"
+              DSYM_PATH="$ARCHIVE_DSYMS/${FW_NAME}.framework.dSYM"
+              if [ -f "$FW_BINARY" ] && [ ! -d "$DSYM_PATH" ]; then
+                echo "Generating dSYM for $FW_NAME.framework..."
+                dsymutil "$FW_BINARY" -o "$DSYM_PATH" 2>/dev/null && \
+                  echo "  Created $FW_NAME.framework.dSYM" || \
+                  echo "  Could not generate dSYM for $FW_NAME (stripped binary)"
+              fi
+            done
+          fi
+          echo "dSYMs in archive:"
+          ls -la "$ARCHIVE_DSYMS/" || true
+
+      - name: Create App Store ExportOptions
+        run: |
+          cd ios-app/PTPerformance
+          cat > AppStoreExportOptions.plist << 'PLIST'
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+              <key>method</key>
+              <string>app-store-connect</string>
+              <key>teamID</key>
+              <string>5NNLBL74XR</string>
+              <key>uploadBitcode</key>
+              <false/>
+              <key>uploadSymbols</key>
+              <true/>
+              <key>compileBitcode</key>
+              <false/>
+              <key>signingStyle</key>
+              <string>automatic</string>
+              <key>destination</key>
+              <string>export</string>
+              <key>manageAppVersionAndBuildNumber</key>
+              <false/>
+          </dict>
+          </plist>
+          PLIST
+
+      - name: Export IPA for App Store
+        run: |
+          cd ios-app/PTPerformance
+          xcodebuild -exportArchive \
+            -archivePath PTPerformance.xcarchive \
+            -exportPath export \
+            -exportOptionsPlist AppStoreExportOptions.plist \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath ~/private_keys/AuthKey_${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}.p8 \
+            -authenticationKeyID ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }} \
+            -authenticationKeyIssuerID ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
+
+      - name: Package dSYMs
+        run: |
+          cd ios-app/PTPerformance
+          cd PTPerformance.xcarchive/dSYMs
+          zip -r ../../export/PTPerformance-${{ github.event.inputs.version }}-dSYMs.zip *.dSYM
+          echo "dSYM archive created:"
+          ls -la ../../export/PTPerformance-${{ github.event.inputs.version }}-dSYMs.zip
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-store-build-${{ github.event.inputs.version }}
+          path: |
+            ios-app/PTPerformance/export/PTPerformance.ipa
+            ios-app/PTPerformance/export/PTPerformance-${{ github.event.inputs.version }}-dSYMs.zip
+          retention-days: 365
+
+      - name: Clean up API key
+        if: always()
+        run: |
+          rm -rf ~/private_keys
+
+  upload:
+    name: Upload to App Store Connect
+    runs-on: macos-26
+    timeout-minutes: 30
+    needs: [validate-version, build-and-archive]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: app-store-build-${{ github.event.inputs.version }}
+          path: artifacts
+
+      - name: Set up App Store Connect API Key
+        run: |
+          mkdir -p ~/private_keys
+          echo "${{ secrets.APP_STORE_CONNECT_API_KEY_CONTENT }}" | base64 --decode > ~/private_keys/AuthKey_${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}.p8
+
+      - name: Upload IPA to App Store Connect
+        env:
+          API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
+        run: |
+          echo "Uploading PTPerformance.ipa to App Store Connect..."
+          echo "Version: ${{ github.event.inputs.version }}"
+          echo "Build:   ${{ needs.validate-version.outputs.build_number }}"
+
+          xcrun altool --upload-app \
+            --type ios \
+            --file artifacts/PTPerformance.ipa \
+            --apiKey "$API_KEY_ID" \
+            --apiIssuer "$API_ISSUER_ID"
+
+          echo ""
+          echo "Upload complete. The build will appear in App Store Connect within 15-30 minutes."
+          echo "IMPORTANT: This build has NOT been submitted for review."
+          echo "Go to App Store Connect to submit for review when ready."
+
+      - name: Upload dSYMs to Sentry
+        continue-on-error: true
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
+        run: |
+          if [ -z "$SENTRY_AUTH_TOKEN" ]; then
+            echo "SENTRY_AUTH_TOKEN not configured, skipping dSYM upload"
+            exit 0
+          fi
+
+          # Install Sentry CLI
+          brew install getsentry/tools/sentry-cli
+
+          # Unzip dSYMs and upload
+          mkdir -p dsyms_extracted
+          unzip -o "artifacts/PTPerformance-${{ github.event.inputs.version }}-dSYMs.zip" -d dsyms_extracted
+
+          sentry-cli upload-dif \
+            --org "${SENTRY_ORG}" \
+            --project "${SENTRY_PROJECT}" \
+            --include-sources \
+            dsyms_extracted
+
+          echo "dSYMs uploaded to Sentry"
+
+      - name: Clean up API key
+        if: always()
+        run: |
+          rm -rf ~/private_keys
+
+  release:
+    name: Create GitHub Release
+    runs-on: macos-26
+    timeout-minutes: 10
+    needs: [validate-version, build-and-archive, upload]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: app-store-build-${{ github.event.inputs.version }}
+          path: artifacts
+
+      - name: Create git tag
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag -a "v${{ github.event.inputs.version }}" -m "Release v${{ github.event.inputs.version }}"
+          git push origin "v${{ github.event.inputs.version }}"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ github.event.inputs.version }}
+          name: v${{ github.event.inputs.version }}
+          body: |
+            ## Modus v${{ github.event.inputs.version }}
+
+            ### What's New
+            ${{ github.event.inputs.release_notes }}
+
+            ### Build Details
+            - **Version:** ${{ github.event.inputs.version }}
+            - **Build:** ${{ needs.validate-version.outputs.build_number }}
+            - **Commit:** ${{ github.sha }}
+            - **Tests:** ${{ github.event.inputs.skip_tests == 'true' && 'Skipped (emergency override)' || 'Passed' }}
+
+            ### App Store
+            This build has been uploaded to App Store Connect.
+            It must be **manually submitted for App Review** from [App Store Connect](https://appstoreconnect.apple.com).
+          draft: false
+          prerelease: false
+          files: |
+            artifacts/PTPerformance.ipa
+            artifacts/PTPerformance-${{ github.event.inputs.version }}-dSYMs.zip
+
+      - name: Add release summary
+        run: |
+          cat >> $GITHUB_STEP_SUMMARY << 'SUMMARY'
+          ## App Store Release Summary
+
+          | Field | Value |
+          |-------|-------|
+          | **Version** | ${{ github.event.inputs.version }} |
+          | **Build** | ${{ needs.validate-version.outputs.build_number }} |
+          | **Tag** | `v${{ github.event.inputs.version }}` |
+          | **Commit** | `${{ github.sha }}` |
+          | **Tests** | ${{ github.event.inputs.skip_tests == 'true' && 'SKIPPED' || 'Passed' }} |
+
+          ### Next Steps
+          1. Wait 15-30 minutes for App Store Connect processing
+          2. Go to [App Store Connect](https://appstoreconnect.apple.com)
+          3. Select the build and submit for App Review
+          4. Fill in App Store metadata if this is a new version
+          5. Monitor review status (typically 24-48 hours)
+
+          ### Release Notes
+          ${{ github.event.inputs.release_notes }}
+          SUMMARY
+
+  cleanup:
+    name: Post-Release Cleanup
+    runs-on: macos-26
+    timeout-minutes: 5
+    needs: [upload, release]
+    if: always()
+
+    steps:
+      - name: Clean up sensitive data
+        run: |
+          # Remove any API keys that may have been left behind
+          rm -rf ~/private_keys
+
+          # Clean Xcode derived data to free runner disk space
+          rm -rf ~/Library/Developer/Xcode/DerivedData/*
+
+          echo "Cleanup complete"

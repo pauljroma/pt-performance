@@ -2,6 +2,8 @@
 // Temporary workaround until patients table is populated
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { checkRateLimit, rateLimitResponse } from '../_shared/rate-limit.ts'
+import { corsHeaders, handleCors } from '../_shared/cors.ts'
 
 const openaiApiKey = Deno.env.get('OPENAI_API_KEY')
 
@@ -16,39 +18,40 @@ interface ChatRequest {
 }
 
 serve(async (req) => {
-  try {
-    // CORS
-    if (req.method === 'OPTIONS') {
-      return new Response(null, {
-        headers: {
-          'Access-Control-Allow-Origin': '*',
-          'Access-Control-Allow-Methods': 'POST, OPTIONS',
-          'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-        }
-      })
-    }
+  // Handle CORS preflight
+  const corsResponse = handleCors(req)
+  if (corsResponse) return corsResponse
 
+  const origin = req.headers.get('Origin')
+  const headers = corsHeaders(origin)
+
+  try {
     if (req.method !== 'POST') {
       return new Response(
         JSON.stringify({ error: 'Method not allowed' }),
-        { status: 405, headers: { 'Content-Type': 'application/json' } }
+        { status: 405, headers: { ...headers, 'Content-Type': 'application/json' } }
       )
     }
 
     if (!openaiApiKey) {
       return new Response(
         JSON.stringify({ error: 'OpenAI API key not configured' }),
-        { status: 500, headers: { 'Content-Type': 'application/json' } }
+        { status: 500, headers: { ...headers, 'Content-Type': 'application/json' } }
       )
     }
 
     const body: ChatRequest = await req.json()
     const { message, athlete_id } = body
 
+    // Rate limit: 10 requests/minute for AI endpoints
+    const rateLimitKey = athlete_id || req.headers.get('x-forwarded-for') || 'anonymous'
+    const { allowed, resetMs } = checkRateLimit(`ai-chat-simple:${rateLimitKey}`, { windowMs: 60_000, maxRequests: 10 })
+    if (!allowed) return rateLimitResponse(resetMs)
+
     if (!message || !athlete_id) {
       return new Response(
         JSON.stringify({ error: 'message and athlete_id required' }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
+        { status: 400, headers: { ...headers, 'Content-Type': 'application/json' } }
       )
     }
 
@@ -91,7 +94,7 @@ TONE: Friendly, encouraging, professional but warm`
       console.error('OpenAI error:', errorData)
       return new Response(
         JSON.stringify({ error: 'OpenAI request failed', details: errorData.error?.message }),
-        { status: 500, headers: { 'Content-Type': 'application/json' } }
+        { status: 500, headers: { ...headers, 'Content-Type': 'application/json' } }
       )
     }
 
@@ -114,10 +117,7 @@ TONE: Friendly, encouraging, professional but warm`
       }),
       {
         status: 200,
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*'
-        }
+        headers: { ...headers, 'Content-Type': 'application/json' }
       }
     )
 
@@ -130,10 +130,7 @@ TONE: Friendly, encouraging, professional but warm`
       }),
       {
         status: 500,
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*'
-        }
+        headers: { ...headers, 'Content-Type': 'application/json' }
       }
     )
   }

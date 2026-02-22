@@ -2,18 +2,22 @@
 // Build 138 - Nutrition Tracking
 // Parses natural language meal descriptions into structured macro data
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type'
-};
+import { checkRateLimit, rateLimitResponse } from '../_shared/rate-limit.ts';
+import { corsHeaders, handleCors } from '../_shared/cors.ts';
+
 serve(async (req)=>{
   // Handle CORS preflight
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', {
-      headers: corsHeaders
-    });
-  }
+  const corsResponse = handleCors(req);
+  if (corsResponse) return corsResponse;
+
+  const origin = req.headers.get('Origin');
+  const headers = corsHeaders(origin);
+
   try {
+    // Rate limit: 10 requests/minute for AI endpoints
+    const rateLimitKey = req.headers.get('x-forwarded-for') || 'anonymous';
+    const { allowed, resetMs } = checkRateLimit(`ai-meal-parser:${rateLimitKey}`, { windowMs: 60_000, maxRequests: 10 });
+    if (!allowed) return rateLimitResponse(resetMs);
     const { description, image_url } = await req.json();
     if (!description || description.trim().length === 0) {
       return new Response(JSON.stringify({
@@ -21,7 +25,7 @@ serve(async (req)=>{
       }), {
         status: 400,
         headers: {
-          ...corsHeaders,
+          ...headers,
           'Content-Type': 'application/json'
         }
       });
@@ -180,7 +184,7 @@ Return ONLY valid JSON with this exact structure:
     }), {
       status: 200,
       headers: {
-        ...corsHeaders,
+        ...headers,
         'Content-Type': 'application/json'
       }
     });
@@ -193,7 +197,7 @@ Return ONLY valid JSON with this exact structure:
     }), {
       status: 500,
       headers: {
-        ...corsHeaders,
+        ...headers,
         'Content-Type': 'application/json'
       }
     });

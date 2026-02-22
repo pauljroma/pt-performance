@@ -5,8 +5,27 @@ import Foundation
 enum Config {
     // MARK: - Supabase Configuration
 
-    static let supabaseURL = "https://rpbxeaxlaoyoqkohytlw.supabase.co"
-    static let supabaseAnonKey = "sb_publishable_bvF02gZep-IdSHFNYVro3g_lNY8hfzr"
+    static let supabaseURL: String = {
+        #if DEBUG
+        return ProcessInfo.processInfo.environment["SUPABASE_URL"] ?? "https://rpbxeaxlaoyoqkohytlw.supabase.co"
+        #else
+        guard let url = ProcessInfo.processInfo.environment["SUPABASE_URL"], !url.isEmpty else {
+            fatalError("SUPABASE_URL not configured for production build")
+        }
+        return url
+        #endif
+    }()
+
+    static let supabaseAnonKey: String = {
+        #if DEBUG
+        return ProcessInfo.processInfo.environment["SUPABASE_ANON_KEY"] ?? "sb_publishable_bvF02gZep-IdSHFNYVro3g_lNY8hfzr"
+        #else
+        guard let key = ProcessInfo.processInfo.environment["SUPABASE_ANON_KEY"], !key.isEmpty else {
+            fatalError("SUPABASE_ANON_KEY not configured for production build")
+        }
+        return key
+        #endif
+    }()
 
     // MARK: - Backend Configuration
 
@@ -101,10 +120,16 @@ enum Config {
         static let anthropicMaxTokens = 1000
         static let anthropicTemperature = 0.3
 
-        // Feature Flags
-        static let aiChatEnabled = true
-        static let aiSubstitutionEnabled = true
-        static let aiSafetyEnabled = true
+        // Feature Flags (remote via FeatureFlagService, with local defaults)
+        static var aiChatEnabled: Bool { FeatureFlagService.shared.isEnabled("ai_chat_enabled") }
+        static var aiSubstitutionEnabled: Bool { FeatureFlagService.shared.isEnabled("ai_substitution_enabled") }
+        static var aiSafetyEnabled: Bool { FeatureFlagService.shared.isEnabled("ai_safety_enabled") }
+        static var aiProgressiveOverloadEnabled: Bool { FeatureFlagService.shared.isEnabled("ai_progressive_overload_enabled") }
+        static var aiSoapSuggestionsEnabled: Bool { FeatureFlagService.shared.isEnabled("ai_soap_suggestions_enabled") }
+        static var aiNutritionEnabled: Bool { FeatureFlagService.shared.isEnabled("ai_nutrition_enabled") }
+        static var whoopIntegrationEnabled: Bool { FeatureFlagService.shared.isEnabled("whoop_integration_enabled") }
+        static var baseballPackEnabled: Bool { FeatureFlagService.shared.isEnabled("baseball_pack_enabled") }
+        static var eliteTierEnabled: Bool { FeatureFlagService.shared.isEnabled("elite_tier_enabled") }
 
         // Safety Configuration
         static let blockDangerLevel = true
