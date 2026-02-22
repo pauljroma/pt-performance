@@ -85,6 +85,30 @@ jobs:
             -authenticationKeyID ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }} \
             -authenticationKeyIssuerID ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
 
+      - name: Generate dSYMs for SPM Binary Frameworks
+        run: |
+          cd ios-app/PTPerformance
+          # Xcode does not auto-generate dSYMs for SPM binary targets (e.g., Sentry.xcframework).
+          # This causes "Upload Symbols Failed" warnings during TestFlight export.
+          # Run dsymutil on each embedded framework that lacks a dSYM in the archive.
+          ARCHIVE_FRAMEWORKS="PTPerformance.xcarchive/Products/Applications/PTPerformance.app/Frameworks"
+          ARCHIVE_DSYMS="PTPerformance.xcarchive/dSYMs"
+          if [ -d "$ARCHIVE_FRAMEWORKS" ]; then
+            for FW in "$ARCHIVE_FRAMEWORKS"/*.framework; do
+              FW_NAME=$(basename "$FW" .framework)
+              FW_BINARY="$FW/$FW_NAME"
+              DSYM_PATH="$ARCHIVE_DSYMS/${FW_NAME}.framework.dSYM"
+              if [ -f "$FW_BINARY" ] && [ ! -d "$DSYM_PATH" ]; then
+                echo "Generating dSYM for $FW_NAME.framework..."
+                dsymutil "$FW_BINARY" -o "$DSYM_PATH" 2>/dev/null && \
+                  echo "  Created $FW_NAME.framework.dSYM" || \
+                  echo "  Could not generate dSYM for $FW_NAME (stripped binary)"
+              fi
+            done
+          fi
+          echo "dSYMs in archive:"
+          ls -la "$ARCHIVE_DSYMS/" || true
+
       - name: Export IPA
         run: |
           cd ios-app/PTPerformance
@@ -98,6 +122,7 @@ jobs:
             -authenticationKeyIssuerID ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
 
       - name: Upload Debug Symbols to Sentry
+        if: ${{ secrets.SENTRY_AUTH_TOKEN != '' }}
         continue-on-error: true
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
@@ -107,11 +132,12 @@ jobs:
           # Install Sentry CLI
           brew install getsentry/tools/sentry-cli
 
-          # Upload dSYMs
+          # Upload all dSYMs (app + SPM frameworks like Sentry)
           cd ios-app/PTPerformance
           sentry-cli upload-dif \
-            --org ${SENTRY_ORG} \
-            --project ${SENTRY_PROJECT} \
+            --org "${SENTRY_ORG}" \
+            --project "${SENTRY_PROJECT}" \
+            --include-sources \
             PTPerformance.xcarchive/dSYMs
 
       - name: Upload to TestFlight

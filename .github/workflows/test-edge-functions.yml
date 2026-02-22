@@ -100,13 +100,15 @@ jobs:
 
             echo "### By Function" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
-            echo "| Function | Tests |" >> $GITHUB_STEP_SUMMARY
-            echo "|----------|-------|" >> $GITHUB_STEP_SUMMARY
-            echo "| Equipment Substitution | $(jq -r '.by_function.generate_equipment_substitution.actual' test-results.json)/10 |" >> $GITHUB_STEP_SUMMARY
-            echo "| Apply Substitution | $(jq -r '.by_function.apply_substitution.actual' test-results.json)/7 |" >> $GITHUB_STEP_SUMMARY
-            echo "| WHOOP Sync | $(jq -r '.by_function.sync_whoop_recovery.actual' test-results.json)/8 |" >> $GITHUB_STEP_SUMMARY
-            echo "| Nutrition Recommendation | $(jq -r '.by_function.ai_nutrition_recommendation.actual' test-results.json)/9 |" >> $GITHUB_STEP_SUMMARY
-            echo "| Meal Parser | $(jq -r '.by_function.ai_meal_parser.actual' test-results.json)/10 |" >> $GITHUB_STEP_SUMMARY
+            echo "| Function | Passed |" >> $GITHUB_STEP_SUMMARY
+            echo "|----------|--------|" >> $GITHUB_STEP_SUMMARY
+            echo "| Revenue Analytics | $(jq -r '.by_function.revenue_analytics.actual // 0' test-results.json) |" >> $GITHUB_STEP_SUMMARY
+            echo "| Retention Analytics | $(jq -r '.by_function.retention_analytics.actual // 0' test-results.json) |" >> $GITHUB_STEP_SUMMARY
+            echo "| Engagement Scoring | $(jq -r '.by_function.engagement_scoring.actual // 0' test-results.json) |" >> $GITHUB_STEP_SUMMARY
+            echo "| Training Outcomes | $(jq -r '.by_function.training_outcomes.actual // 0' test-results.json) |" >> $GITHUB_STEP_SUMMARY
+            echo "| Executive Dashboard | $(jq -r '.by_function.executive_dashboard.actual // 0' test-results.json) |" >> $GITHUB_STEP_SUMMARY
+            echo "| Product Health | $(jq -r '.by_function.product_health.actual // 0' test-results.json) |" >> $GITHUB_STEP_SUMMARY
+            echo "| Analytics Pipeline | $(jq -r '.by_function.analytics_pipeline.actual // 0' test-results.json) |" >> $GITHUB_STEP_SUMMARY
 
             # Fail workflow if tests failed
             if [ "$FAILED" != "0" ]; then
