@@ -26,16 +26,16 @@ final class KPIDashboardViewModel: ObservableObject {
 
     // MARK: - Published Properties
 
-    @Published private(set) var dashboard: KPIDashboard?
-    @Published private(set) var openIncidents: [SafetyIncident] = []
-    @Published private(set) var isLoading = false
+    @Published var dashboard: KPIDashboard?
+    @Published var openIncidents: [SafetyIncident] = []
+    @Published var isLoading = false
     @Published var lastError: Error?
 
     // Trend data
-    @Published private(set) var ptWauTrend: KPITrend?
-    @Published private(set) var athleteWauTrend: KPITrend?
-    @Published private(set) var citationTrend: KPITrend?
-    @Published private(set) var latencyTrend: KPITrend?
+    @Published var ptWauTrend: KPITrend?
+    @Published var athleteWauTrend: KPITrend?
+    @Published var citationTrend: KPITrend?
+    @Published var latencyTrend: KPITrend?
 
     // MARK: - Private Properties
 
@@ -243,7 +243,7 @@ final class KPIDashboardViewModel: ObservableObject {
     }
 
     /// Map an EF TrendMetric to the existing KPITrend enum
-    private func mapTrend(_ metric: EFTrendMetric?) -> KPITrend {
+    func mapTrend(_ metric: EFTrendMetric?) -> KPITrend {
         guard let metric = metric, let changePct = metric.changePct else { return .stable }
         if changePct > 1.0 { return .up }
         if changePct < -1.0 { return .down }
