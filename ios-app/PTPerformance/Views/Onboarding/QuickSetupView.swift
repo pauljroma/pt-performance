@@ -146,15 +146,26 @@ struct QuickSetupView: View {
 struct QuickSetupProgressView: View {
     let currentStep: QuickSetupViewModel.SetupStep
 
-    // ACP-1035: Reduced to 2 core steps (mode, goals)
-    private let totalSteps = 2
+    // ACP-1035: Reduced to 2 core steps (mode, goals); 1 step when mode selection hidden in MVP
+    private var totalSteps: Int {
+        Config.MVPConfig.modeSelectionEnabled ? 2 : 1
+    }
 
     private var progress: Double {
-        switch currentStep {
-        case .welcome: return 0
-        case .modeSelection: return 0.5
-        case .goalSelection: return 1.0
-        case .complete: return 1.0
+        if Config.MVPConfig.modeSelectionEnabled {
+            switch currentStep {
+            case .welcome: return 0
+            case .modeSelection: return 0.5
+            case .goalSelection: return 1.0
+            case .complete: return 1.0
+            }
+        } else {
+            switch currentStep {
+            case .welcome: return 0
+            case .modeSelection: return 0.5 // unreachable in MVP
+            case .goalSelection: return 1.0
+            case .complete: return 1.0
+            }
         }
     }
 
@@ -185,11 +196,20 @@ struct QuickSetupProgressView: View {
     }
 
     private var stepNumber: Int {
-        switch currentStep {
-        case .welcome: return 0
-        case .modeSelection: return 1
-        case .goalSelection: return 2
-        case .complete: return 2
+        if Config.MVPConfig.modeSelectionEnabled {
+            switch currentStep {
+            case .welcome: return 0
+            case .modeSelection: return 1
+            case .goalSelection: return 2
+            case .complete: return 2
+            }
+        } else {
+            switch currentStep {
+            case .welcome: return 0
+            case .modeSelection: return 1 // unreachable in MVP
+            case .goalSelection: return 1
+            case .complete: return 1
+            }
         }
     }
 }
@@ -220,7 +240,9 @@ struct WelcomeStepView: View {
                 .multilineTextAlignment(.center)
 
             // Subtitle — emphasize speed
-            Text("Two quick choices and you're in.\nThis takes about 30 seconds.")
+            Text(Config.MVPConfig.modeSelectionEnabled
+                 ? "Two quick choices and you're in.\nThis takes about 30 seconds."
+                 : "One quick choice and you're in.\nThis takes about 15 seconds.")
                 .font(.body)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
@@ -230,11 +252,13 @@ struct WelcomeStepView: View {
 
             // What we'll ask
             VStack(alignment: .leading, spacing: 14) {
-                SetupFeatureRow(
-                    icon: "target",
-                    title: "Choose your mode",
-                    subtitle: "Rehab, Strength, or Performance"
-                )
+                if Config.MVPConfig.modeSelectionEnabled {
+                    SetupFeatureRow(
+                        icon: "target",
+                        title: "Choose your mode",
+                        subtitle: "Rehab, Strength, or Performance"
+                    )
+                }
                 SetupFeatureRow(
                     icon: "star.fill",
                     title: "Pick your goals",

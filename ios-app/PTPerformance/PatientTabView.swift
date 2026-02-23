@@ -132,6 +132,11 @@ struct PatientTabView: View {
             }
         }
 
+        /// MVP tabs: Today, Workouts, Recovery, Settings
+        static var mvpTabs: [ModeAwareTab] {
+            [.today, .workouts, .recovery, .settings]
+        }
+
         /// Returns tabs visible for a given mode
         static func tabs(for mode: Mode) -> [ModeAwareTab] {
             switch mode {
@@ -145,9 +150,12 @@ struct PatientTabView: View {
         }
     }
 
-    /// Current tabs based on mode
+    /// Current tabs based on mode (MVP mode overrides all modes)
     private var currentTabs: [ModeAwareTab] {
-        ModeAwareTab.tabs(for: modeService.currentMode)
+        if Config.MVPConfig.isMVPMode {
+            return ModeAwareTab.mvpTabs
+        }
+        return ModeAwareTab.tabs(for: modeService.currentMode)
     }
 
     var body: some View {
@@ -213,6 +221,35 @@ struct PatientTabView: View {
         // Deep link handling for patient-level navigation
         .onChange(of: appState.pendingDeepLink) { _, newValue in
             guard let newValue else { return }
+
+            // MVP mode guard: if the deep link targets a tab not in mvpTabs, redirect to .today
+            if Config.MVPConfig.isMVPMode {
+                let mvpTabs = ModeAwareTab.mvpTabs
+                let isAllowedDeepLink: Bool
+                switch newValue {
+                case .workout, .startWorkout:
+                    // .today is always in mvpTabs — workout deep links go to Today
+                    isAllowedDeepLink = true
+                case .recovery:
+                    isAllowedDeepLink = mvpTabs.contains(.recovery)
+                case .settings:
+                    isAllowedDeepLink = mvpTabs.contains(.settings)
+                case .readiness, .schedule, .uclHealth:
+                    // These open sheets, allow them through
+                    isAllowedDeepLink = true
+                case .progress:
+                    // Progress tabs (rehabProgress, strengthProgress, analytics) are not in MVP
+                    isAllowedDeepLink = false
+                default:
+                    isAllowedDeepLink = false
+                }
+
+                if !isAllowedDeepLink {
+                    appState.pendingDeepLink = nil
+                    selectedTab = .today
+                    return
+                }
+            }
 
             switch newValue {
             case .readiness:

@@ -140,4 +140,28 @@ enum Config {
         static let maxChatHistoryMessages = 10
         static let maxDailyAPICallsPerAthlete = 100
     }
+
+    // MARK: - MVP Feature Flags
+
+    struct MVPConfig {
+        static var isMVPMode: Bool { FeatureFlagService.shared.isEnabled("mvp_mode") }
+        static var therapistModeEnabled: Bool { FeatureFlagService.shared.isEnabled("therapist_mode_enabled") }
+        static var modeSelectionEnabled: Bool { FeatureFlagService.shared.isEnabled("mode_selection_enabled") }
+        static var painTrackingEnabled: Bool { FeatureFlagService.shared.isEnabled("pain_tracking_enabled") }
+        static var romExercisesEnabled: Bool { FeatureFlagService.shared.isEnabled("rom_exercises_enabled") }
+        static var prTrackingEnabled: Bool { FeatureFlagService.shared.isEnabled("pr_tracking_enabled") }
+        static var performanceAnalyticsEnabled: Bool { FeatureFlagService.shared.isEnabled("performance_analytics_enabled") }
+        static var fastingTrackerEnabled: Bool { FeatureFlagService.shared.isEnabled("fasting_tracker_enabled") }
+        static var biomarkerDashboardEnabled: Bool { FeatureFlagService.shared.isEnabled("biomarker_dashboard_enabled") }
+        static var aiHealthCoachEnabled: Bool { FeatureFlagService.shared.isEnabled("ai_health_coach_enabled") }
+        static var labUploadEnabled: Bool { FeatureFlagService.shared.isEnabled("lab_upload_enabled") }
+        static var programsPacksEnabled: Bool { FeatureFlagService.shared.isEnabled("programs_packs_enabled") }
+        static var programsTrendsEnabled: Bool { FeatureFlagService.shared.isEnabled("programs_trends_enabled") }
+        static var programsHistoryEnabled: Bool { FeatureFlagService.shared.isEnabled("programs_history_enabled") }
+        static var armCareEnabled: Bool { FeatureFlagService.shared.isEnabled("arm_care_enabled") }
+        static var paywallEnabled: Bool { FeatureFlagService.shared.isEnabled("paywall_enabled") }
+        static var modeDashboardsEnabled: Bool { FeatureFlagService.shared.isEnabled("mode_dashboards_enabled") }
+        static var bodyCompToolsEnabled: Bool { FeatureFlagService.shared.isEnabled("body_comp_tools_enabled") }
+        static var therapistLinkingEnabled: Bool { FeatureFlagService.shared.isEnabled("therapist_linking_enabled") }
+    }
 }

@@ -303,8 +303,15 @@ class QuickSetupViewModel: ObservableObject {
         guard let nextIndex = SetupStep.allCases.firstIndex(where: { $0.rawValue == currentStep.rawValue + 1 }) else {
             return
         }
+        var nextStep = SetupStep.allCases[nextIndex]
+
+        // Skip mode selection in MVP
+        if !Config.MVPConfig.modeSelectionEnabled && nextStep == .modeSelection {
+            nextStep = .goalSelection
+        }
+
         withAnimation(.easeInOut(duration: 0.3)) {
-            currentStep = SetupStep.allCases[nextIndex]
+            currentStep = nextStep
         }
     }
 
@@ -313,8 +320,15 @@ class QuickSetupViewModel: ObservableObject {
               let prevIndex = SetupStep.allCases.firstIndex(where: { $0.rawValue == currentStep.rawValue - 1 }) else {
             return
         }
+        var prevStep = SetupStep.allCases[prevIndex]
+
+        // Skip mode selection in MVP
+        if !Config.MVPConfig.modeSelectionEnabled && prevStep == .modeSelection {
+            prevStep = .welcome
+        }
+
         withAnimation(.easeInOut(duration: 0.3)) {
-            currentStep = SetupStep.allCases[prevIndex]
+            currentStep = prevStep
         }
     }
 
@@ -326,6 +340,10 @@ class QuickSetupViewModel: ObservableObject {
 
         switch currentStep {
         case .welcome:
+            // In MVP, mode selection is skipped — save default mode quietly
+            if !Config.MVPConfig.modeSelectionEnabled {
+                await saveModeQuietly()
+            }
             goToNextStep()
 
         case .modeSelection:

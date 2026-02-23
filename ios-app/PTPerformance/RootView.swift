@@ -96,7 +96,23 @@ struct RootView: View {
                             }
                         }
                 } else if appState.userRole == .therapist {
-                    TherapistTabView()
+                    if Config.MVPConfig.therapistModeEnabled {
+                        TherapistTabView()
+                    } else {
+                        // Therapist mode not yet enabled — show coming soon placeholder
+                        VStack(spacing: 16) {
+                            Image(systemName: "hammer.fill")
+                                .font(.system(size: 48))
+                                .foregroundStyle(.secondary)
+                            Text("Therapist Mode Coming Soon")
+                                .font(.title2.bold())
+                            Text("We're building powerful tools for clinicians. Stay tuned!")
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+                                .multilineTextAlignment(.center)
+                                .padding(.horizontal, 32)
+                        }
+                    }
                 } else {
                     // Role not yet determined — show loading with timeout
                     VStack(spacing: Spacing.md) {

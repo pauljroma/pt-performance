@@ -119,8 +119,11 @@ struct TodayHubView: View {
                         ReadinessCheckInView(patientId: patientId)
                     }
                 }
-                // ACP-MODE: Rehab Mode Dashboard sheet
-                .sheetWithHaptic(isPresented: $state.showRehabDashboard) {
+                // ACP-MODE: Mode-specific dashboard sheets (gated by feature flag)
+                .sheetWithHaptic(isPresented: Binding(
+                    get: { Config.MVPConfig.modeDashboardsEnabled && state.showRehabDashboard },
+                    set: { state.showRehabDashboard = $0 }
+                )) {
                     NavigationStack {
                         RehabModeDashboardView()
                             .environmentObject(appState)
@@ -133,8 +136,10 @@ struct TodayHubView: View {
                             }
                     }
                 }
-                // ACP-MODE: Strength Mode Dashboard sheet
-                .sheetWithHaptic(isPresented: $state.showStrengthDashboard) {
+                .sheetWithHaptic(isPresented: Binding(
+                    get: { Config.MVPConfig.modeDashboardsEnabled && state.showStrengthDashboard },
+                    set: { state.showStrengthDashboard = $0 }
+                )) {
                     if let patientIdString = supabase.userId,
                        let patientId = UUID(uuidString: patientIdString) {
                         NavigationStack {
@@ -150,8 +155,10 @@ struct TodayHubView: View {
                         }
                     }
                 }
-                // ACP-MODE: Performance Mode Dashboard sheet
-                .sheetWithHaptic(isPresented: $state.showPerformanceDashboard) {
+                .sheetWithHaptic(isPresented: Binding(
+                    get: { Config.MVPConfig.modeDashboardsEnabled && state.showPerformanceDashboard },
+                    set: { state.showPerformanceDashboard = $0 }
+                )) {
                     if let patientIdString = supabase.userId,
                        let patientId = UUID(uuidString: patientIdString) {
                         NavigationStack {
@@ -359,16 +366,18 @@ struct TodayHubView: View {
                 Label("Streak Dashboard", systemImage: "flame.fill")
             }
 
-            Divider()
-
             // ACP-522: Arm Care Assessment menu item - Rehab mode feature
-            Button(action: {
-                HapticFeedback.light()
-                state.showArmCareAssessment = true
-            }) {
-                Label("Arm Care Check", systemImage: "figure.baseball")
+            if Config.MVPConfig.armCareEnabled {
+                Divider()
+
+                Button(action: {
+                    HapticFeedback.light()
+                    state.showArmCareAssessment = true
+                }) {
+                    Label("Arm Care Check", systemImage: "figure.baseball")
+                }
+                .visibleIf(.romExercises)
             }
-            .visibleIf(.romExercises)
         } label: {
             Image(systemName: "ellipsis.circle")
                 .font(.system(size: 18))

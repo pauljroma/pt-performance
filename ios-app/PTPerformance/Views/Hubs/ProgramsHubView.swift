@@ -37,17 +37,37 @@ struct ProgramsHubView: View {
         var title: String { rawValue }
     }
 
+    // MARK: - Visible Sections (filtered by MVP flags)
+
+    /// Filters sections based on feature flags so non-MVP tabs are hidden
+    private var visibleSections: [ProgramsSection] {
+        ProgramsSection.allCases.filter { section in
+            switch section {
+            case .programs:
+                return true // always visible
+            case .packs:
+                return Config.MVPConfig.programsPacksEnabled
+            case .history:
+                return Config.MVPConfig.programsHistoryEnabled
+            case .trends:
+                return Config.MVPConfig.programsTrendsEnabled
+            }
+        }
+    }
+
     // MARK: - Body
 
     var body: some View {
         // Single NavigationStack wrapping everything to prevent overlapping bars
         NavigationStack {
             VStack(spacing: 0) {
-                // Segmented control for sub-sections (inside NavigationStack)
-                segmentedPicker
-                    .padding(.horizontal)
-                    .padding(.top, Spacing.xs)
-                    .padding(.bottom, Spacing.xs)
+                // Segmented control for sub-sections (hidden when only one section visible)
+                if visibleSections.count > 1 {
+                    segmentedPicker
+                        .padding(.horizontal)
+                        .padding(.top, Spacing.xs)
+                        .padding(.bottom, Spacing.xs)
+                }
 
                 // Content based on selection (no more nested NavigationStacks)
                 contentView
@@ -61,7 +81,7 @@ struct ProgramsHubView: View {
 
     private var segmentedPicker: some View {
         Picker("Section", selection: $selectedSection) {
-            ForEach(ProgramsSection.allCases, id: \.self) { section in
+            ForEach(visibleSections, id: \.self) { section in
                 Text(section.title).tag(section)
             }
         }

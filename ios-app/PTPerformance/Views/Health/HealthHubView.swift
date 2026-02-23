@@ -46,7 +46,7 @@ struct HealthHubView: View {
 
     var body: some View {
         NavigationStack(path: $navigationPath) {
-            if storeKit.isPremium {
+            if !Config.MVPConfig.paywallEnabled || storeKit.isPremium {
                 premiumContent
             } else {
                 paywallContent
@@ -64,7 +64,7 @@ struct HealthHubView: View {
                 headerSection
 
                 // Lab Upload CTA (shown only when no lab results exist)
-                if !viewModel.hasLabResults {
+                if Config.MVPConfig.labUploadEnabled && !viewModel.hasLabResults {
                     labUploadCTACard
                 }
 
@@ -284,10 +284,15 @@ struct HealthHubView: View {
             data: HealthSnapshotData(
                 recoveryScore: viewModel.recoveryScore,
                 recoveryTrend: recoveryTrend,
-                fastingStatus: HealthSnapshotData.FastingStatus(
+                fastingStatus: Config.MVPConfig.fastingTrackerEnabled ? HealthSnapshotData.FastingStatus(
                     isFasting: viewModel.isFasting,
                     hoursElapsed: fastingHoursElapsed,
                     targetHours: fastingTargetHours,
+                    currentProtocol: nil
+                ) : HealthSnapshotData.FastingStatus(
+                    isFasting: false,
+                    hoursElapsed: nil,
+                    targetHours: nil,
                     currentProtocol: nil
                 ),
                 supplementsCompliance: HealthSnapshotData.SupplementsCompliance(
@@ -571,6 +576,7 @@ struct HealthHubView: View {
                 .accessibilityAddTraits(.isHeader)
 
             VStack(spacing: 0) {
+                // Recovery & Readiness — always visible (MVP core)
                 DetailedViewRow(
                     title: "Recovery & Readiness",
                     subtitle: "Sauna, cold plunge, contrast therapy",
@@ -579,17 +585,7 @@ struct HealthHubView: View {
                     destination: RecoveryTrackingView()
                 )
 
-                Divider()
-                    .padding(.leading, 56)
-
-                DetailedViewRow(
-                    title: "Fasting Tracker",
-                    subtitle: "Intermittent fasting protocols",
-                    icon: "timer.circle.fill",
-                    iconColor: .orange,
-                    destination: FastingTrackerView()
-                )
-
+                // Supplements — always visible (MVP core)
                 Divider()
                     .padding(.leading, 56)
 
@@ -601,16 +597,33 @@ struct HealthHubView: View {
                     destination: SupplementDashboardView()
                 )
 
-                Divider()
-                    .padding(.leading, 56)
+                // Fasting Tracker — gated by feature flag
+                if Config.MVPConfig.fastingTrackerEnabled {
+                    Divider()
+                        .padding(.leading, 56)
 
-                DetailedViewRow(
-                    title: "Biomarkers & Labs",
-                    subtitle: "Track your health markers",
-                    icon: "cross.circle.fill",
-                    iconColor: .red,
-                    destination: BiomarkerDashboardView()
-                )
+                    DetailedViewRow(
+                        title: "Fasting Tracker",
+                        subtitle: "Intermittent fasting protocols",
+                        icon: "timer.circle.fill",
+                        iconColor: .orange,
+                        destination: FastingTrackerView()
+                    )
+                }
+
+                // Biomarkers & Labs — gated by feature flag
+                if Config.MVPConfig.biomarkerDashboardEnabled {
+                    Divider()
+                        .padding(.leading, 56)
+
+                    DetailedViewRow(
+                        title: "Biomarkers & Labs",
+                        subtitle: "Track your health markers",
+                        icon: "cross.circle.fill",
+                        iconColor: .red,
+                        destination: BiomarkerDashboardView()
+                    )
+                }
             }
             .background(Color(.secondarySystemGroupedBackground))
             .cornerRadius(CornerRadius.lg)

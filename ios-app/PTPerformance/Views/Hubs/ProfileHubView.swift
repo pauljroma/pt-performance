@@ -107,13 +107,17 @@ struct ProfileHubView: View {
                 toolsSection
                     .staggeredAnimation(index: 4)
 
-                // Training Mode
-                trainingModeSection
-                    .staggeredAnimation(index: 5)
+                // Training Mode (gated by MVP flag)
+                if Config.MVPConfig.modeSelectionEnabled {
+                    trainingModeSection
+                        .staggeredAnimation(index: 5)
+                }
 
-                // Therapist Section
-                therapistSection
-                    .staggeredAnimation(index: 6)
+                // Therapist Section (gated by MVP flag)
+                if Config.MVPConfig.therapistLinkingEnabled {
+                    therapistSection
+                        .staggeredAnimation(index: 6)
+                }
 
                 // Support Section
                 supportSection
@@ -358,35 +362,38 @@ struct ProfileHubView: View {
 
     private var toolsSection: some View {
         Section("Tools & Tracking") {
-            NavigationLink {
-                BodyCompositionTimelineView()
-            } label: {
-                HStack {
-                    Image(systemName: "figure.stand")
-                        .foregroundColor(.modusCyan)
-                        .frame(width: 24)
-                        .accessibilityHidden(true)
-                    Text("Body Composition")
-                        .foregroundColor(.primary)
+            // Body Composition tools — gated by MVP flag
+            if Config.MVPConfig.bodyCompToolsEnabled {
+                NavigationLink {
+                    BodyCompositionTimelineView()
+                } label: {
+                    HStack {
+                        Image(systemName: "figure.stand")
+                            .foregroundColor(.modusCyan)
+                            .frame(width: 24)
+                            .accessibilityHidden(true)
+                        Text("Body Composition")
+                            .foregroundColor(.primary)
+                    }
                 }
-            }
-            .accessibilityLabel("Body Composition")
-            .accessibilityHint("Track body measurements over time")
+                .accessibilityLabel("Body Composition")
+                .accessibilityHint("Track body measurements over time")
 
-            NavigationLink {
-                BodyCompGoalsView()
-            } label: {
-                HStack {
-                    Image(systemName: "figure.arms.open")
-                        .foregroundColor(.purple)
-                        .frame(width: 24)
-                        .accessibilityHidden(true)
-                    Text("Body Comp Goals")
-                        .foregroundColor(.primary)
+                NavigationLink {
+                    BodyCompGoalsView()
+                } label: {
+                    HStack {
+                        Image(systemName: "figure.arms.open")
+                            .foregroundColor(.purple)
+                            .frame(width: 24)
+                            .accessibilityHidden(true)
+                        Text("Body Comp Goals")
+                            .foregroundColor(.primary)
+                    }
                 }
+                .accessibilityLabel("Body Comp Goals")
+                .accessibilityHint("Set body composition targets")
             }
-            .accessibilityLabel("Body Comp Goals")
-            .accessibilityHint("Set body composition targets")
 
             NavigationLink {
                 CalculatorsMenuView()
@@ -678,45 +685,47 @@ struct ProfileHubView: View {
             .accessibilityValue(subscriptionPlanText)
             .accessibilityHint("View and manage your subscription plan")
 
-            // Baseball Pack
-            NavigationLink {
-                BaseballPackView()
-                    .environmentObject(storeKit)
-            } label: {
-                HStack {
-                    Image(systemName: "baseball.fill")
-                        .foregroundColor(.orange)
-                        .frame(width: 24)
-                        .accessibilityHidden(true)
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("Baseball Pack")
-                            .foregroundColor(.primary)
-                        Text(storeKit.hasBaseballAccess ? "Purchased" : "12+ baseball programs")
-                            .font(.caption)
-                            .foregroundColor(storeKit.hasBaseballAccess ? .green : .secondary)
-                    }
-                    Spacer()
-                    if storeKit.hasBaseballAccess {
-                        Image(systemName: "checkmark.circle.fill")
-                            .foregroundColor(.green)
-                            .font(.subheadline)
-                            .accessibilityHidden(true)
-                    } else {
-                        Text("PREMIUM")
-                            .font(.caption2)
-                            .fontWeight(.bold)
-                            .padding(.horizontal, 6)
-                            .padding(.vertical, 2)
-                            .background(Color.orange.opacity(0.2))
+            // Baseball Pack — gated by feature flag
+            if Config.AIConfig.baseballPackEnabled {
+                NavigationLink {
+                    BaseballPackView()
+                        .environmentObject(storeKit)
+                } label: {
+                    HStack {
+                        Image(systemName: "baseball.fill")
                             .foregroundColor(.orange)
-                            .cornerRadius(CornerRadius.xs)
+                            .frame(width: 24)
                             .accessibilityHidden(true)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Baseball Pack")
+                                .foregroundColor(.primary)
+                            Text(storeKit.hasBaseballAccess ? "Purchased" : "12+ baseball programs")
+                                .font(.caption)
+                                .foregroundColor(storeKit.hasBaseballAccess ? .green : .secondary)
+                        }
+                        Spacer()
+                        if storeKit.hasBaseballAccess {
+                            Image(systemName: "checkmark.circle.fill")
+                                .foregroundColor(.green)
+                                .font(.subheadline)
+                                .accessibilityHidden(true)
+                        } else {
+                            Text("PREMIUM")
+                                .font(.caption2)
+                                .fontWeight(.bold)
+                                .padding(.horizontal, 6)
+                                .padding(.vertical, 2)
+                                .background(Color.orange.opacity(0.2))
+                                .foregroundColor(.orange)
+                                .cornerRadius(CornerRadius.xs)
+                                .accessibilityHidden(true)
+                        }
                     }
                 }
+                .accessibilityLabel("Baseball Pack")
+                .accessibilityValue(storeKit.hasBaseballAccess ? "Purchased" : "Not purchased")
+                .accessibilityHint("12 or more baseball training programs")
             }
-            .accessibilityLabel("Baseball Pack")
-            .accessibilityValue(storeKit.hasBaseballAccess ? "Purchased" : "Not purchased")
-            .accessibilityHint("12 or more baseball training programs")
         }
     }
 

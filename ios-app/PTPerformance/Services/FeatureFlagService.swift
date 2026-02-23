@@ -40,6 +40,7 @@ final class FeatureFlagService: ObservableObject {
     /// Hardcoded defaults used before remote fetch completes or when offline.
     /// These must stay in sync with the seed data in the feature_flags migration.
     private static let defaults: [String: Bool] = [
+        // AI feature flags
         "ai_chat_enabled": true,
         "ai_substitution_enabled": true,
         "ai_safety_enabled": true,
@@ -48,7 +49,31 @@ final class FeatureFlagService: ObservableObject {
         "ai_nutrition_enabled": true,
         "whoop_integration_enabled": false,
         "baseball_pack_enabled": true,
-        "elite_tier_enabled": true
+        "elite_tier_enabled": true,
+
+        // MVP flags — controls what's visible at launch
+        "mvp_mode": true,
+        "therapist_mode_enabled": false,
+        "mode_selection_enabled": false,
+        "pain_tracking_enabled": false,
+        "rom_exercises_enabled": false,
+        "pr_tracking_enabled": false,
+        "performance_analytics_enabled": false,
+        "fasting_tracker_enabled": false,
+        "biomarker_dashboard_enabled": false,
+        "ai_health_coach_enabled": false,
+        "lab_upload_enabled": false,
+        "programs_packs_enabled": false,
+        "programs_trends_enabled": false,
+        "programs_history_enabled": false,
+        "arm_care_enabled": false,
+        "leaderboards_enabled": false,
+        "paywall_enabled": false,
+        "mode_dashboards_enabled": false,
+        "weekly_summary_enabled": true,
+        "streak_dashboard_enabled": true,
+        "body_comp_tools_enabled": false,
+        "therapist_linking_enabled": false,
     ]
 
     // MARK: - Cache Configuration
