@@ -13,6 +13,9 @@ on:
         required: false
         type: string
 
+permissions:
+  contents: write
+
 jobs:
   deploy-testflight:
     name: Build and Deploy to TestFlight
