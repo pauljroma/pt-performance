@@ -34,7 +34,7 @@ enum Config {
 
     // MARK: - App Configuration
 
-    static let appVersion = "1.0"
+    static let appVersion = "1.0.0"
     static let buildNumber: String = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "unknown"
 
     // MARK: - Subscription Products

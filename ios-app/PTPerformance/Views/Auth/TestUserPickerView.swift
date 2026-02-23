@@ -125,7 +125,7 @@ private let testUsers: [TestUser] = [
         mode: "strength",
         level: "Recreational",
         sportIcon: "tennisball.fill"
-    ),
+    )
 ]
 
 // MARK: - TestUserPickerView

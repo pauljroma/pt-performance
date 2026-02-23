@@ -486,10 +486,8 @@ final class LabResultService: ObservableObject {
             }
         }
 
-        // Fallback to demo patient for unauthenticated users (demo mode)
-        // This allows testing without login - demo_mode_enabled must be true in database
-        DebugLogger.shared.warning("LabResultService", "No authenticated user, using demo patient")
-        return UUID(uuidString: "00000000-0000-0000-0000-000000000001")
+        DebugLogger.shared.warning("LabResultService", "No authenticated user, cannot resolve patient ID")
+        return nil
     }
 
     // MARK: - PDF Conversion

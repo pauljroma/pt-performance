@@ -104,6 +104,7 @@ struct RootView: View {
                             Image(systemName: "hammer.fill")
                                 .font(.system(size: 48))
                                 .foregroundStyle(.secondary)
+                                .accessibilityHidden(true)
                             Text("Therapist Mode Coming Soon")
                                 .font(.title2.bold())
                             Text("We're building powerful tools for clinicians. Stay tuned!")
@@ -112,6 +113,8 @@ struct RootView: View {
                                 .multilineTextAlignment(.center)
                                 .padding(.horizontal, 32)
                         }
+                        .accessibilityElement(children: .combine)
+                        .accessibilityIdentifier("therapist_coming_soon_placeholder")
                     }
                 } else {
                     // Role not yet determined — show loading with timeout

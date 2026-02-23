@@ -73,7 +73,7 @@ final class FeatureFlagService: ObservableObject {
         "weekly_summary_enabled": true,
         "streak_dashboard_enabled": true,
         "body_comp_tools_enabled": false,
-        "therapist_linking_enabled": false,
+        "therapist_linking_enabled": false
     ]
 
     // MARK: - Cache Configuration

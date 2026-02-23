@@ -517,7 +517,7 @@ class PTSupabaseClient: ObservableObject {
     func signInAsDemoUser(demoUserId: String, role: UserRole) async throws {
         let body: [String: String] = [
             "demo_user_id": demoUserId,
-            "role": role.rawValue,
+            "role": role.rawValue
         ]
 
         let responseData: Data = try await client.functions.invoke(

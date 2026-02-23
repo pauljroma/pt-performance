@@ -131,9 +131,11 @@ struct ProfileHubView: View {
                 accountSection
                     .staggeredAnimation(index: 9)
 
-                // Debug Section
+                // Debug Section (debug builds only)
+                #if DEBUG
                 debugSection
                     .staggeredAnimation(index: 10)
+                #endif
             }
             .navigationTitle("Profile")
             .task {
@@ -771,6 +773,7 @@ struct ProfileHubView: View {
 
     // MARK: - Debug Section
 
+    #if DEBUG
     @AppStorage("debug_demo_mode") private var debugDemoMode = false
 
     private var debugSection: some View {
@@ -830,6 +833,7 @@ struct ProfileHubView: View {
             .accessibilityHint("Toggle to use demo data instead of live backend data")
         }
     }
+    #endif
 
     // MARK: - Premium Badge
 

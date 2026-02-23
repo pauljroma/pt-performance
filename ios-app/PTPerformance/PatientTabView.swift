@@ -172,6 +172,7 @@ struct PatientTabView: View {
                         }
                     }
                     .tag(tab)
+                    .accessibilityIdentifier("tab_\(tab.rawValue)")
                     .accessibilityLabel(tab.title)
                     .accessibilityHint(tab.accessibilityHint)
             }

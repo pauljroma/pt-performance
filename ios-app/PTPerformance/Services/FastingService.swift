@@ -148,8 +148,8 @@ final class FastingService: ObservableObject {
 
     private let supabase = PTSupabaseClient.shared
 
-    /// Demo patient ID for unauthenticated testing
-    private let demoPatientId = UUID(uuidString: "00000000-0000-0000-0000-000000000001") ?? UUID()
+    // Note: Demo mode uses authenticated demo session via Supabase edge function.
+    // No hardcoded patient IDs needed — getPatientId() returns nil for unauthenticated users.
 
     private init() {}
 
@@ -917,9 +917,8 @@ final class FastingService: ObservableObject {
             }
         }
 
-        // Fallback to demo patient for unauthenticated users (demo mode)
-        DebugLogger.shared.warning("FastingService", "No authenticated user, using demo patient")
-        return demoPatientId
+        DebugLogger.shared.warning("FastingService", "No authenticated user, cannot resolve patient ID")
+        return nil
     }
 }
 

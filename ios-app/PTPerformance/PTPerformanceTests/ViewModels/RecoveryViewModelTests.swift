@@ -431,10 +431,12 @@ final class RecoveryViewModelTests: XCTestCase {
     // MARK: - Concurrent Sessions Tests
 
     func testConcurrentSessions_SameDay() {
-        let now = Date()
-        let session1 = createMockSession(protocolType: .saunaTraditional, loggedAt: now, durationMinutes: 20)
-        let session2 = createMockSession(protocolType: .coldPlunge, loggedAt: now.addingTimeInterval(1200), durationMinutes: 3)
-        let session3 = createMockSession(protocolType: .contrast, loggedAt: now.addingTimeInterval(2400), durationMinutes: 15)
+        // Use noon today to avoid midnight boundary issues when adding time intervals
+        let calendar = Calendar.current
+        let noon = calendar.date(bySettingHour: 12, minute: 0, second: 0, of: Date())!
+        let session1 = createMockSession(protocolType: .saunaTraditional, loggedAt: noon, durationMinutes: 20)
+        let session2 = createMockSession(protocolType: .coldPlunge, loggedAt: noon.addingTimeInterval(1200), durationMinutes: 3)
+        let session3 = createMockSession(protocolType: .contrast, loggedAt: noon.addingTimeInterval(2400), durationMinutes: 15)
 
         sut.sessions = [session1, session2, session3]
 

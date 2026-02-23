@@ -294,24 +294,14 @@ struct WorkoutSummaryCard: View {
     let currentStreak: Int
     let onTap: (() -> Void)?
 
-    @State private var showEnhancedSummary = false
-
     var body: some View {
         Button(action: {
             HapticFeedback.light()
-            if let onTap = onTap {
-                onTap()
-            } else {
-                showEnhancedSummary = true
-            }
+            onTap?()
         }) {
             cardContent
         }
         .buttonStyle(PlainButtonStyle())
-        .sheet(isPresented: $showEnhancedSummary) {
-            // Enhanced summary placeholder - will be populated with actual data
-            Text("Enhanced Summary Coming Soon")
-        }
     }
 
     private var cardContent: some View {

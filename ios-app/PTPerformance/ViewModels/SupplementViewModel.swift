@@ -517,8 +517,8 @@ final class SupplementViewModel: ObservableObject {
 
     private func getPatientId() async -> UUID? {
         guard let userId = PTSupabaseClient.shared.client.auth.currentUser?.id else {
-            // Return demo patient ID
-            return UUID(uuidString: "00000000-0000-0000-0000-000000000001")
+            DebugLogger.shared.warning("SupplementViewModel", "No authenticated user for patient lookup")
+            return nil
         }
 
         struct PatientRow: Decodable {
@@ -533,9 +533,10 @@ final class SupplementViewModel: ObservableObject {
                 .limit(1)
                 .execute()
                 .value
-            return patients.first?.id ?? UUID(uuidString: "00000000-0000-0000-0000-000000000001")
+            return patients.first?.id
         } catch {
-            return UUID(uuidString: "00000000-0000-0000-0000-000000000001")
+            DebugLogger.shared.warning("SupplementViewModel", "Patient lookup failed: \(error.localizedDescription)")
+            return nil
         }
     }
 

@@ -13,8 +13,8 @@ final class AICoachService: ObservableObject {
     private let supabase = PTSupabaseClient.shared
     private let edgeFunctionUrl = "unified-ai-coach"
 
-    /// Demo patient ID for unauthenticated testing
-    private let demoPatientId = UUID(uuidString: "00000000-0000-0000-0000-000000000001") ?? UUID()
+    // Note: Demo mode uses authenticated demo session via Supabase edge function.
+    // No hardcoded patient IDs needed — getPatientId() returns nil for unauthenticated users.
 
     // MARK: - Response Caching
 
@@ -271,9 +271,8 @@ final class AICoachService: ObservableObject {
             }
         }
 
-        // Fallback to demo patient for unauthenticated users (demo mode)
-        DebugLogger.shared.warning("AICoachService", "No authenticated user, using demo patient")
-        return demoPatientId
+        DebugLogger.shared.warning("AICoachService", "No authenticated user, cannot resolve patient ID")
+        return nil
     }
 
     // MARK: - Demo Mode Fallback Response

@@ -398,9 +398,6 @@ final class FastingTrackerService: ObservableObject {
 
     // MARK: - Helpers
 
-    /// Demo patient ID for unauthenticated testing
-    private let demoPatientId = UUID(uuidString: "00000000-0000-0000-0000-000000000001") ?? UUID()
-
     private func getPatientId() async throws -> UUID? {
         // Check for authenticated user first
         if let userId = supabase.client.auth.currentUser?.id {
@@ -428,9 +425,8 @@ final class FastingTrackerService: ObservableObject {
             }
         }
 
-        // Fallback to demo patient for unauthenticated users (demo mode)
-        DebugLogger.shared.warning("FastingTrackerService", "No authenticated user, using demo patient")
-        return demoPatientId
+        DebugLogger.shared.warning("FastingTrackerService", "No authenticated user, cannot resolve patient ID")
+        return nil
     }
 
     private func convertProtocolToType(_ protocol_: FastingProtocolType) -> FastingType {

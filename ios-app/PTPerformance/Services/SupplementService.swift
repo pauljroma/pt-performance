@@ -44,8 +44,9 @@ final class SupplementService: ObservableObject {
     private let supabase = PTSupabaseClient.shared
     private let edgeFunctionUrl = "ai-supplement-recommendation"
 
-    /// Demo patient UUID for unauthenticated users
-    private let demoPatientId = UUID(uuidString: "00000000-0000-0000-0000-000000000001") ?? UUID()
+    /// Sentinel UUID for demo mode — used only to detect demo-mode fallback paths.
+    /// Never sent to Supabase in release builds (RLS would reject it anyway).
+    private static let demoSentinel = UUID(uuidString: "FFFFFFFF-FFFF-FFFF-FFFF-FFFFFFFFFFFF")!
 
     /// Maximum retry attempts for transient network failures
     private let maxRetryAttempts = 3
@@ -338,8 +339,8 @@ final class SupplementService: ObservableObject {
         sideEffects: [String]? = nil,
         notes: String? = nil
     ) async throws {
-        let patientId = try await getPatientId() ?? demoPatientId
-        let isDemoMode = patientId == demoPatientId
+        let patientId = try await getPatientId() ?? Self.demoSentinel
+        let isDemoMode = patientId == Self.demoSentinel
 
         // Database schema (supplement_logs):
         // id, patient_id, supplement_id, dosage, dosage_unit, logged_at, timing, notes
@@ -419,8 +420,8 @@ final class SupplementService: ObservableObject {
     /// and include skip reason in notes
     /// Supports demo mode - logs will be stored locally when using demo patient
     func skipSupplement(dose: TodaySupplementDose, reason: String?) async throws {
-        let patientId = try await getPatientId() ?? demoPatientId
-        let isDemoMode = patientId == demoPatientId
+        let patientId = try await getPatientId() ?? Self.demoSentinel
+        let isDemoMode = patientId == Self.demoSentinel
 
         // Database schema (supplement_logs):
         // id, patient_id, supplement_id, dosage, dosage_unit, logged_at, timing, notes
@@ -494,8 +495,8 @@ final class SupplementService: ObservableObject {
     /// Undoes a logged supplement
     /// Supports demo mode - will update local state even if database delete fails
     func undoLog(_ logId: UUID) async throws {
-        let patientId = try await getPatientId() ?? demoPatientId
-        let isDemoMode = patientId == demoPatientId
+        let patientId = try await getPatientId() ?? Self.demoSentinel
+        let isDemoMode = patientId == Self.demoSentinel
 
         // For demo mode, attempt the delete but don't fail if it errors
         if isDemoMode {
@@ -617,7 +618,7 @@ final class SupplementService: ObservableObject {
         // Calculate multi-day streak by checking historical compliance
         let streak = await calculateStreak(todayCompliant: taken == planned && planned > 0)
 
-        let patientId = (try? await getPatientId()) ?? demoPatientId
+        let patientId = (try? await getPatientId()) ?? Self.demoSentinel
 
         todayCompliance = SupplementCompliance(
             id: UUID(),
@@ -1119,7 +1120,7 @@ final class SupplementService: ObservableObject {
         }
 
         // Fallback to demo patient for unauthenticated users (demo mode)
-        DebugLogger.shared.warning("SupplementService", "No authenticated user, returning nil (caller should use demoPatientId)")
+        DebugLogger.shared.warning("SupplementService", "No authenticated user, cannot resolve patient ID")
         return nil
     }
 

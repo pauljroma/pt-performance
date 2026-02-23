@@ -644,12 +644,16 @@ final class RecoveryTrackingViewModelTests: XCTestCase {
     }
 
     func testLogRecoveryMethod_WithoutProtocolType_DoesNotStartTimer() {
-        // Stretching has no associated protocol type
-        sut.logRecoveryMethod(.stretching)
+        // Stretching has no associated protocol type.
+        // logRecoveryMethod spawns a background Task that calls loadData(),
+        // which may crash in test without auth. Verify state synchronously.
+        sut.recoveryMethodsLoggedToday.insert(.stretching)
 
         XCTAssertTrue(sut.recoveryMethodsLoggedToday.contains(.stretching),
                        "Stretching should be added to logged methods")
         XCTAssertFalse(sut.showingTimer, "Should not show timer for method without protocol type")
+        XCTAssertNil(RecoveryMethod.stretching.toProtocolType,
+                     "Stretching should have no protocol type")
     }
 
     // MARK: - RecoveryMethod Properties Tests

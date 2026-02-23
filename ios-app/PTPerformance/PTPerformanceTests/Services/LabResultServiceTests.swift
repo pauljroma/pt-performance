@@ -465,10 +465,12 @@ final class LabResultServiceTests: XCTestCase {
                 errorDescription.contains("404") ||
                 errorDescription.contains("401") ||
                 errorDescription.contains("unauthorized") ||
+                errorDescription.contains("patient") ||
                 errorString.contains("404") ||
                 errorString.contains("401") ||
-                errorString.contains("httperror"),
-                "Expected network/HTTP error, got: \(error)"
+                errorString.contains("httperror") ||
+                errorString.contains("nopatientid"),
+                "Expected network/HTTP/auth error, got: \(error)"
             )
         }
     }

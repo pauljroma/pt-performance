@@ -538,8 +538,8 @@ class TodaySessionViewModel: ObservableObject {
         }
 
         // Create a synthetic Session object for display
-        // Use a well-known "template" phase UUID for template-based workouts
-        let templatePhaseId = UUID(uuidString: "00000000-0000-0000-0000-000000000002") ?? UUID()
+        // Sentinel UUID for template-based workouts (not a real phase — never persisted to DB)
+        let templatePhaseId = UUID(uuidString: "EEEEEEEE-EEEE-EEEE-EEEE-EEEEEEEEEE02") ?? UUID()
 
         let syntheticSession = Session(
             id: template.id,  // Use template ID as session ID

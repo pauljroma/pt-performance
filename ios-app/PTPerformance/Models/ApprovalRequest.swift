@@ -377,6 +377,6 @@ extension ApprovalRequest {
             aiRationale: "All Phase 1 checkpoints met: zero pain during and after throwing, full ROM restored, adequate arm care compliance (95%). Ready for Phase 2 based on protocol criteria.",
             aiConfidence: 0.75,
             expiresAt: Calendar.current.date(byAdding: .hour, value: 72, to: Date())
-        ),
+        )
     ]
 }
