@@ -121,6 +121,10 @@ class QuickStartService: ObservableObject {
             let todayResult = try await fetchTodaysSessions(patientId: patientId)
             result = todayResult
             return todayResult
+        } catch is CancellationError {
+            // Task was cancelled (e.g., view redraw during auth) — not a real error
+            logger.log("[QuickStart] Task cancelled, will retry on next load", level: .diagnostic)
+            return result ?? .noWorkoutToday
         } catch {
             let quickStartError = QuickStartError.fetchFailed(error)
             lastError = quickStartError

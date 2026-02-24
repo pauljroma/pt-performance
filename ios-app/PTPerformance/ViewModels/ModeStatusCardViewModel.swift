@@ -104,6 +104,8 @@ class ModeStatusCardViewModel: ObservableObject {
             }
 
             DebugLogger.shared.log("[ModeStatusCardVM] Rehab data loaded (alerts=\(alertCount))", level: .diagnostic)
+        } catch is CancellationError {
+            DebugLogger.shared.log("[ModeStatusCardVM] Rehab load cancelled, will retry", level: .diagnostic)
         } catch {
             DebugLogger.shared.log("[ModeStatusCardVM] Failed to load rehab data: \(error)", level: .warning)
             hasActiveAlerts = false
@@ -167,6 +169,8 @@ class ModeStatusCardViewModel: ObservableObject {
             }
 
             DebugLogger.shared.log("[ModeStatusCardVM] Strength data loaded: total=\(estimatedTotal ?? 0), recentPRs=\(recentPRs.count)", level: .diagnostic)
+        } catch is CancellationError {
+            DebugLogger.shared.log("[ModeStatusCardVM] Strength load cancelled, will retry", level: .diagnostic)
         } catch {
             DebugLogger.shared.log("[ModeStatusCardVM] Failed to load strength data: \(error)", level: .warning)
             // Reset to defaults on error
@@ -254,6 +258,7 @@ class ModeStatusCardViewModel: ObservableObject {
             }
         } catch {
             DebugLogger.shared.log("[ModeStatusCardVM] Failed to load performance data: \(error)", level: .warning)
+            if error is CancellationError { return }
             performanceStatusData = .empty
         }
     }
