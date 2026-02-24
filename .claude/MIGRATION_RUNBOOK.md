@@ -44,7 +44,7 @@ cd /Users/expo/Code/expo/clients/linear-bootstrap
 source .env
 
 # Set access token (required for CLI to work)
-export SUPABASE_ACCESS_TOKEN="sbp_9d60dd93d30bd9f1dc7adce99fd8ec3e02dfc6a8"
+export SUPABASE_ACCESS_TOKEN="sbp_aa37cd3ac90eb8a4519b634c72fba8ed3b60cb0a"
 
 # Apply migrations (uses both token and password)
 supabase db push -p "${SUPABASE_PASSWORD}" --include-all
@@ -62,7 +62,7 @@ If you see error: "Remote migration versions not found in local migrations direc
 
 ```bash
 # Set access token first
-export SUPABASE_ACCESS_TOKEN="sbp_9d60dd93d30bd9f1dc7adce99fd8ec3e02dfc6a8"
+export SUPABASE_ACCESS_TOKEN="sbp_aa37cd3ac90eb8a4519b634c72fba8ed3b60cb0a"
 
 # For each migration that's causing conflicts:
 supabase migration repair --status applied YYYYMMDDHHMMSS -p "${SUPABASE_PASSWORD}"
@@ -211,7 +211,7 @@ END $$;
 → Then retry the push with `--include-all`
 → Example:
 ```bash
-export SUPABASE_ACCESS_TOKEN="sbp_9d60dd93d30bd9f1dc7adce99fd8ec3e02dfc6a8"
+export SUPABASE_ACCESS_TOKEN="sbp_aa37cd3ac90eb8a4519b634c72fba8ed3b60cb0a"
 supabase migration repair --status reverted 20251212000001 -p "${SUPABASE_PASSWORD}"
 supabase db push -p "${SUPABASE_PASSWORD}" --include-all
 ```
@@ -224,7 +224,7 @@ supabase db push -p "${SUPABASE_PASSWORD}" --include-all
 → Example:
 ```bash
 # Set the access token
-export SUPABASE_ACCESS_TOKEN="sbp_9d60dd93d30bd9f1dc7adce99fd8ec3e02dfc6a8"
+export SUPABASE_ACCESS_TOKEN="sbp_aa37cd3ac90eb8a4519b634c72fba8ed3b60cb0a"
 
 # Verify it's set
 echo $SUPABASE_ACCESS_TOKEN
