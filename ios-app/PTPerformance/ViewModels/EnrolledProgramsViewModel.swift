@@ -70,6 +70,14 @@ class EnrolledProgramsViewModel: ObservableObject {
                 logger.log("  - \(program.program.title) (\(program.enrollment.status))", level: .diagnostic)
             }
             isLoading = false
+        } catch is CancellationError {
+            // Task was cancelled (e.g. SwiftUI .task modifier cancelled on view redraw).
+            isLoading = false
+            return
+        } catch let urlError as URLError where urlError.code == .cancelled {
+            // URLSession-level cancellation (NSURLErrorDomain Code=-999).
+            isLoading = false
+            return
         } catch {
             logger.log("[EnrolledPrograms] Failed: \(error.localizedDescription)", level: .error)
             errorMessage = "Unable to load your programs"

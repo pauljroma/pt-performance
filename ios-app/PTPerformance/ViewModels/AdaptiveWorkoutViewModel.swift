@@ -70,6 +70,12 @@ class AdaptiveWorkoutViewModel: ObservableObject {
                 Calendar.current.isDateInToday(modification.scheduledDate) && modification.isActionable
             }
             DebugLogger.shared.info("AdaptiveWorkoutVM", "Loaded \(pendingModifications.count) pending modifications")
+        } catch is CancellationError {
+            // Task was cancelled (e.g. SwiftUI .task modifier cancelled on view redraw).
+            return
+        } catch let urlError as URLError where urlError.code == .cancelled {
+            // URLSession-level cancellation (NSURLErrorDomain Code=-999).
+            return
         } catch {
             self.error = error
             DebugLogger.shared.error("AdaptiveWorkoutVM", "Failed to load modifications: \(error.localizedDescription)")
@@ -90,6 +96,12 @@ class AdaptiveWorkoutViewModel: ObservableObject {
                 showModificationSheet = true
                 DebugLogger.shared.info("AdaptiveWorkoutVM", "Generated modification: \(modification.modificationType)")
             }
+        } catch is CancellationError {
+            // Task was cancelled (e.g. SwiftUI .task modifier cancelled on view redraw).
+            return
+        } catch let urlError as URLError where urlError.code == .cancelled {
+            // URLSession-level cancellation (NSURLErrorDomain Code=-999).
+            return
         } catch {
             self.error = error
             DebugLogger.shared.error("AdaptiveWorkoutVM", "Failed to generate modification: \(error.localizedDescription)")

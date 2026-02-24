@@ -94,6 +94,10 @@ class ProgramLibraryService: ObservableObject {
 
             logger.log("Fetched \(programs.count) programs", level: .success)
             return programs
+        } catch is CancellationError {
+            throw CancellationError()
+        } catch let urlError as URLError where urlError.code == .cancelled {
+            throw urlError
         } catch {
             logger.log("Failed to fetch programs: \(error.localizedDescription)", level: .error)
             throw error
@@ -120,6 +124,10 @@ class ProgramLibraryService: ObservableObject {
 
             logger.log("Fetched \(programs.count) featured programs", level: .success)
             return programs
+        } catch is CancellationError {
+            throw CancellationError()
+        } catch let urlError as URLError where urlError.code == .cancelled {
+            throw urlError
         } catch {
             logger.log("Failed to fetch featured programs: \(error.localizedDescription)", level: .error)
             throw error
@@ -146,6 +154,10 @@ class ProgramLibraryService: ObservableObject {
 
             logger.log("Fetched \(programs.count) programs for category '\(category)'", level: .success)
             return programs
+        } catch is CancellationError {
+            throw CancellationError()
+        } catch let urlError as URLError where urlError.code == .cancelled {
+            throw urlError
         } catch {
             logger.log("Failed to fetch programs by category: \(error.localizedDescription)", level: .error)
             throw error
@@ -227,6 +239,10 @@ class ProgramLibraryService: ObservableObject {
 
             logger.log("Fetched \(enrollments.count) enrolled programs", level: .success)
             return enrollments
+        } catch is CancellationError {
+            throw CancellationError()
+        } catch let urlError as URLError where urlError.code == .cancelled {
+            throw urlError
         } catch {
             logger.log("Failed to fetch enrolled programs: \(error.localizedDescription)", level: .error)
             throw error

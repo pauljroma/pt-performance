@@ -256,9 +256,14 @@ class ModeStatusCardViewModel: ObservableObject {
                 performanceStatusData = .empty
                 DebugLogger.shared.log("[ModeStatusCardVM] No fatigue data available, using empty state", level: .diagnostic)
             }
+        } catch is CancellationError {
+            // Task was cancelled (e.g. SwiftUI .task modifier cancelled on view redraw).
+            return
+        } catch let urlError as URLError where urlError.code == .cancelled {
+            // URLSession-level cancellation (NSURLErrorDomain Code=-999).
+            return
         } catch {
             DebugLogger.shared.log("[ModeStatusCardVM] Failed to load performance data: \(error)", level: .warning)
-            if error is CancellationError { return }
             performanceStatusData = .empty
         }
     }

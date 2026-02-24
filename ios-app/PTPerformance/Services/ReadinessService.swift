@@ -301,6 +301,13 @@ class ReadinessService: ObservableObject {
                 .rpc("get_daily_readiness", params: params)
                 .execute()
             responseData = response.data
+        } catch is CancellationError {
+            // Task was cancelled (e.g. SwiftUI .task modifier cancelled on view redraw).
+            // Propagate so callers can handle silently.
+            throw ReadinessError.fetchFailed(CancellationError())
+        } catch let urlError as URLError where urlError.code == .cancelled {
+            // URLSession-level cancellation (NSURLErrorDomain Code=-999).
+            throw ReadinessError.fetchFailed(urlError)
         } catch {
             // Network or RPC execution error - this is a real failure, throw it
             DebugLogger.shared.error("READINESS", """
