@@ -626,11 +626,10 @@ struct TodaySessionView: View {
             }()
             async let c: () = viewState.loadTodayReadiness(userId: userId)
             async let d: () = viewState.loadTodayArmCare(userId: userId)
-            async let e: () = enrolledProgramsViewModel.loadEnrolledPrograms()
             async let f: () = viewState.loadPendingPrescriptions(userId: userId)
             async let g: () = viewState.loadWorkoutAdaptation(userId: userId)
             async let h: () = adaptiveWorkoutVM.loadPendingModifications()
-            _ = await (a, b, c, d, e, f, g, h)
+            _ = await (a, b, c, d, f, g, h)
 
             // If readiness exists but no pending modification, check if one should be generated
             if viewState.todayReadiness != nil && !adaptiveWorkoutVM.hasTodayModification {
@@ -640,8 +639,16 @@ struct TodaySessionView: View {
                 }
             }
         }
+        .task(id: supabase.userId) {
+            // Load enrolled programs independently (not in the main .task block)
+            // to avoid cancellation from other async lets causing view redraws.
+            // Keyed on userId so it re-fires when auth resolves.
+            guard supabase.userId != nil else { return }
+            await enrolledProgramsViewModel.loadEnrolledPrograms()
+        }
         .onAppear {
             // Refresh enrolled programs when returning from other tabs (e.g. after enrollment)
+            guard supabase.userId != nil else { return }
             Task { await enrolledProgramsViewModel.loadEnrolledPrograms() }
         }
         .onDisappear {

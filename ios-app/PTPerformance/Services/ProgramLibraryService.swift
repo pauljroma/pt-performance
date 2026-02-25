@@ -178,6 +178,17 @@ class ProgramLibraryService: ObservableObject {
 
         // Enforce max 2 active enrollments
         let activeEnrollments = try await getEnrolledPrograms(patientId: patientId, status: "active")
+
+        // Check if already actively enrolled in THIS program
+        if activeEnrollments.contains(where: { $0.programLibraryId == programLibraryId }) {
+            logger.log("Patient already actively enrolled in this program", level: .warning)
+            throw NSError(
+                domain: "ProgramLibraryService",
+                code: 409,
+                userInfo: [NSLocalizedDescriptionKey: "You're already enrolled in this program"]
+            )
+        }
+
         if activeEnrollments.count >= 2 {
             logger.log("Patient already has \(activeEnrollments.count) active enrollments (max 2)", level: .warning)
             throw NSError(
@@ -185,6 +196,26 @@ class ProgramLibraryService: ObservableObject {
                 code: 429,
                 userInfo: [NSLocalizedDescriptionKey: "You can have up to 2 active programs. Finish or leave a program to start a new one."]
             )
+        }
+
+        // Check if there's a previous cancelled/paused enrollment to reactivate
+        let allEnrollments = try await getEnrolledPrograms(patientId: patientId, status: nil)
+        if let previous = allEnrollments.first(where: {
+            $0.programLibraryId == programLibraryId && ($0.status == "cancelled" || $0.status == "paused")
+        }) {
+            // Reactivate the previous enrollment
+            logger.log("Reactivating previous enrollment \(previous.id)", level: .diagnostic)
+            try await updateEnrollmentStatus(enrollmentId: previous.id, status: "active")
+            // Fetch the updated enrollment
+            let response = try await supabase.client
+                .from("program_enrollments")
+                .select()
+                .eq("id", value: previous.id.uuidString)
+                .single()
+                .execute()
+            let enrollment = try PTSupabaseClient.flexibleDecoder.decode(ProgramEnrollment.self, from: response.data)
+            logger.log("Reactivated enrollment: \(enrollment.id)", level: .success)
+            return enrollment
         }
 
         let input = CreateEnrollmentInput(
@@ -533,6 +564,10 @@ class ProgramLibraryService: ObservableObject {
 
             logger.log("Fetched \(combined.count) enrolled programs with full details", level: .success)
             return combined
+        } catch is CancellationError {
+            throw CancellationError()
+        } catch let urlError as URLError where urlError.code == .cancelled {
+            throw urlError
         } catch {
             logger.log("RPC failed: \(error.localizedDescription), falling back to direct query", level: .warning)
 
