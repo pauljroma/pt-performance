@@ -276,6 +276,8 @@ class TherapistPrescriptionDashboardViewModel: ObservableObject {
             lastRefreshDate = Date()
             DebugLogger.shared.log("Loaded \(prescriptions.count) prescriptions for dashboard", level: .success)
 
+        } catch where error.isCancellation {
+            DebugLogger.shared.log("Prescription dashboard load cancelled (navigation)", level: .diagnostic)
         } catch {
             DebugLogger.shared.log("Failed to load prescriptions: \(error.localizedDescription)", level: .error)
             errorMessage = "Failed to load prescriptions. Please try again."

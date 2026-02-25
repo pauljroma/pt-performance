@@ -235,6 +235,8 @@ class TodaySessionViewState: ObservableObject {
             for prescription in pendingPrescriptions where prescription.status == .pending {
                 try? await prescriptionService.markAsViewed(prescription.id)
             }
+        } catch where error.isCancellation {
+            DebugLogger.shared.log("Prescription load cancelled (navigation)", level: .diagnostic)
         } catch {
             DebugLogger.shared.log("Failed to load prescriptions: \(error.localizedDescription)", level: .warning)
             pendingPrescriptions = []
@@ -793,15 +795,11 @@ struct TodaySessionView: View {
     private var sessionContent: some View {
         ScrollTrackingContainer(scrollOffset: $viewState.scrollOffset) {
             VStack(alignment: .leading, spacing: 20) {
-                // Daily Check-in Prompt Card - hero section with parallax depth effect
-                CheckInPromptCard()
+                // ACP-MODE: Mode-specific status card with dashboard navigation
+                modeStatusCard
                     .parallax(scrollOffset: viewState.scrollOffset, intensity: 0.15)
                     .scaleOnScroll(scrollOffset: viewState.scrollOffset, minScale: 0.98)
                     .staggeredAnimation(index: 0)
-
-                // ACP-MODE: Mode-specific status card with dashboard navigation
-                modeStatusCard
-                    .staggeredAnimation(index: 1)
 
                 // Enrolled Programs Section (only shows if user has enrolled programs)
                 if enrolledProgramsViewModel.hasEnrolledPrograms {

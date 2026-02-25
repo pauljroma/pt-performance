@@ -50,6 +50,81 @@ class WorkoutPickerViewModel: ObservableObject {
     private let workoutService = ManualWorkoutService()
     private let logger = DebugLogger.shared
 
+    // MARK: - Premium Gating
+
+    /// IDs of templates that are free to use (10 per bucket: core, conditioning, mobility)
+    private(set) var freeTemplateIDs: Set<UUID> = []
+
+    /// Maximum number of free templates per category bucket
+    private static let freePerBucket = 10
+
+    /// Check if a template is premium (locked)
+    func isPremium(_ template: SystemWorkoutTemplate) -> Bool {
+        !freeTemplateIDs.contains(template.id)
+    }
+
+    /// Categorize a template into one of the free buckets, or nil if it doesn't fit
+    private static func freeBucket(for template: SystemWorkoutTemplate) -> FreeBucket? {
+        let cat = template.category?.lowercased() ?? ""
+        let tags = Set((template.tags ?? []).map { $0.lowercased() })
+        let name = template.name.lowercased()
+
+        // Core / Strength bucket
+        let coreKeywords = ["core", "abs", "functional", "stability", "strength"]
+        if coreKeywords.contains(where: { cat.contains($0) }) ||
+           !coreKeywords.filter({ tags.contains($0) }).isEmpty ||
+           coreKeywords.contains(where: { name.contains($0) }) {
+            return .coreStrength
+        }
+
+        // Conditioning bucket
+        let conditioningKeywords = ["cardio", "hiit", "conditioning", "endurance", "metabolic"]
+        if conditioningKeywords.contains(where: { cat.contains($0) }) ||
+           !conditioningKeywords.filter({ tags.contains($0) }).isEmpty ||
+           conditioningKeywords.contains(where: { name.contains($0) }) {
+            return .conditioning
+        }
+
+        // Mobility bucket
+        let mobilityKeywords = ["mobility", "flexibility", "recovery", "stretching", "yoga", "warm"]
+        if mobilityKeywords.contains(where: { cat.contains($0) }) ||
+           !mobilityKeywords.filter({ tags.contains($0) }).isEmpty ||
+           mobilityKeywords.contains(where: { name.contains($0) }) {
+            return .mobility
+        }
+
+        return nil
+    }
+
+    enum FreeBucket { case coreStrength, conditioning, mobility }
+
+    /// Compute which templates are free after loading
+    private func computeFreeTemplateIDs() {
+        var buckets: [FreeBucket: [SystemWorkoutTemplate]] = [
+            .coreStrength: [],
+            .conditioning: [],
+            .mobility: []
+        ]
+
+        for template in allTemplates {
+            if let bucket = Self.freeBucket(for: template) {
+                buckets[bucket, default: []].append(template)
+            }
+        }
+
+        var freeIDs = Set<UUID>()
+        for (_, templates) in buckets {
+            // Sort by displayOrder (fallback to name) and take first N
+            let sorted = templates.sorted { ($0.displayOrder ?? 999) < ($1.displayOrder ?? 999) }
+            for template in sorted.prefix(Self.freePerBucket) {
+                freeIDs.insert(template.id)
+            }
+        }
+
+        freeTemplateIDs = freeIDs
+        logger.log("QuickPick: \(freeIDs.count) free templates (\(buckets[.coreStrength]?.count ?? 0) core, \(buckets[.conditioning]?.count ?? 0) conditioning, \(buckets[.mobility]?.count ?? 0) mobility)", level: .diagnostic)
+    }
+
     // MARK: - Duration Options
 
     enum DurationOption: Int, CaseIterable, Identifiable {
@@ -159,6 +234,7 @@ class WorkoutPickerViewModel: ObservableObject {
 
         do {
             allTemplates = try await workoutService.fetchSystemTemplates()
+            computeFreeTemplateIDs()
             logger.log("QuickPick: Loaded \(allTemplates.count) templates", level: .success)
         } catch {
             logger.log("QuickPick: Failed to load templates: \(error.localizedDescription)", level: .error)

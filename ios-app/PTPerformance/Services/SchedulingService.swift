@@ -147,6 +147,8 @@ actor SchedulingService {
                 .value
 
             return sessions
+        } catch where error.isCancellation {
+            throw error
         } catch {
             errorLogger.logError(error, context: "\(context)(patient=\(patientId))")
             throw SchedulingError.fetchFailed(error)

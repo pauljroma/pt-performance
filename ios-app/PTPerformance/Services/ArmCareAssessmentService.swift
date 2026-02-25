@@ -177,6 +177,9 @@ class ArmCareAssessmentService: ObservableObject {
 
             let decoder = createDecoder()
             return try decoder.decode(ArmCareAssessment.self, from: response.data)
+        } catch where error.isCancellation {
+            DebugLogger.shared.log("Arm care assessment fetch cancelled (navigation)", level: .diagnostic)
+            return nil
         } catch {
             DebugLogger.shared.warning("ArmCareAssessmentService", "Error fetching today's arm care assessment: \(error.localizedDescription)")
             return nil

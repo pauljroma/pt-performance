@@ -24,6 +24,9 @@ struct WorkoutPickerView: View {
     @State private var isCreatingSession: Bool = false
     @State private var creationError: String?
 
+    // BUILD 605: Premium gating
+    @State private var premiumTemplate: SystemWorkoutTemplate?
+
     var body: some View {
         NavigationStack {
             ScrollView {
@@ -60,7 +63,11 @@ struct WorkoutPickerView: View {
                     await viewModel.markAIRecommendationSelected(templateId: recommendation.templateId)
                     if let template = await viewModel.getTemplateForAIRecommendation(recommendation) {
                         selectedAIRecommendation = nil
-                        selectedTemplate = template
+                        if viewModel.isPremium(template) {
+                            premiumTemplate = template
+                        } else {
+                            selectedTemplate = template
+                        }
                     }
                 }
             }
@@ -98,6 +105,16 @@ struct WorkoutPickerView: View {
                 if let error = creationError {
                     Text(error)
                 }
+            }
+            .alert("Premium Workout", isPresented: Binding(
+                get: { premiumTemplate != nil },
+                set: { if !$0 { premiumTemplate = nil } }
+            )) {
+                Button("OK", role: .cancel) {
+                    premiumTemplate = nil
+                }
+            } message: {
+                Text("This workout is part of our premium program library. Premium programs are coming soon!")
             }
         }
     }
@@ -235,8 +252,12 @@ struct WorkoutPickerView: View {
             .padding(.vertical, Spacing.lg)
         } else {
             ForEach(viewModel.recommendations) { template in
-                WorkoutRecommendationCard(template: template) {
-                    selectedTemplate = template
+                WorkoutRecommendationCard(template: template, isPremium: viewModel.isPremium(template)) {
+                    if viewModel.isPremium(template) {
+                        premiumTemplate = template
+                    } else {
+                        selectedTemplate = template
+                    }
                 }
             }
         }
@@ -571,6 +592,7 @@ private struct CategoryToggle: View {
 
 private struct WorkoutRecommendationCard: View {
     let template: SystemWorkoutTemplate
+    let isPremium: Bool
     let onSelect: () -> Void
 
     var body: some View {
@@ -579,11 +601,20 @@ private struct WorkoutRecommendationCard: View {
                 HStack {
                     Text(template.name)
                         .font(.headline)
-                        .foregroundColor(.primary)
+                        .foregroundColor(isPremium ? .secondary : .primary)
 
                     Spacer()
 
-                    if let duration = template.durationDisplay {
+                    if isPremium {
+                        Label("Premium", systemImage: "lock.fill")
+                            .font(.caption)
+                            .fontWeight(.semibold)
+                            .padding(.horizontal, Spacing.xs)
+                            .padding(.vertical, Spacing.xxs)
+                            .background(Color.purple.opacity(0.2))
+                            .foregroundColor(.purple)
+                            .cornerRadius(CornerRadius.sm)
+                    } else if let duration = template.durationDisplay {
                         Text(duration)
                             .font(.caption)
                             .padding(.horizontal, Spacing.xs)
@@ -614,15 +645,16 @@ private struct WorkoutRecommendationCard: View {
                         .font(.caption2)
                         .foregroundColor(.secondary)
 
-                    Image(systemName: "chevron.right")
+                    Image(systemName: isPremium ? "lock.fill" : "chevron.right")
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(isPremium ? .purple : .secondary)
                 }
             }
             .padding()
             .background(Color(.systemBackground))
             .cornerRadius(CornerRadius.lg)
             .adaptiveShadow(Shadow.subtle)
+            .opacity(isPremium ? 0.7 : 1.0)
         }
     }
 }

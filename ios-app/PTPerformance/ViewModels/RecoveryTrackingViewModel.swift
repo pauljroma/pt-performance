@@ -22,6 +22,7 @@ final class RecoveryTrackingViewModel: ObservableObject {
     // Sheet/Navigation State
     @Published var showingLogSheet: Bool = false
     @Published var showingTimer: Bool = false
+    @Published var showWorkoutPicker: Bool = false
     @Published var selectedSessionType: RecoverySessionType?
     @Published var timerConfig: TimerConfiguration?
 
@@ -436,7 +437,7 @@ final class RecoveryTrackingViewModel: ObservableObject {
 
     func startTodaysWorkout() {
         HapticFeedback.medium()
-        // In production, navigate to workout screen
+        showWorkoutPicker = true
     }
 
     // MARK: - Session Management

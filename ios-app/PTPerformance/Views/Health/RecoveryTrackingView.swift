@@ -60,6 +60,9 @@ struct RecoveryTrackingView: View {
                     )
                 }
             }
+            .sheet(isPresented: $viewModel.showWorkoutPicker) {
+                WorkoutPickerView()
+            }
             .task {
                 await viewModel.loadData()
             }

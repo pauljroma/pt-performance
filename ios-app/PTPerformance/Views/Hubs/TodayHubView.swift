@@ -399,6 +399,8 @@ class StreakIndicatorViewModel: ObservableObject {
                 currentStreak = streak.currentStreak
                 isAtRisk = streak.isAtRisk
             }
+        } catch where error.isCancellation {
+            DebugLogger.shared.log("Streak load cancelled (navigation)", level: .diagnostic)
         } catch {
             DebugLogger.shared.warning("TodayHubView", "Error loading streak: \(error.localizedDescription)")
         }

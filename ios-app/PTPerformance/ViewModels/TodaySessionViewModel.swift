@@ -258,6 +258,9 @@ class TodaySessionViewModel: ObservableObject {
         var sessionId: String? = nil
 
         do {
+            // Check for cancellation before network call
+            try Task.checkCancellation()
+
             let scheduledResponse = try await supabase.client
                 .from("scheduled_sessions")
                 .select("session_id, status, enrollment_id, workout_template_id, workout_name")
@@ -274,14 +277,20 @@ class TodaySessionViewModel: ObservableObject {
             // Decode the scheduled session - session_id may be null for enrollment-based workouts
             struct ScheduledSessionRow: Codable {
                 let session_id: String?  // Nullable for enrollment-based workouts
-                let status: String
+                let status: String?  // Make optional to handle malformed responses
                 let enrollment_id: String?
                 let workout_template_id: String?
                 let workout_name: String?
             }
 
             let decoder = JSONDecoder()
-            let scheduledSessions = try decoder.decode([ScheduledSessionRow].self, from: scheduledResponse.data)
+            let scheduledSessions: [ScheduledSessionRow]
+            do {
+                scheduledSessions = try decoder.decode([ScheduledSessionRow].self, from: scheduledResponse.data)
+            } catch {
+                logger.log("⚠️ Failed to decode scheduled sessions (empty or malformed): \(error.localizedDescription)", level: .warning)
+                scheduledSessions = []
+            }
 
             if let scheduled = scheduledSessions.first {
                 if let id = scheduled.session_id {
@@ -305,6 +314,10 @@ class TodaySessionViewModel: ObservableObject {
                     }
                 }
             }
+        } catch is CancellationError {
+            throw CancellationError()
+        } catch let error where error.isCancellation {
+            throw CancellationError()
         } catch {
             logger.log("⚠️ Failed to fetch scheduled sessions: \(error.localizedDescription)", level: .warning)
         }
