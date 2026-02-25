@@ -13,6 +13,7 @@ struct ProgramDetailSheet: View {
     @State private var isEnrolling = false
     @State private var showEnrollSuccess = false
     @State private var enrollmentError: String?
+    @State private var alreadyEnrolled = false
 
     // Phase preview state
     @State private var phases: [ProgramPhasePreview] = []
@@ -121,35 +122,6 @@ struct ProgramDetailSheet: View {
                                 }
                             }
                         }
-                        .padding(.horizontal)
-                    }
-
-                    // MARK: - Program Template Notice (for catalog-only programs)
-                    if program.programId == nil {
-                        VStack(alignment: .leading, spacing: 8) {
-                            HStack(spacing: 8) {
-                                Image(systemName: "doc.text.magnifyingglass")
-                                    .font(.title3)
-                                    .foregroundColor(.modusCyan)
-                                Text("Program Template")
-                                    .font(.headline)
-                            }
-
-                            Text("This is a program template. Workouts can be customized by your therapist to match your specific needs and goals.")
-                                .font(.subheadline)
-                                .foregroundColor(.secondary)
-
-                            HStack(spacing: 4) {
-                                Image(systemName: "info.circle")
-                                    .font(.caption)
-                                Text("Enroll to save this program, then work with your therapist to personalize the workouts.")
-                                    .font(.caption)
-                            }
-                            .foregroundColor(.modusCyan)
-                        }
-                        .padding()
-                        .background(Color.modusCyan.opacity(0.1))
-                        .cornerRadius(CornerRadius.md)
                         .padding(.horizontal)
                     }
 
@@ -278,24 +250,24 @@ struct ProgramDetailSheet: View {
                     .background(.ultraThinMaterial)
                 }
             }
-            .alert(program.programId == nil ? "Template Saved!" : "Enrolled!", isPresented: $showEnrollSuccess) {
+            .alert("Enrolled!", isPresented: $showEnrollSuccess) {
                 Button("OK") {
                     dismiss()
                 }
             } message: {
-                if program.programId == nil {
-                    Text("You've saved \(program.title) to your programs. Ask your therapist to customize the workouts for you.")
-                } else {
-                    Text("You have successfully enrolled in \(program.title). Check your Today tab to get started!")
-                }
+                Text("You've started \(program.title). Check your Today tab to see your program!")
             }
-            .alert("Enrollment Error", isPresented: Binding(
+            .alert(alreadyEnrolled ? "Already Enrolled" : "Enrollment Error", isPresented: Binding(
                 get: { enrollmentError != nil },
-                set: { if !$0 { enrollmentError = nil } }
+                set: { if !$0 { enrollmentError = nil; alreadyEnrolled = false } }
             )) {
-                Button("OK", role: .cancel) { }
+                Button("OK", role: .cancel) {
+                    if alreadyEnrolled { dismiss() }
+                }
             } message: {
-                if let error = enrollmentError {
+                if alreadyEnrolled {
+                    Text("You're already in \(program.title). Check your Today tab to see your program!")
+                } else if let error = enrollmentError {
                     Text(error)
                 }
             }
@@ -353,10 +325,17 @@ struct ProgramDetailSheet: View {
                 isEnrolling = false
                 showEnrollSuccess = true
             }
+        } catch let error as NSError where error.code == 409 {
+            // Already enrolled — treat as success, navigate to Today
+            await MainActor.run {
+                isEnrolling = false
+                alreadyEnrolled = true
+                enrollmentError = error.localizedDescription
+            }
         } catch {
             await MainActor.run {
                 isEnrolling = false
-                enrollmentError = "Failed to enroll: \(error.localizedDescription)"
+                enrollmentError = "Something went wrong. Please try again."
             }
         }
     }

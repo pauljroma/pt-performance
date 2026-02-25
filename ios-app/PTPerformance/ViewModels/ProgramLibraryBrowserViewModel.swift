@@ -168,17 +168,38 @@ class ProgramLibraryBrowserViewModel: ObservableObject {
 
     // MARK: - Program Visibility
 
-    /// Tags that indicate sport-specific or therapist-required programs (hidden from browser)
-    private static let hiddenTags: Set<String> = [
-        "baseball", "golf", "pickleball", "tactical", "running", "rehab"
+    /// Categories that are hidden from the program browser
+    private static let hiddenCategories: Set<String> = [
+        "baseball", "recovery"
     ]
 
-    /// Filter programs to only show general-purpose fitness (BASE, EXPRESS, MASTERS packs)
+    /// Tags that indicate sport-specific or therapist-required programs
+    private static let hiddenTags: Set<String> = [
+        "baseball", "golf", "pickleball", "tactical", "running", "rehab",
+        "catcher", "pitcher", "infielder", "outfielder", "position_specific",
+        "arm-care", "arm_care", "throwing_prep", "velocity"
+    ]
+
+    /// Filter programs to only show general-purpose fitness programs
     private func filterToAvailablePrograms(_ allPrograms: [ProgramLibrary]) -> [ProgramLibrary] {
         let filtered = allPrograms.filter { program in
+            let category = program.category.lowercased()
             let tags = Set(program.tagsList.map { $0.lowercased() })
-            let hasHiddenTag = !tags.isDisjoint(with: Self.hiddenTags)
-            return !hasHiddenTag
+            let title = program.title.lowercased()
+
+            // Hide by category
+            if Self.hiddenCategories.contains(category) { return false }
+
+            // Hide by tag
+            if !tags.isDisjoint(with: Self.hiddenTags) { return false }
+
+            // Hide by title keywords (catch-all for programs that slipped through)
+            let hiddenTitleWords = ["baseball", "pitcher", "catcher", "outfield", "infield",
+                                    "arm care", "throw", "ucl", "golf", "pickleball",
+                                    "tactical", "combat", "rehab", "return-to-throw"]
+            if hiddenTitleWords.contains(where: { title.contains($0) }) { return false }
+
+            return true
         }
         DebugLogger.shared.log("ProgramLibrary: Showing \(filtered.count) of \(allPrograms.count) programs (hiding sport-specific/rehab)", level: .diagnostic)
         return filtered
