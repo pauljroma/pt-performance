@@ -9,7 +9,6 @@ import SwiftUI
 
 struct ProgramDetailSheet: View {
     let program: ProgramLibrary
-    var isPremium: Bool = false
     @Environment(\.dismiss) private var dismiss
     @State private var isEnrolling = false
     @State private var showEnrollSuccess = false
@@ -243,59 +242,40 @@ struct ProgramDetailSheet: View {
                 VStack(spacing: 0) {
                     Divider()
 
-                    if isPremium {
-                        // Premium locked state
+                    Button {
+                        Task {
+                            await enrollInProgram()
+                        }
+                    } label: {
                         HStack {
-                            Image(systemName: "lock.fill")
-                                .accessibilityHidden(true)
-                            Text("Premium Program")
-                                .fontWeight(.semibold)
+                            if isEnrolling {
+                                ProgressView()
+                                    .tint(.white)
+                                    .accessibilityHidden(true)
+                            } else {
+                                Image(systemName: "play.circle.fill")
+                                    .accessibilityHidden(true)
+                                Text("Start This Program")
+                                    .fontWeight(.semibold)
+                            }
                         }
                         .frame(maxWidth: .infinity)
                         .padding()
-                        .background(Color.gray.opacity(0.3))
-                        .foregroundColor(.secondary)
-                        .cornerRadius(CornerRadius.lg)
-                        .padding()
-                        .background(.ultraThinMaterial)
-                        .accessibilityLabel("Premium program, not available")
-                        .accessibilityHint("This program requires a premium subscription")
-                    } else {
-                        Button {
-                            Task {
-                                await enrollInProgram()
-                            }
-                        } label: {
-                            HStack {
-                                if isEnrolling {
-                                    ProgressView()
-                                        .tint(.white)
-                                        .accessibilityHidden(true)
-                                } else {
-                                    Image(systemName: program.programId == nil ? "bookmark.fill" : "play.circle.fill")
-                                        .accessibilityHidden(true)
-                                    Text(program.programId == nil ? "Save This Template" : "Start This Program")
-                                        .fontWeight(.semibold)
-                                }
-                            }
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                            .background(
-                                LinearGradient(
-                                    colors: program.programId == nil ? [.modusCyan, .cyan] : [.modusCyan, .purple],
-                                    startPoint: .leading,
-                                    endPoint: .trailing
-                                )
+                        .background(
+                            LinearGradient(
+                                colors: [.modusCyan, .purple],
+                                startPoint: .leading,
+                                endPoint: .trailing
                             )
-                            .foregroundColor(.white)
-                            .cornerRadius(CornerRadius.lg)
-                        }
-                        .disabled(isEnrolling)
-                        .accessibilityLabel(isEnrolling ? "Enrolling in program" : (program.programId == nil ? "Save \(program.title) template" : "Start \(program.title)"))
-                        .accessibilityHint(isEnrolling ? "Please wait" : (program.programId == nil ? "Saves this template to your programs for customization" : "Enrolls you in this program and adds workouts to your schedule"))
-                        .padding()
-                        .background(.ultraThinMaterial)
+                        )
+                        .foregroundColor(.white)
+                        .cornerRadius(CornerRadius.lg)
                     }
+                    .disabled(isEnrolling)
+                    .accessibilityLabel(isEnrolling ? "Enrolling in program" : "Start \(program.title)")
+                    .accessibilityHint(isEnrolling ? "Please wait" : "Enrolls you in this program and adds it to your Today tab")
+                    .padding()
+                    .background(.ultraThinMaterial)
                 }
             }
             .alert(program.programId == nil ? "Template Saved!" : "Enrolled!", isPresented: $showEnrollSuccess) {

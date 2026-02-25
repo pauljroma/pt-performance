@@ -23,23 +23,17 @@ import SwiftUI
 
 struct ProgramLibraryBrowserView: View {
 
-    // MARK: - Environment
-
-    @EnvironmentObject var storeKit: StoreKitService
-
     // MARK: - State
 
     @StateObject private var viewModel = ProgramLibraryBrowserViewModel()
     @State private var selectedProgram: ProgramLibrary?
-    @State private var showBaseballLocked = false
-    @State private var showPremiumLocked = false
     @State private var programToDuplicate: ProgramLibrary?
     @State private var showFilters = false
     @State private var previewProgram: ProgramLibrary?
 
     // MARK: - Constants
 
-    private let categories = ["All", "Annuals", "Strength", "Mobility", "Conditioning", "Baseball"]
+    private let categories = ["All", "Strength", "Mobility", "Conditioning"]
     private let difficulties = ["All", "Beginner", "Intermediate", "Advanced"]
 
     private let columns = [
@@ -69,21 +63,10 @@ struct ProgramLibraryBrowserView: View {
             contentView
         }
         .sheet(item: $selectedProgram) { program in
-            ProgramDetailSheet(program: program, isPremium: viewModel.isProgramPremium(program))
+            ProgramDetailSheet(program: program)
         }
         .sheet(item: $previewProgram) { program in
             ProgramFirstWeekPreviewSheet(program: program, viewModel: viewModel)
-        }
-        .sheet(isPresented: $showBaseballLocked) {
-            NavigationStack {
-                BaseballPackLockedView()
-                    .environmentObject(storeKit)
-            }
-        }
-        .alert("Premium Program", isPresented: $showPremiumLocked) {
-            Button("OK", role: .cancel) { }
-        } message: {
-            Text("This program is part of our premium collection. Free programs are available in the Strength, Mobility, and Conditioning categories.")
         }
         .alert("Error", isPresented: Binding(
             get: { viewModel.errorMessage != nil },
@@ -246,46 +229,23 @@ struct ProgramLibraryBrowserView: View {
                     let isSelected = (category == "All" && viewModel.selectedCategory == nil) ||
                         (category != "All" && viewModel.selectedCategory?.rawValue.lowercased() == category.lowercased())
 
-                    // Special handling for baseball category with premium badge
-                    if category == "Baseball" {
-                        BaseballCategoryChip(
-                            isSelected: isSelected,
-                            isPremium: !storeKit.hasBaseballAccess
-                        ) {
-                            handleBaseballCategoryTap()
-                        }
-                    } else {
-                        ProgramFilterChip(
-                            title: category,
-                            icon: iconForCategory(category),
-                            isSelected: isSelected,
-                            color: colorForCategory(category)
-                        ) {
-                            if category == "All" {
-                                viewModel.selectedCategory = nil
-                            } else {
-                                let newCategory = ProgramCategory(rawValue: category.lowercased())
-                                viewModel.selectedCategory = viewModel.selectedCategory == newCategory ? nil : newCategory
-                            }
+                    ProgramFilterChip(
+                        title: category,
+                        icon: iconForCategory(category),
+                        isSelected: isSelected,
+                        color: colorForCategory(category)
+                    ) {
+                        if category == "All" {
+                            viewModel.selectedCategory = nil
+                        } else {
+                            let newCategory = ProgramCategory(rawValue: category.lowercased())
+                            viewModel.selectedCategory = viewModel.selectedCategory == newCategory ? nil : newCategory
                         }
                     }
                 }
             }
             .padding(.horizontal)
             .padding(.vertical, Spacing.xs)
-        }
-    }
-
-    // MARK: - Baseball Category Tap Handler
-
-    private func handleBaseballCategoryTap() {
-        if storeKit.hasBaseballAccess {
-            // User owns baseball pack - filter to baseball programs
-            let newCategory = ProgramCategory(rawValue: "baseball")
-            viewModel.selectedCategory = viewModel.selectedCategory == newCategory ? nil : newCategory
-        } else {
-            // User doesn't own baseball pack - show locked view
-            showBaseballLocked = true
         }
     }
 
@@ -461,10 +421,8 @@ struct ProgramLibraryBrowserView: View {
         ScrollView {
             LazyVGrid(columns: columns, spacing: 12) {
                 ForEach(Array(viewModel.cachedFilteredPrograms.enumerated()), id: \.element.id) { index, program in
-                    let premium = viewModel.isProgramPremium(program)
                     EnhancedProgramLibraryCard(
                         program: program,
-                        isPremium: premium,
                         onDuplicate: {
                             programToDuplicate = program
                         },
@@ -472,13 +430,8 @@ struct ProgramLibraryBrowserView: View {
                             previewProgram = program
                         }
                     )
-                    .opacity(premium ? 0.75 : 1.0)
                     .onTapGesture {
-                        if premium {
-                            showPremiumLocked = true
-                        } else {
-                            selectedProgram = program
-                        }
+                        selectedProgram = program
                     }
                     .staggeredAnimation(index: index)
                 }
@@ -654,7 +607,6 @@ private struct BaseballCategoryChip: View {
 
 struct EnhancedProgramLibraryCard: View {
     let program: ProgramLibrary
-    var isPremium: Bool = false
     var onDuplicate: (() -> Void)? = nil
     var onPreview: (() -> Void)? = nil
 
@@ -672,22 +624,6 @@ struct EnhancedProgramLibraryCard: View {
                 .clipped()
                 .accessibilityHidden(true)
 
-                // Premium lock badge
-                if isPremium {
-                    HStack(spacing: 4) {
-                        Image(systemName: "lock.fill")
-                            .font(.system(size: 10))
-                        Text("Premium")
-                            .font(.system(size: 10, weight: .semibold))
-                    }
-                    .foregroundColor(.white)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
-                    .background(Color.black.opacity(0.7))
-                    .cornerRadius(CornerRadius.sm)
-                    .padding(Spacing.xs)
-                }
-
                 // ACP-1031: Difficulty stars overlay
                 HStack(spacing: 2) {
                     ForEach(1...3, id: \.self) { star in
@@ -700,7 +636,6 @@ struct EnhancedProgramLibraryCard: View {
                 .background(Color.black.opacity(0.5))
                 .cornerRadius(CornerRadius.sm)
                 .padding(Spacing.xs)
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
             }
 
             VStack(alignment: .leading, spacing: 6) {

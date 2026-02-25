@@ -166,53 +166,22 @@ class ProgramLibraryBrowserViewModel: ObservableObject {
     @Published private(set) var cachedFilteredPrograms: [ProgramLibrary] = []
     @Published private(set) var cachedFilteredFeaturedPrograms: [ProgramLibrary] = []
 
-    // MARK: - Premium Gating
+    // MARK: - Program Visibility
 
-    /// IDs of programs that are free to enroll in (10 strength + 10 conditioning + 10 mobility)
-    private(set) var freeProgramIDs: Set<UUID> = []
+    /// Tags that indicate sport-specific or therapist-required programs (hidden from browser)
+    private static let hiddenTags: Set<String> = [
+        "baseball", "golf", "pickleball", "tactical", "running", "rehab"
+    ]
 
-    /// Maximum free programs per category bucket
-    private static let freePerCategory = 10
-
-    /// Free category buckets
-    private static let freeCategories: Set<String> = ["strength", "mobility", "cardio", "conditioning"]
-
-    /// Check if a program is premium (locked for free users)
-    func isProgramPremium(_ program: ProgramLibrary) -> Bool {
-        !freeProgramIDs.contains(program.id)
-    }
-
-    /// Compute which programs are free after loading
-    private func computeFreeProgramIDs() {
-        var buckets: [String: [ProgramLibrary]] = [
-            "strength": [],
-            "conditioning": [],
-            "mobility": []
-        ]
-
-        for program in programs {
-            let cat = program.category.lowercased()
-            if cat == "strength" {
-                buckets["strength", default: []].append(program)
-            } else if cat == "cardio" || cat == "conditioning" {
-                buckets["conditioning", default: []].append(program)
-            } else if cat == "mobility" {
-                buckets["mobility", default: []].append(program)
-            }
+    /// Filter programs to only show general-purpose fitness (BASE, EXPRESS, MASTERS packs)
+    private func filterToAvailablePrograms(_ allPrograms: [ProgramLibrary]) -> [ProgramLibrary] {
+        let filtered = allPrograms.filter { program in
+            let tags = Set(program.tagsList.map { $0.lowercased() })
+            let hasHiddenTag = !tags.isDisjoint(with: Self.hiddenTags)
+            return !hasHiddenTag
         }
-
-        var freeIDs = Set<UUID>()
-        for (_, programs) in buckets {
-            let sorted = programs.sorted {
-                ($0.sortOrder ?? 999) < ($1.sortOrder ?? 999)
-            }
-            for program in sorted.prefix(Self.freePerCategory) {
-                freeIDs.insert(program.id)
-            }
-        }
-
-        freeProgramIDs = freeIDs
-        DebugLogger.shared.log("ProgramLibrary: \(freeIDs.count) free programs (\(buckets["strength"]?.count ?? 0) strength, \(buckets["conditioning"]?.count ?? 0) conditioning, \(buckets["mobility"]?.count ?? 0) mobility)", level: .diagnostic)
+        DebugLogger.shared.log("ProgramLibrary: Showing \(filtered.count) of \(allPrograms.count) programs (hiding sport-specific/rehab)", level: .diagnostic)
+        return filtered
     }
 
     // MARK: - Dependencies
@@ -344,8 +313,8 @@ class ProgramLibraryBrowserViewModel: ObservableObject {
         errorMessage = nil
 
         do {
-            programs = try await service.fetchPrograms()
-            computeFreeProgramIDs()
+            let allPrograms = try await service.fetchPrograms()
+            programs = filterToAvailablePrograms(allPrograms)
             updateFilteredPrograms()
             isLoading = false
         } catch {
