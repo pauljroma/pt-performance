@@ -51,6 +51,29 @@ struct UpdateStatusInput: Codable {
 class ProgramLibraryService: ObservableObject {
     private let supabase: PTSupabaseClient
 
+    // MARK: - In-Memory Cache
+
+    /// Shared cache for all-programs fetch (no filters). TTL = 10 minutes.
+    private static var cachedPrograms: [ProgramLibrary]?
+    private static var cacheTimestamp: Date?
+    private static let cacheTTL: TimeInterval = 600 // 10 minutes
+
+    /// Returns cached programs if still valid, otherwise nil.
+    private static func cachedIfValid() -> [ProgramLibrary]? {
+        guard let programs = cachedPrograms,
+              let timestamp = cacheTimestamp,
+              Date().timeIntervalSince(timestamp) < cacheTTL else {
+            return nil
+        }
+        return programs
+    }
+
+    /// Invalidate the cache (call after enrollment changes, etc.)
+    static func invalidateCache() {
+        cachedPrograms = nil
+        cacheTimestamp = nil
+    }
+
     init(supabase: PTSupabaseClient = .shared) {
         self.supabase = supabase
     }
@@ -64,7 +87,17 @@ class ProgramLibraryService: ObservableObject {
         search: String? = nil
     ) async throws -> [ProgramLibrary] {
         let logger = DebugLogger.shared
-        logger.log("Fetching programs with filters - category: \(category ?? "nil"), difficulty: \(difficulty ?? "nil"), search: \(search ?? "nil")", level: .diagnostic)
+        let hasFilters = (category != nil && !category!.isEmpty)
+            || (difficulty != nil && !difficulty!.isEmpty)
+            || (search != nil && !search!.isEmpty)
+
+        // Serve from cache for unfiltered requests
+        if !hasFilters, let cached = Self.cachedIfValid() {
+            logger.log("Serving \(cached.count) programs from cache", level: .diagnostic)
+            return cached
+        }
+
+        logger.log("Fetching programs from network - category: \(category ?? "nil"), difficulty: \(difficulty ?? "nil"), search: \(search ?? "nil")", level: .diagnostic)
 
         var query = supabase.client
             .from("program_library")
@@ -88,9 +121,13 @@ class ProgramLibraryService: ObservableObject {
                 .limit(200)
                 .execute()
 
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
-            let programs = try decoder.decode([ProgramLibrary].self, from: response.data)
+            let programs = try PTSupabaseClient.flexibleDecoder.decode([ProgramLibrary].self, from: response.data)
+
+            // Cache unfiltered results
+            if !hasFilters {
+                Self.cachedPrograms = programs
+                Self.cacheTimestamp = Date()
+            }
 
             logger.log("Fetched \(programs.count) programs", level: .success)
             return programs
@@ -118,9 +155,7 @@ class ProgramLibraryService: ObservableObject {
                 .limit(100)
                 .execute()
 
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
-            let programs = try decoder.decode([ProgramLibrary].self, from: response.data)
+            let programs = try PTSupabaseClient.flexibleDecoder.decode([ProgramLibrary].self, from: response.data)
 
             logger.log("Fetched \(programs.count) featured programs", level: .success)
             return programs
