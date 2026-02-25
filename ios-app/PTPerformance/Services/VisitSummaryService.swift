@@ -233,8 +233,7 @@ final class VisitSummaryService: ObservableObject {
                 .limit(limit)
                 .execute()
 
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
+            let decoder = PTSupabaseClient.flexibleDecoder
             let summaries = try decoder.decode([VisitSummary].self, from: response.data)
 
             patientSummaries = summaries
@@ -264,8 +263,7 @@ final class VisitSummaryService: ObservableObject {
                 .single()
                 .execute()
 
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
+            let decoder = PTSupabaseClient.flexibleDecoder
             let summary = try decoder.decode(VisitSummary.self, from: response.data)
 
             return summary
@@ -307,8 +305,7 @@ final class VisitSummaryService: ObservableObject {
                 .order("visit_date", ascending: false)
                 .execute()
 
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
+            let decoder = PTSupabaseClient.flexibleDecoder
             let summaries = try decoder.decode([VisitSummary].self, from: response.data)
 
             return summaries
@@ -350,8 +347,7 @@ final class VisitSummaryService: ObservableObject {
                 .single()
                 .execute()
 
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
+            let decoder = PTSupabaseClient.flexibleDecoder
             let summary = try decoder.decode(VisitSummary.self, from: response.data)
 
             // Update local cache if present
@@ -391,8 +387,7 @@ final class VisitSummaryService: ObservableObject {
                 .single()
                 .execute()
 
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
+            let decoder = PTSupabaseClient.flexibleDecoder
             let summary = try decoder.decode(VisitSummary.self, from: response.data)
 
             // Update local cache if present
@@ -529,8 +524,7 @@ final class VisitSummaryService: ObservableObject {
                 .single()
                 .execute()
 
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
+            let decoder = PTSupabaseClient.flexibleDecoder
             let summary = try decoder.decode(VisitSummary.self, from: response.data)
 
             // Update local cache if present
@@ -582,8 +576,7 @@ final class VisitSummaryService: ObservableObject {
             .single()
             .execute()
 
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
+        let decoder = PTSupabaseClient.flexibleDecoder
         return try decoder.decode(SessionData.self, from: response.data)
     }
 
@@ -595,8 +588,7 @@ final class VisitSummaryService: ObservableObject {
             .order("created_at", ascending: true)
             .execute()
 
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
+        let decoder = PTSupabaseClient.flexibleDecoder
         return try decoder.decode([VSExerciseLog].self, from: response.data)
     }
 
@@ -648,8 +640,7 @@ final class VisitSummaryService: ObservableObject {
             .single()
             .execute()
 
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
+        let decoder = PTSupabaseClient.flexibleDecoder
         return try decoder.decode(VisitSummary.self, from: response.data)
     }
 

@@ -201,9 +201,7 @@ class ProgressionService: ObservableObject {
                 .gte("occurred_at", value: windowStart.ISO8601Format())
                 .execute()
 
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
-            let triggers = try decoder.decode([DeloadTrigger].self, from: response.data)
+            let triggers = try PTSupabaseClient.flexibleDecoder.decode([DeloadTrigger].self, from: response.data)
 
             logger.log("  Found \(triggers.count) unresolved triggers", level: .diagnostic)
 
@@ -376,9 +374,7 @@ class ProgressionService: ObservableObject {
                 .limit(1)
                 .execute()
 
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
-            let records = try decoder.decode([LoadProgressionHistory].self, from: response.data)
+            let records = try PTSupabaseClient.flexibleDecoder.decode([LoadProgressionHistory].self, from: response.data)
 
             if let record = records.first {
                 logger.log("[ProgressionService] Found last progression: \(record.currentLoad) lbs", level: .success)
@@ -428,9 +424,7 @@ class ProgressionService: ObservableObject {
                 .limit(limit)
                 .execute()
 
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
-            let records = try decoder.decode([LoadProgressionHistory].self, from: response.data)
+            let records = try PTSupabaseClient.flexibleDecoder.decode([LoadProgressionHistory].self, from: response.data)
 
             logger.log("[ProgressionService] Fetched \(records.count) progression records", level: .success)
             return records

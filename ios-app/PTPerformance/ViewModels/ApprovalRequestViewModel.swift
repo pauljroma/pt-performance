@@ -59,8 +59,7 @@ class ApprovalRequestViewModel: ObservableObject {
                 .order("created_at", ascending: false)
                 .execute()
 
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
+            let decoder = PTSupabaseClient.flexibleDecoder
 
             if let jsonString = String(data: response.data, encoding: .utf8),
                jsonString != "[]" && !jsonString.isEmpty {
@@ -113,8 +112,7 @@ class ApprovalRequestViewModel: ObservableObject {
                 .limit(limit)
                 .execute()
 
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
+            let decoder = PTSupabaseClient.flexibleDecoder
 
             if let jsonString = String(data: response.data, encoding: .utf8),
                jsonString != "[]" && !jsonString.isEmpty {
@@ -156,8 +154,7 @@ class ApprovalRequestViewModel: ObservableObject {
                 .limit(20)
                 .execute()
 
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
+            let decoder = PTSupabaseClient.flexibleDecoder
 
             if let jsonString = String(data: response.data, encoding: .utf8),
                jsonString != "[]" && !jsonString.isEmpty {
@@ -302,8 +299,7 @@ class ApprovalRequestViewModel: ObservableObject {
                 .single()
                 .execute()
 
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
+            let decoder = PTSupabaseClient.flexibleDecoder
             let request = try decoder.decode(ApprovalRequest.self, from: response.data)
             return request
         } catch {

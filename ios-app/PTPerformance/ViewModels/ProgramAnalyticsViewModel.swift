@@ -223,8 +223,7 @@ class ProgramAnalyticsViewModel: ObservableObject {
             .order("created_at", ascending: false)
             .execute()
 
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
+        let decoder = PTSupabaseClient.flexibleDecoder
         let libraryPrograms = try decoder.decode([ProgramLibrary].self, from: programsResponse.data)
 
         logger.log("Found \(libraryPrograms.count) programs by therapist", level: .diagnostic)
@@ -299,8 +298,7 @@ class ProgramAnalyticsViewModel: ObservableObject {
             .eq("therapist_id", value: therapistId)
             .execute()
 
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
+        let decoder = PTSupabaseClient.flexibleDecoder
 
         struct PatientRow: Codable {
             let id: UUID

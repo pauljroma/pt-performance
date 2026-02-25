@@ -830,10 +830,7 @@ actor APIResponseCache {
         guard let data = try? Data(contentsOf: fileURL) else { return nil }
 
         do {
-            // Use a standard decoder for the entry envelope (not the flexible one,
-            // since APICacheEntry uses standard ISO8601 dates via Codable synthesis).
-            let entryDecoder = JSONDecoder()
-            entryDecoder.dateDecodingStrategy = .iso8601
+            let entryDecoder = PTSupabaseClient.flexibleDecoder
             let entry = try entryDecoder.decode(APICacheEntry.self, from: data)
             Task { await metrics.recordDiskRead() }
             return entry
@@ -881,8 +878,7 @@ actor APIResponseCache {
         let fileURLs = enumerator.allObjects.compactMap { $0 as? URL }
         var restoredCount = 0
 
-        let entryDecoder = JSONDecoder()
-        entryDecoder.dateDecodingStrategy = .iso8601
+        let entryDecoder = PTSupabaseClient.flexibleDecoder
 
         for fileURL in fileURLs {
             guard fileURL.pathExtension == "cache" else { continue }

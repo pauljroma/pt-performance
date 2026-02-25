@@ -453,8 +453,7 @@ class ProgressiveOverloadAIService: ObservableObject {
             }
 
             // Decode response
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
+            let decoder = PTSupabaseClient.flexibleDecoder
 
             // Check for error response first
             if let errorResponse = try? decoder.decode(ProgressiveOverloadErrorResponse.self, from: responseDataRaw),
@@ -590,8 +589,7 @@ class ProgressiveOverloadAIService: ObservableObject {
                 }
             }
 
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
+            let decoder = PTSupabaseClient.flexibleDecoder
             let entries = try decoder.decode([HistoryEntry].self, from: response.data)
 
             // Convert to ExercisePerformance format
@@ -962,8 +960,7 @@ class ProgressiveOverloadAIService: ObservableObject {
                 }
             }
 
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
+            let decoder = PTSupabaseClient.flexibleDecoder
             let entries = try decoder.decode([HistoryEntry].self, from: response.data)
 
             return entries.map { entry in

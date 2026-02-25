@@ -423,8 +423,7 @@ class ProgramsListViewModel: ObservableObject {
 
             logger.log("📚 Programs response size: \(response.data.count) bytes")
 
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
+            let decoder = PTSupabaseClient.flexibleDecoder
 
             programs = try decoder.decode([ProgramListItem].self, from: response.data)
             logger.log("✅ Loaded \(programs.count) programs", level: .success)

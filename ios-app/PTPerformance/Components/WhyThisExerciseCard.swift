@@ -202,6 +202,7 @@ struct WhyThisExerciseCard: View {
         .padding(.vertical, Spacing.xs)
         .background(Color.purple.opacity(0.1))
         .cornerRadius(CornerRadius.xs)
+        .accessibilityElement(children: .combine)
         .accessibilityLabel("Movement pattern: \(pattern)")
     }
 
@@ -341,6 +342,7 @@ struct WhyThisExerciseCompactCard: View {
                             .fontWeight(.medium)
                         Image(systemName: "chevron.right")
                             .font(.caption2)
+                            .accessibilityHidden(true)
                     }
                     .foregroundColor(.modusCyan)
                 }

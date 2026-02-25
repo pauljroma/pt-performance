@@ -287,8 +287,7 @@ class ProgramWorkoutHistoryViewModel: ObservableObject {
             }
         }
 
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
+        let decoder = PTSupabaseClient.flexibleDecoder
 
         let rows = try decoder.decode([WorkoutRow].self, from: data)
 
@@ -345,8 +344,7 @@ class ProgramWorkoutHistoryViewModel: ObservableObject {
             let avg_pain: Double?
         }
 
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
+        let decoder = PTSupabaseClient.flexibleDecoder
 
         let rows = try decoder.decode([StatsRow].self, from: response.data)
 

@@ -107,11 +107,7 @@ actor ConversionFunnelTracker {
         return encoder
     }()
 
-    private nonisolated static let iso8601Decoder: JSONDecoder = {
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
-        return decoder
-    }()
+    private nonisolated static let iso8601Decoder: JSONDecoder = PTSupabaseClient.flexibleDecoder
 
     // MARK: - Initialization
 

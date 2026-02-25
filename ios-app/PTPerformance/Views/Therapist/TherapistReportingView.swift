@@ -77,8 +77,7 @@ class TherapistReportingViewModel: ObservableObject {
                 .eq("therapist_id", value: therapistId)
                 .execute()
 
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
+            let decoder = PTSupabaseClient.flexibleDecoder
             let decoded = try decoder.decode([Patient].self, from: response.data)
 
             patients = decoded

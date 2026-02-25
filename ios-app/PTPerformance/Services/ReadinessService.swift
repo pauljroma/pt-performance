@@ -168,6 +168,7 @@ class ReadinessService: ObservableObject {
             DebugLogger.shared.log("Readiness saved successfully: score=\(readiness.readinessScore ?? 0)", level: .success)
             return readiness
         } catch {
+            guard !error.isCancellation else { throw error }
             ErrorLogger.shared.logError(error, context: "ReadinessService.submitReadiness", metadata: ["patient_id": patientId.uuidString, "date": dateString])
             self.error = error
             throw error
@@ -187,10 +188,9 @@ class ReadinessService: ObservableObject {
                 .order("weight", ascending: false)
                 .execute()
 
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
-            return try decoder.decode([ReadinessFactor].self, from: response.data)
+            return try PTSupabaseClient.flexibleDecoder.decode([ReadinessFactor].self, from: response.data)
         } catch {
+            guard !error.isCancellation else { throw error }
             self.error = error
             throw error
         }
@@ -227,6 +227,7 @@ class ReadinessService: ObservableObject {
 
             return score
         } catch {
+            guard !error.isCancellation else { throw error }
             self.error = error
             throw error
         }
@@ -253,10 +254,9 @@ class ReadinessService: ObservableObject {
                 .rpc("get_readiness_trend", params: params)
                 .execute()
 
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
-            return try decoder.decode(ReadinessTrend.self, from: response.data)
+            return try PTSupabaseClient.flexibleDecoder.decode(ReadinessTrend.self, from: response.data)
         } catch {
+            guard !error.isCancellation else { throw error }
             self.error = error
             throw ReadinessError.trendCalculationFailed
         }
@@ -423,10 +423,9 @@ class ReadinessService: ObservableObject {
                 .limit(limit)
                 .execute()
 
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
-            return try decoder.decode([DailyReadiness].self, from: response.data)
+            return try PTSupabaseClient.flexibleDecoder.decode([DailyReadiness].self, from: response.data)
         } catch {
+            guard !error.isCancellation else { throw error }
             self.error = error
             throw error
         }
@@ -467,10 +466,9 @@ class ReadinessService: ObservableObject {
                 .order("date", ascending: false)
                 .execute()
 
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
-            return try decoder.decode([DailyReadiness].self, from: response.data)
+            return try PTSupabaseClient.flexibleDecoder.decode([DailyReadiness].self, from: response.data)
         } catch {
+            guard !error.isCancellation else { throw error }
             self.error = error
             throw error
         }
@@ -499,6 +497,7 @@ class ReadinessService: ObservableObject {
                 .eq("date", value: dateString)
                 .execute()
         } catch {
+            guard !error.isCancellation else { throw error }
             self.error = error
             throw error
         }

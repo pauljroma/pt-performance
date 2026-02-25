@@ -248,8 +248,7 @@ class WorkoutTemplateBuilderViewModel: ObservableObject {
         do {
             DebugLogger.shared.log("Loading exercise library for autocomplete", level: .diagnostic)
 
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
+            let decoder = PTSupabaseClient.flexibleDecoder
 
             let result = try await supabase.client
                 .from("exercise_templates")
@@ -438,8 +437,7 @@ class WorkoutTemplateBuilderViewModel: ObservableObject {
                 .execute()
 
             // Decode response to get the ID
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
+            let decoder = PTSupabaseClient.flexibleDecoder
             let createdTemplate = try decoder.decode(CreatedTemplateResponse.self, from: response.data)
 
             DebugLogger.shared.log("Workout template created with ID: \(createdTemplate.id)", level: .success)

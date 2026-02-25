@@ -53,8 +53,7 @@ final class ProgramEffectivenessService {
             """)
             .execute()
 
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
+        let decoder = PTSupabaseClient.flexibleDecoder
 
         struct ProgramBasic: Codable {
             let id: UUID
@@ -218,7 +217,7 @@ final class ProgramEffectivenessService {
             .order("phase_number", ascending: true)
             .execute()
 
-        let decoder = JSONDecoder()
+        let decoder = PTSupabaseClient.flexibleDecoder
 
         struct PhaseInfo: Codable {
             let id: UUID
@@ -257,7 +256,6 @@ final class ProgramEffectivenessService {
             }
         }
 
-        decoder.dateDecodingStrategy = .iso8601
         let sessions = try decoder.decode([SessionInfo].self, from: sessionsResponse.data)
 
         // Calculate dropoff for each phase
@@ -392,8 +390,7 @@ final class ProgramEffectivenessService {
             }
         }
 
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
+        let decoder = PTSupabaseClient.flexibleDecoder
         let phaseRows = (try? decoder.decode([PhaseIdRow].self, from: phasesResponse.data)) ?? []
 
         var dataPoints: [HeatmapDataPoint] = []
@@ -443,7 +440,7 @@ final class ProgramEffectivenessService {
                 .order("scheduled_date", ascending: true)
                 .execute()
 
-            let decoder = JSONDecoder()
+            let decoder = PTSupabaseClient.flexibleDecoder
             let sessionRows = try decoder.decode([PhaseSessionDateRow].self, from: sessionsResponse.data)
 
             guard !sessionRows.isEmpty else { return 0 }
@@ -461,7 +458,6 @@ final class ProgramEffectivenessService {
                 .lte("logged_at", value: maxDate + "T23:59:59Z")
                 .execute()
 
-            decoder.dateDecodingStrategy = .iso8601
             let painRows = try decoder.decode([PhasePainRow].self, from: painResponse.data)
 
             guard !painRows.isEmpty else { return 0 }
@@ -489,7 +485,7 @@ final class ProgramEffectivenessService {
                 .order("scheduled_date", ascending: true)
                 .execute()
 
-            let decoder = JSONDecoder()
+            let decoder = PTSupabaseClient.flexibleDecoder
             let sessionRows = try decoder.decode([PhaseSessionDateRow].self, from: sessionsResponse.data)
 
             guard !sessionRows.isEmpty else { return 0 }
@@ -509,7 +505,6 @@ final class ProgramEffectivenessService {
                 .order("logged_at", ascending: true)
                 .execute()
 
-            decoder.dateDecodingStrategy = .iso8601
             let exerciseRows = try decoder.decode([PhaseExerciseRow].self, from: logsResponse.data)
 
             guard !exerciseRows.isEmpty else { return 0 }
@@ -592,7 +587,7 @@ final class ProgramEffectivenessService {
             }
         }
 
-        let decoder = JSONDecoder()
+        let decoder = PTSupabaseClient.flexibleDecoder
         let sessions = try decoder.decode([SessionWithPatient].self, from: response.data)
 
         // Group sessions by patient
@@ -658,8 +653,7 @@ final class ProgramEffectivenessService {
                 .eq("template_id", value: programId.uuidString)
                 .execute()
 
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
+            let decoder = PTSupabaseClient.flexibleDecoder
             let rows = try decoder.decode([PatientProgramDateRow].self, from: response.data)
 
             var result: [UUID: Date] = [:]
@@ -690,8 +684,7 @@ final class ProgramEffectivenessService {
             .eq("program_id", value: programId.uuidString)
             .execute()
 
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
+        let decoder = PTSupabaseClient.flexibleDecoder
 
         struct SessionData: Codable {
             let id: UUID
@@ -822,8 +815,7 @@ final class ProgramEffectivenessService {
                 .order("logged_date", ascending: true)
                 .execute()
 
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
+            let decoder = PTSupabaseClient.flexibleDecoder
             let painData = try decoder.decode([PainTrendRow].self, from: painResponse.data)
 
             if painData.count >= 2,
@@ -853,8 +845,7 @@ final class ProgramEffectivenessService {
                     .order("logged_date", ascending: true)
                     .execute()
 
-                let decoder = JSONDecoder()
-                decoder.dateDecodingStrategy = .iso8601
+                let decoder = PTSupabaseClient.flexibleDecoder
                 let painData = try decoder.decode([PainTrendRow].self, from: painResponse.data)
 
                 if let first = painData.first?.avgPain, let last = painData.last?.avgPain, first > 0 {
@@ -887,8 +878,7 @@ final class ProgramEffectivenessService {
                     .order("logged_at", ascending: true)
                     .execute()
 
-                let decoder = JSONDecoder()
-                decoder.dateDecodingStrategy = .iso8601
+                let decoder = PTSupabaseClient.flexibleDecoder
                 let exerciseLogs = try decoder.decode([ExerciseLogQueryRow].self, from: logsResponse.data)
 
                 if let firstWeight = exerciseLogs.first?.actualLoad,
@@ -928,7 +918,7 @@ final class ProgramEffectivenessService {
                 .in("status", values: ["cancelled", "paused"])
                 .execute()
 
-            let decoder = JSONDecoder()
+            let decoder = PTSupabaseClient.flexibleDecoder
             let rows = try decoder.decode([EnrollmentDropoffRow].self, from: response.data)
 
             // Collect non-empty notes as reasons

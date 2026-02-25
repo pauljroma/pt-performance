@@ -330,8 +330,7 @@ final class TimelineService: ObservableObject {
                 .order("logged_at", ascending: false)
                 .execute()
 
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
+            let decoder = PTSupabaseClient.flexibleDecoder
 
             // Decode raw response
             guard let json = try? JSONSerialization.jsonObject(with: response.data) as? [[String: Any]] else {

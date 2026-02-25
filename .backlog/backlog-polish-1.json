@@ -1,0 +1,63 @@
+{
+  "swarm": "pre-release-polish",
+  "build": 615,
+  "created": "2026-02-25",
+  "items": [
+    {
+      "id": "BL-001",
+      "priority": "HIGH",
+      "title": "Comprehensive accessibility audit",
+      "description": "Run full VoiceOver audit on all screens. Audit agents found some missing accessibilityHints and inconsistent accessibilityLabel patterns. Focus on: workout flow, enrollment sheets, session summary.",
+      "files": ["TodaySessionView.swift", "ProgramDetailSheet.swift", "WorkoutExecutionView.swift"],
+      "estimate_hours": 2
+    },
+    {
+      "id": "BL-002",
+      "priority": "HIGH",
+      "title": "Remaining CancellationError coverage",
+      "description": "Several services still lack CancellationError handling: SchedulingService, ArmCareAssessmentService, StreakViewModel, PrescriptionService. These log noise in console but don't break UX.",
+      "files": ["SchedulingService.swift", "ArmCareAssessmentService.swift", "StreakViewModel.swift", "PrescriptionService.swift"],
+      "estimate_hours": 1
+    },
+    {
+      "id": "BL-003",
+      "priority": "MEDIUM",
+      "title": "Sport-neutral strings audit",
+      "description": "WhyThisExerciseCard was neutralized but the ExerciseExplanation model still has baseballBenefit field name. Consider renaming to performanceBenefit at the model + DB column level for consistency.",
+      "files": ["ExerciseExplanation.swift", "WhyThisExerciseCard.swift"],
+      "estimate_hours": 1.5
+    },
+    {
+      "id": "BL-004",
+      "priority": "MEDIUM",
+      "title": "Additional decoder paths to flexibleDecoder",
+      "description": "Audit found iso8601 decoders in less-critical paths (HealthKit sync, check-in history). These are lower risk but should be unified for consistency.",
+      "files": ["HealthKitService.swift", "CheckInService.swift"],
+      "estimate_hours": 0.5
+    },
+    {
+      "id": "BL-005",
+      "priority": "MEDIUM",
+      "title": "Empty state illustrations",
+      "description": "Current empty states use SF Symbols. Consider custom illustrations or Lottie animations for key empty states (no programs, no workouts, first launch) to improve perceived polish.",
+      "files": ["ProgramStateViews.swift", "TodaySessionView.swift"],
+      "estimate_hours": 3
+    },
+    {
+      "id": "BL-006",
+      "priority": "LOW",
+      "title": "Loading skeleton screens",
+      "description": "Replace spinner-based loading with skeleton/shimmer placeholders for program cards and workout lists. Better perceived performance.",
+      "files": ["ProgramCardView.swift", "TodayEnrolledProgramsSection.swift"],
+      "estimate_hours": 4
+    },
+    {
+      "id": "BL-007",
+      "priority": "LOW",
+      "title": "Haptic feedback on key actions",
+      "description": "Add haptic feedback on: enrollment success, workout complete, streak milestone. Small UX polish for physical device.",
+      "files": ["ProgramDetailSheet.swift", "WorkoutExecutionView.swift", "StreakViewModel.swift"],
+      "estimate_hours": 1
+    }
+  ]
+}

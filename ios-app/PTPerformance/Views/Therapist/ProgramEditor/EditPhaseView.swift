@@ -181,8 +181,7 @@ struct EditPhaseView: View {
         do {
             logger.log("📅 Loading sessions for phase: \(phase.wrappedValue.name)")
 
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
+            let decoder = PTSupabaseClient.flexibleDecoder
 
             let result = try await PTSupabaseClient.shared.client
                 .from("sessions")
@@ -217,8 +216,7 @@ struct EditPhaseView: View {
                 notes: nil
             )
 
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
+            let decoder = PTSupabaseClient.flexibleDecoder
 
             let result = try await PTSupabaseClient.shared.client
                 .from("sessions")

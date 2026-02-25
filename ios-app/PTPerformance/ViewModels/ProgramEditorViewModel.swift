@@ -207,8 +207,7 @@ class ProgramEditorViewModel: ObservableObject {
                     .select()
                     .execute()
 
-                let decoder = JSONDecoder()
-                decoder.dateDecodingStrategy = .iso8601
+                let decoder = PTSupabaseClient.flexibleDecoder
                 availableExercises = try decoder.decode([Exercise].self, from: response.data)
 
                 logger.log("✅ Loaded \(availableExercises.count) exercises", level: .success)
@@ -229,8 +228,7 @@ class ProgramEditorViewModel: ObservableObject {
                         .single()
                         .execute()
 
-                    let decoder = JSONDecoder()
-                    decoder.dateDecodingStrategy = .iso8601
+                    let decoder = PTSupabaseClient.flexibleDecoder
                     let sessionExercise = try decoder.decode(SessionExercise.self, from: exerciseResponse.data)
 
                     // Find matching exercise template in available exercises
@@ -279,8 +277,7 @@ class ProgramEditorViewModel: ObservableObject {
                 .limit(Limits.historyQueryLimit)
                 .execute()
 
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
+            let decoder = PTSupabaseClient.flexibleDecoder
             let logs = try decoder.decode([ExerciseLog].self, from: response.data)
 
             if !logs.isEmpty {
@@ -443,8 +440,7 @@ class ProgramEditorViewModel: ObservableObject {
         }
 
         do {
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
+            let decoder = PTSupabaseClient.flexibleDecoder
 
             // Step 1: Load program
             logger.log("📥 Step 1: Fetching program...", level: .diagnostic)
@@ -602,8 +598,7 @@ class ProgramEditorViewModel: ObservableObject {
                 .order("name", ascending: true)
                 .execute()
 
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
+            let decoder = PTSupabaseClient.flexibleDecoder
 
             // Decode as array of exercise templates
             let templates = try decoder.decode([ExerciseTemplate].self, from: response.data)
@@ -677,8 +672,7 @@ class ProgramEditorViewModel: ObservableObject {
                 .order("created_at", ascending: false)
                 .execute()
 
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
+            let decoder = PTSupabaseClient.flexibleDecoder
 
             let programs = try decoder.decode([Program].self, from: response.data)
 
@@ -819,8 +813,7 @@ class ProgramEditorViewModel: ObservableObject {
                 goals: phase.goals
             )
 
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
+            let decoder = PTSupabaseClient.flexibleDecoder
 
             let response = try await supabase.client
                 .from("phases")

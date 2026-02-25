@@ -295,9 +295,7 @@ extension ScheduledSession {
 
         do {
             let data = try JSONEncoder().encode(directSession)
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
-            return try decoder.decode(ScheduledSession.self, from: data)
+            return try PTSupabaseClient.flexibleDecoder.decode(ScheduledSession.self, from: data)
         } catch {
             // Fallback: Create a minimal valid session using direct initialization
             // This should never fail with valid input, but provides safety

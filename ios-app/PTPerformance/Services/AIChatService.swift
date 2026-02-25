@@ -326,8 +326,7 @@ class AIChatService: ObservableObject {
                 .order("created_at", ascending: true)
                 .execute()
 
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
+            let decoder = PTSupabaseClient.flexibleDecoder
             let loadedMessages = try decoder.decode([ChatMessage].self, from: messagesResponse.data)
 
             self.messages = loadedMessages

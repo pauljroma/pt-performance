@@ -85,10 +85,7 @@ class ModeService: ObservableObject {
                 .limit(1)
                 .execute()
 
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
-
-            let results = try decoder.decode([PatientMode].self, from: response.data)
+            let results = try PTSupabaseClient.flexibleDecoder.decode([PatientMode].self, from: response.data)
 
             if let patientMode = results.first {
                 currentMode = patientMode.mode
@@ -195,10 +192,7 @@ class ModeService: ObservableObject {
                 .limit(10)
                 .execute()
 
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
-
-            let history = try decoder.decode([ModeHistoryEntry].self, from: response.data)
+            let history = try PTSupabaseClient.flexibleDecoder.decode([ModeHistoryEntry].self, from: response.data)
 
             debugLogger.log("[ModeService] Loaded \(history.count) mode history entries", level: .success)
 

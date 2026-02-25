@@ -39,11 +39,7 @@ actor SubscriptionAnalyticsService {
 
     // MARK: - Shared Formatters (nonisolated to avoid repeated allocation)
 
-    private nonisolated static let iso8601Decoder: JSONDecoder = {
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
-        return decoder
-    }()
+    private nonisolated static let iso8601Decoder: JSONDecoder = PTSupabaseClient.flexibleDecoder
 
     private nonisolated static let iso8601Encoder: JSONEncoder = {
         let encoder = JSONEncoder()

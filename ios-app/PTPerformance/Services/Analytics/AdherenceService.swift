@@ -81,10 +81,7 @@ final class AdherenceService {
             .gte("scheduled_date", value: startDate.iso8601String)
             .execute()
 
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
-
-        let scheduledSessions = try decoder.decode([ScheduledSession].self, from: response.data)
+        let scheduledSessions = try PTSupabaseClient.flexibleDecoder.decode([ScheduledSession].self, from: response.data)
 
         // Group by week
         var weeklyData: [Date: (scheduled: Int, completed: Int)] = [:]
@@ -148,10 +145,7 @@ final class AdherenceService {
             .order("logged_date", ascending: true)
             .execute()
 
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
-
-        return try decoder.decode([PainDataPoint].self, from: response.data)
+        return try PTSupabaseClient.flexibleDecoder.decode([PainDataPoint].self, from: response.data)
     }
 
     /// Fetch summary statistics combining adherence and pain data

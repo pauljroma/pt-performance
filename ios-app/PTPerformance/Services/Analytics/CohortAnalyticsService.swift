@@ -235,8 +235,7 @@ final class CohortAnalyticsService {
             let program_therapist_id: UUID
         }
 
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
+        let decoder = PTSupabaseClient.flexibleDecoder
 
         let enrollments: [EnrollmentRow]
         do {
@@ -387,8 +386,7 @@ final class CohortAnalyticsService {
             let status: String
         }
 
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
+        let decoder = PTSupabaseClient.flexibleDecoder
 
         let enrollments: [EnrollmentData]
         do {
@@ -604,8 +602,7 @@ final class CohortAnalyticsService {
             .eq("therapist_id", value: therapistId)
             .execute()
 
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
+        let decoder = PTSupabaseClient.flexibleDecoder
 
         return try decoder.decode([Patient].self, from: response.data)
     }
@@ -618,8 +615,7 @@ final class CohortAnalyticsService {
             .single()
             .execute()
 
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
+        let decoder = PTSupabaseClient.flexibleDecoder
 
         return try decoder.decode(Patient.self, from: response.data)
     }
@@ -693,8 +689,7 @@ final class CohortAnalyticsService {
                     }
                 }
 
-                let logsDecoder = JSONDecoder()
-                logsDecoder.dateDecodingStrategy = .iso8601
+                let logsDecoder = PTSupabaseClient.flexibleDecoder
                 let exerciseLogs = try logsDecoder.decode([StrengthRow].self, from: logsResponse.data)
 
                 if let firstWeight = exerciseLogs.first?.actualLoad,

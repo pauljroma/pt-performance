@@ -258,10 +258,7 @@ struct RemoteNotificationPayload: Codable {
             return nil
         }
 
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
-
-        return try? decoder.decode(RemoteNotificationPayload.self, from: data)
+        return try? PTSupabaseClient.flexibleDecoder.decode(RemoteNotificationPayload.self, from: data)
     }
 }
 

@@ -283,10 +283,9 @@ class TodaySessionViewModel: ObservableObject {
                 let workout_name: String?
             }
 
-            let decoder = JSONDecoder()
             let scheduledSessions: [ScheduledSessionRow]
             do {
-                scheduledSessions = try decoder.decode([ScheduledSessionRow].self, from: scheduledResponse.data)
+                scheduledSessions = try PTSupabaseClient.flexibleDecoder.decode([ScheduledSessionRow].self, from: scheduledResponse.data)
             } catch {
                 logger.log("⚠️ Failed to decode scheduled sessions (empty or malformed): \(error.localizedDescription)", level: .warning)
                 scheduledSessions = []
@@ -494,9 +493,7 @@ class TodaySessionViewModel: ObservableObject {
             .limit(1)
             .execute()
 
-        let sessionDecoder = JSONDecoder()
-        sessionDecoder.dateDecodingStrategy = .iso8601
-        let sessions = try sessionDecoder.decode([Session].self, from: sessionResponse.data)
+        let sessions = try PTSupabaseClient.flexibleDecoder.decode([Session].self, from: sessionResponse.data)
 
         return sessions.first
     }
@@ -930,9 +927,7 @@ class TodaySessionViewModel: ObservableObject {
                 .single()
                 .execute()
 
-            let sessionDecoder = JSONDecoder()
-            sessionDecoder.dateDecodingStrategy = .iso8601
-            let updatedSession = try sessionDecoder.decode(Session.self, from: fetchResponse.data)
+            let updatedSession = try PTSupabaseClient.flexibleDecoder.decode(Session.self, from: fetchResponse.data)
 
             logger.log("✅ Fetched updated session with started_at: \(updatedSession.started_at?.description ?? "nil")")
 

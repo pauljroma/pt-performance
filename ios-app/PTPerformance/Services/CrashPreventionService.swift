@@ -161,8 +161,7 @@ final class CrashPreventionService {
     /// - Returns: The decoded value, or nil if decoding fails
     func safeJSONDecode<T: Decodable>(_ type: T.Type, from data: Data, context: String) -> T? {
         do {
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
+            let decoder = PTSupabaseClient.flexibleDecoder
             return try decoder.decode(type, from: data)
         } catch {
             ErrorLogger.shared.logError(

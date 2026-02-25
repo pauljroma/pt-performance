@@ -177,8 +177,7 @@ struct EditSessionView: View {
         do {
             logger.log("💪 Loading exercises for session: \(session.name)")
 
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
+            let decoder = PTSupabaseClient.flexibleDecoder
 
             let result = try await PTSupabaseClient.shared.client
                 .from("session_exercises")
@@ -218,8 +217,7 @@ struct EditSessionView: View {
         do {
             logger.log("📥 Loading available exercise templates")
 
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
+            let decoder = PTSupabaseClient.flexibleDecoder
 
             let result = try await PTSupabaseClient.shared.client
                 .from("exercise_templates")

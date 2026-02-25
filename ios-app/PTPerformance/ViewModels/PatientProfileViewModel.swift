@@ -68,8 +68,7 @@ class PatientProfileViewModel: ObservableObject {
                 .single()
                 .execute()
 
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
+            let decoder = PTSupabaseClient.flexibleDecoder
 
             let profile = try decoder.decode(PatientProfileData.self, from: response.data)
 

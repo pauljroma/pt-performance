@@ -253,8 +253,7 @@ final class TherapistIntelligenceViewModel: ObservableObject {
             .eq("therapist_id", value: therapistId)
             .execute()
 
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
+        let decoder = PTSupabaseClient.flexibleDecoder
         patients = try decoder.decode([Patient].self, from: response.data)
 
         // Load previous period data for trend calculation
@@ -287,8 +286,7 @@ final class TherapistIntelligenceViewModel: ObservableObject {
                 .lte("last_session_date", value: endString)
                 .execute()
 
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
+            let decoder = PTSupabaseClient.flexibleDecoder
             let previousPatients = try decoder.decode([Patient].self, from: response.data)
 
             previousPeriodPatientCount = previousPatients.count

@@ -104,9 +104,7 @@ class ExerciseLogService: ObservableObject {
                 logger.log("📝 Response JSON: \(jsonString)", level: .diagnostic)
             }
 
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
-            let log = try decoder.decode(ExerciseLog.self, from: response.data)
+            let log = try PTSupabaseClient.flexibleDecoder.decode(ExerciseLog.self, from: response.data)
             logger.log("✅ Exercise log created successfully with ID: \(log.id)", level: .success)
             return log
         } catch let decodingError as DecodingError {
@@ -261,9 +259,7 @@ class ExerciseLogService: ObservableObject {
             .order("logged_at", ascending: false)
             .execute()
 
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
-        let logs = try decoder.decode([ExerciseLog].self, from: response.data)
+        let logs = try PTSupabaseClient.flexibleDecoder.decode([ExerciseLog].self, from: response.data)
         return logs
     }
 
@@ -277,9 +273,7 @@ class ExerciseLogService: ObservableObject {
             .limit(limit)
             .execute()
 
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
-        let logs = try decoder.decode([ExerciseLog].self, from: response.data)
+        let logs = try PTSupabaseClient.flexibleDecoder.decode([ExerciseLog].self, from: response.data)
         return logs
     }
 }

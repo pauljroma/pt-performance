@@ -376,8 +376,7 @@ class TherapistPrescriptionDashboardViewModel: ObservableObject {
                 .eq("therapist_id", value: therapistId)
                 .execute()
 
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
+            let decoder = PTSupabaseClient.flexibleDecoder
             patients = try decoder.decode([Patient].self, from: response.data)
 
         } catch {

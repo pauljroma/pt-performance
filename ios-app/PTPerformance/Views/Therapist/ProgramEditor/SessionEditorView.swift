@@ -101,10 +101,9 @@ struct SessionEditorDetailView: View {
         do {
             logger.log("💪 Loading exercises for session: \(session.name)")
 
-            let decoder = JSONDecoder()
+            let decoder = PTSupabaseClient.flexibleDecoder
             // NOTE: Exercise model uses snake_case properties directly, do NOT use .convertFromSnakeCase
             // ExerciseTemplate nested struct has explicit CodingKeys
-            decoder.dateDecodingStrategy = .iso8601
 
             // Load exercises with joined exercise_templates
             let result = try await PTSupabaseClient.shared.client

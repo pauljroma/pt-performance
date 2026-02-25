@@ -236,8 +236,7 @@ class PatientPickerViewModel: ObservableObject {
                 .order("last_name", ascending: true)
                 .execute()
 
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
+            let decoder = PTSupabaseClient.flexibleDecoder
             patients = try decoder.decode([Patient].self, from: response.data)
 
         } catch {

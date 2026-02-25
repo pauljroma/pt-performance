@@ -247,8 +247,7 @@ class ProgramBuilderViewModel: ObservableObject {
 
             logger.log("✅ Program created successfully", level: .success)
 
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
+            let decoder = PTSupabaseClient.flexibleDecoder
             let program: Program
 
             do {

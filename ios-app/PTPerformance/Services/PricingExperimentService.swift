@@ -197,8 +197,7 @@ final class PricingExperimentService: @unchecked Sendable {
                 .eq("is_active", value: true)
                 .execute()
 
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
+            let decoder = PTSupabaseClient.flexibleDecoder
             let experiments = try decoder.decode([PricingExperiment].self, from: response.data)
 
             lock.lock()
@@ -413,8 +412,7 @@ final class PricingExperimentService: @unchecked Sendable {
         guard let data = UserDefaults.standard.data(forKey: DefaultsKeys.cachedExperiments) else { return }
 
         do {
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
+            let decoder = PTSupabaseClient.flexibleDecoder
             let experiments = try decoder.decode([PricingExperiment].self, from: data)
             lock.lock()
             activeExperiments = experiments.filter { $0.isRunning }

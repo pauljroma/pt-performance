@@ -96,8 +96,7 @@ final class TherapistSchedulingViewModel: ObservableObject {
                 .eq("therapist_id", value: therapistId)
                 .execute()
 
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
+            let decoder = PTSupabaseClient.flexibleDecoder
             let fetchedPatients = try decoder.decode([Patient].self, from: response.data)
 
             patients = fetchedPatients

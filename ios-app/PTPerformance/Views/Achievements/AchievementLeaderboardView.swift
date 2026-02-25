@@ -103,10 +103,7 @@ class LeaderboardViewModel: ObservableObject {
                 .execute()
 
             // Process and aggregate the data
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
-
-            let records = try decoder.decode([LeaderboardAchievementRecord].self, from: response.data)
+            let records = try PTSupabaseClient.flexibleDecoder.decode([LeaderboardAchievementRecord].self, from: response.data)
 
             // Filter by time period
             let filteredRecords = filterRecordsByTime(records)

@@ -31,7 +31,7 @@ actor BackgroundDecoder {
     /// Default decoder configured for ISO8601 dates (most common Supabase format).
     private let iso8601Decoder: JSONDecoder = {
         let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
+        decoder.dateDecodingStrategy = PTSupabaseClient.flexibleDecoder.dateDecodingStrategy
         return decoder
     }()
 

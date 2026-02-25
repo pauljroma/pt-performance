@@ -157,9 +157,7 @@ class FoodDatabaseService {
             .limit(1)
             .execute()
 
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
-        let items = try decoder.decode([FoodItem].self, from: response.data)
+        let items = try PTSupabaseClient.flexibleDecoder.decode([FoodItem].self, from: response.data)
         return items.first
     }
 
@@ -174,9 +172,7 @@ class FoodDatabaseService {
             .limit(1)
             .execute()
 
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
-        let items = try decoder.decode([FoodItem].self, from: response.data)
+        let items = try PTSupabaseClient.flexibleDecoder.decode([FoodItem].self, from: response.data)
         return items.first
     }
 
@@ -191,9 +187,7 @@ class FoodDatabaseService {
             .in("id", values: idStrings)
             .execute()
 
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
-        return try decoder.decode([FoodItem].self, from: response.data)
+        return try PTSupabaseClient.flexibleDecoder.decode([FoodItem].self, from: response.data)
     }
 
     // MARK: - Custom Foods
@@ -209,9 +203,7 @@ class FoodDatabaseService {
             .single()
             .execute()
 
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
-        return try decoder.decode(FoodItem.self, from: response.data)
+        return try PTSupabaseClient.flexibleDecoder.decode(FoodItem.self, from: response.data)
     }
 
     /// Update a custom food item
@@ -290,9 +282,7 @@ class FoodDatabaseService {
             .order("name", ascending: true)
             .execute()
 
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
-        return try decoder.decode([FoodItem].self, from: response.data)
+        return try PTSupabaseClient.flexibleDecoder.decode([FoodItem].self, from: response.data)
     }
 
     /// Fetch favorite foods (ACP-1017)

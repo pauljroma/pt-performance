@@ -92,9 +92,8 @@ struct ProgramStructureView: View {
             logger.log("📋 Loading phases for program: \(program.name)")
 
             // Load phases for this program
-            let decoder = JSONDecoder()
+            let decoder = PTSupabaseClient.flexibleDecoder
             // NOTE: Phase model has explicit CodingKeys, do NOT use .convertFromSnakeCase
-            decoder.dateDecodingStrategy = .iso8601
 
             let result = try await PTSupabaseClient.shared.client
                 .from("phases")
@@ -111,9 +110,8 @@ struct ProgramStructureView: View {
             if !phases.isEmpty {
                 logger.log("📅 Batch-loading sessions for all phases...")
 
-                let sessionDecoder = JSONDecoder()
+                let sessionDecoder = PTSupabaseClient.flexibleDecoder
                 // NOTE: Session model uses snake_case properties, do NOT use .convertFromSnakeCase
-                sessionDecoder.dateDecodingStrategy = .iso8601
 
                 // Load all sessions where phase_id matches any of our phase IDs
                 let phaseIds = phases.map { $0.id }

@@ -84,11 +84,7 @@ actor AnalyticsEventQueue {
         return encoder
     }()
 
-    private nonisolated static let decoder: JSONDecoder = {
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
-        return decoder
-    }()
+    private nonisolated static let decoder: JSONDecoder = PTSupabaseClient.flexibleDecoder
 
     // MARK: - Initialisation
 

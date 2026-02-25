@@ -1,0 +1,18 @@
+{
+  "task": "pre-release-polish-v2",
+  "target_grade": "95+",
+  "date": "2026-02-25",
+  "scope": {
+    "iso8601_decoder_replacements": "58 production files, ~200 instances",
+    "cancellation_error_fixes": "3 files, 11 catch blocks",
+    "accessibility_fixes": "6 files, 15 gaps (4 HIGH, 10 MEDIUM)",
+    "infrastructure": "BackgroundDecoder default fix"
+  },
+  "agents": 6,
+  "estimated_time_minutes": 35,
+  "risks": [
+    "Decoder replacement could break models with custom date handling",
+    "Accessibility changes could affect layout",
+    "Large changeset increases regression risk"
+  ]
+}

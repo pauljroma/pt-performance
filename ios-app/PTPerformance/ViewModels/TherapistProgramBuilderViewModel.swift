@@ -695,8 +695,7 @@ class TherapistProgramBuilderViewModel: ObservableObject {
                 .single()
                 .execute()
 
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
+            let decoder = PTSupabaseClient.flexibleDecoder
             let program = try decoder.decode(Program.self, from: programResponse.data)
             createdProgramId = program.id
 
@@ -822,8 +821,7 @@ class TherapistProgramBuilderViewModel: ObservableObject {
                 .single()
                 .execute()
 
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
+            let decoder = PTSupabaseClient.flexibleDecoder
             let libraryEntry = try decoder.decode(ProgramLibrary.self, from: libraryResponse.data)
 
             logger.log("Program published to library with ID: \(libraryEntry.id)", level: .success)

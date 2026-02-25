@@ -126,12 +126,9 @@ class IntervalTimerService: ObservableObject {
 
         DebugLogger.shared.info("TIMER_DATA", "Response received: \(response.data.count) bytes")
 
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
-
         // Try to decode with detailed error logging
         do {
-            let presets = try decoder.decode([TimerPreset].self, from: response.data)
+            let presets = try PTSupabaseClient.flexibleDecoder.decode([TimerPreset].self, from: response.data)
             DebugLogger.shared.success("TIMER_DATA", "Decoded \(presets.count) timer presets successfully")
             return presets
         } catch let decodingError as DecodingError {
@@ -183,9 +180,7 @@ class IntervalTimerService: ObservableObject {
             .order("name", ascending: true)
             .execute()
 
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
-        return try decoder.decode([IntervalTemplate].self, from: response.data)
+        return try PTSupabaseClient.flexibleDecoder.decode([IntervalTemplate].self, from: response.data)
     }
 
     // MARK: - Create Custom Template
@@ -233,9 +228,7 @@ class IntervalTimerService: ObservableObject {
             .single()
             .execute()
 
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
-        return try decoder.decode(IntervalTemplate.self, from: response.data)
+        return try PTSupabaseClient.flexibleDecoder.decode(IntervalTemplate.self, from: response.data)
     }
 
     // MARK: - Start Timer
@@ -302,9 +295,7 @@ class IntervalTimerService: ObservableObject {
             .single()
             .execute()
 
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
-        let session = try decoder.decode(WorkoutTimer.self, from: response.data)
+        let session = try PTSupabaseClient.flexibleDecoder.decode(WorkoutTimer.self, from: response.data)
 
         // Initialize timer state
         activeSession = session
@@ -583,9 +574,7 @@ class IntervalTimerService: ObservableObject {
             .limit(limit)
             .execute()
 
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
-        return try decoder.decode([WorkoutTimer].self, from: response.data)
+        return try PTSupabaseClient.flexibleDecoder.decode([WorkoutTimer].self, from: response.data)
     }
 
     // MARK: - Cleanup

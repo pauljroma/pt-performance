@@ -319,6 +319,7 @@ private struct DayRow: View {
                 .font(.subheadline)
                 .fontWeight(.medium)
                 .foregroundColor(.secondary)
+                .accessibilityAddTraits(.isHeader)
 
             ForEach(day.workouts) { workout in
                 WorkoutCard(workout: workout)
@@ -733,9 +734,7 @@ class WorkoutTemplatePlayerViewModel: ObservableObject {
                 .single()
                 .execute()
 
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
-            template = try decoder.decode(SystemWorkoutTemplate.self, from: response.data)
+            template = try PTSupabaseClient.flexibleDecoder.decode(SystemWorkoutTemplate.self, from: response.data)
 
             logger.log("Loaded template: \(template?.name ?? "unknown")", level: .success)
         } catch {
@@ -920,6 +919,8 @@ private struct PhaseSection: View {
                 .cornerRadius(CornerRadius.md)
             }
             .buttonStyle(.plain)
+            .accessibilityLabel("\(phaseWithSessions.phase.name), \(phaseWithSessions.sessions.count) \(phaseWithSessions.sessions.count == 1 ? "session" : "sessions")")
+            .accessibilityHint("Expands or collapses phase details")
 
             // Sessions
             if isExpanded {
@@ -979,6 +980,8 @@ private struct SessionCard: View {
                     }
                 }
                 .buttonStyle(.plain)
+                .accessibilityLabel("View exercises")
+                .accessibilityHint("Shows exercises in this session")
 
                 // Start button
                 Button {
@@ -990,6 +993,8 @@ private struct SessionCard: View {
                         .foregroundColor(.modusCyan)
                 }
                 .buttonStyle(.plain)
+                .accessibilityLabel("Start \(sessionWithExercises.session.name)")
+                .accessibilityHint("Begins this workout session")
             }
             .padding(Spacing.sm)
             .background(Color(.tertiarySystemGroupedBackground))
@@ -1022,6 +1027,7 @@ private struct PhaseExerciseRow: View {
                 .foregroundColor(.white)
                 .frame(width: 20, height: 20)
                 .background(Circle().fill(Color.modusCyan))
+                .accessibilityHidden(true)
 
             VStack(alignment: .leading, spacing: 2) {
                 // Exercise name
@@ -1073,6 +1079,7 @@ struct PhaseSessionStartSheet: View {
                     .font(.system(size: 60))
                     .foregroundColor(.modusCyan)
                     .padding(.top, 20)
+                    .accessibilityHidden(true)
 
                 // Session Info
                 VStack(spacing: 8) {

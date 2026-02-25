@@ -197,8 +197,7 @@ class PatientProgramProgressViewModel: ObservableObject {
             .order("enrolled_at", ascending: false)
             .execute()
 
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
+        let decoder = PTSupabaseClient.flexibleDecoder
 
         struct EnrollmentRow: Codable {
             let id: UUID
@@ -436,8 +435,7 @@ class PatientProgramProgressViewModel: ObservableObject {
             .limit(5)
             .execute()
 
-        decoder.dateDecodingStrategy = .iso8601
-        recentWorkouts = try decoder.decode([CompletedWorkout].self, from: response.data)
+        recentWorkouts = try PTSupabaseClient.flexibleDecoder.decode([CompletedWorkout].self, from: response.data)
     }
 
     /// Calculate adherence metrics for a program

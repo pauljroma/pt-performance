@@ -1277,6 +1277,7 @@ struct TodaySessionView: View {
                     Image(systemName: "calendar.badge.checkmark")
                         .font(.system(size: 64))
                         .foregroundColor(.green)
+                        .accessibilityHidden(true)
 
                     Text("No Prescribed Session Today")
                         .font(.headline)

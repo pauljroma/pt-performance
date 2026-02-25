@@ -176,8 +176,7 @@ class BaseballPackService: ObservableObject {
                 .order("title", ascending: true)
                 .execute()
 
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
+            let decoder = PTSupabaseClient.flexibleDecoder
             let programs = try decoder.decode([BaseballProgram].self, from: response.data)
 
             await MainActor.run {
@@ -213,8 +212,7 @@ class BaseballPackService: ObservableObject {
                 .order("title", ascending: true)
                 .execute()
 
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
+            let decoder = PTSupabaseClient.flexibleDecoder
             let programs = try decoder.decode([BaseballProgram].self, from: response.data)
 
             logger.success("BaseballPackService", "Fetched \(programs.count) programs for category '\(category.displayName)'")
@@ -246,8 +244,7 @@ class BaseballPackService: ObservableObject {
                 .order("title", ascending: true)
                 .execute()
 
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
+            let decoder = PTSupabaseClient.flexibleDecoder
             let programs = try decoder.decode([BaseballProgram].self, from: response.data)
 
             logger.success("BaseballPackService", "Fetched \(programs.count) programs for position '\(position.displayName)'")
@@ -279,8 +276,7 @@ class BaseballPackService: ObservableObject {
                 .order("title", ascending: true)
                 .execute()
 
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
+            let decoder = PTSupabaseClient.flexibleDecoder
             let programs = try decoder.decode([BaseballProgram].self, from: response.data)
 
             logger.success("BaseballPackService", "Fetched \(programs.count) programs for season '\(season.displayName)'")
@@ -311,8 +307,7 @@ class BaseballPackService: ObservableObject {
                 .order("title", ascending: true)
                 .execute()
 
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
+            let decoder = PTSupabaseClient.flexibleDecoder
             let programs = try decoder.decode([BaseballProgram].self, from: response.data)
 
             logger.success("BaseballPackService", "Fetched \(programs.count) featured baseball programs")
@@ -347,8 +342,7 @@ class BaseballPackService: ObservableObject {
                 .order("title", ascending: true)
                 .execute()
 
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
+            let decoder = PTSupabaseClient.flexibleDecoder
             let programs = try decoder.decode([BaseballProgram].self, from: response.data)
 
             logger.success("BaseballPackService", "Found \(programs.count) programs matching '\(query)'")
@@ -378,8 +372,7 @@ class BaseballPackService: ObservableObject {
                 .single()
                 .execute()
 
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
+            let decoder = PTSupabaseClient.flexibleDecoder
             let program = try decoder.decode(BaseballProgram.self, from: response.data)
 
             logger.success("BaseballPackService", "Fetched program: \(program.title)")
@@ -437,8 +430,7 @@ class BaseballPackService: ObservableObject {
                 .order("title", ascending: true)
                 .execute()
 
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
+            let decoder = PTSupabaseClient.flexibleDecoder
             let programs = try decoder.decode([BaseballProgram].self, from: response.data)
 
             logger.success("BaseballPackService", "Fetched \(programs.count) programs with filters")
@@ -730,8 +722,7 @@ extension BaseballPackService {
                 .single()
                 .execute()
 
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
+            let decoder = PTSupabaseClient.flexibleDecoder
             let program = try decoder.decode(BaseballProgram.self, from: programResponse.data)
 
             // Fetch phases
@@ -850,8 +841,7 @@ extension BaseballPackService {
             .order("sequence", ascending: true)
             .execute()
 
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
+        let decoder = PTSupabaseClient.flexibleDecoder
         let phases = try decoder.decode([BaseballProgramPhaseDetail].self, from: response.data)
 
         logger.success("BaseballPackService", "Fetched \(phases.count) phases")
@@ -862,8 +852,7 @@ extension BaseballPackService {
     func fetchPhaseSessions(phaseId: UUID) async throws -> [BaseballProgramStructure.SessionWithExercises] {
         logger.diagnostic("BaseballPackService: Fetching sessions for phase: \(phaseId)")
 
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
+        let decoder = PTSupabaseClient.flexibleDecoder
 
         // Fetch sessions
         let sessionsResponse = try await supabase.client

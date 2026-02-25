@@ -84,10 +84,7 @@ class WorkoutGridViewModel: ObservableObject {
                 .order("sequence", ascending: true)
                 .execute()
 
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
-
-            let sessionExercises = try decoder.decode([SessionExerciseWithTemplate].self, from: response.data)
+            let sessionExercises = try PTSupabaseClient.flexibleDecoder.decode([SessionExerciseWithTemplate].self, from: response.data)
 
             // Convert to grid exercises
             exercises = sessionExercises.map { convertToGridExercise($0) }

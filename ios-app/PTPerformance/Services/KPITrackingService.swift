@@ -239,6 +239,7 @@ final class KPITrackingService: ObservableObject {
                 .insert(insertData)
                 .execute()
         } catch {
+            if error.isCancellation { return }
             errorLogger.logError(error, context: "KPITrackingService.trackEvent(\(type.rawValue))")
         }
     }
@@ -279,6 +280,14 @@ final class KPITrackingService: ObservableObject {
 
             return dashboard
         } catch {
+            if error.isCancellation { return KPIDashboard(
+                periodStart: periodStart,
+                periodEnd: periodEnd,
+                ptMetrics: PTMetrics(totalPTs: 0, weeklyActivePTs: 0, wauPercentage: 0, avgPrepTimeSeconds: 0, briefsOpened: 0, plansAssigned: 0),
+                athleteMetrics: AthleteMetrics(totalAthletes: 0, weeklyActiveAthletes: 0, wauPercentage: 0, checkInsCompleted: 0, taskCompletionRate: 0, avgStreakDays: 0),
+                aiMetrics: AIMetrics(claimsGenerated: 0, citationCoverage: 0, avgConfidence: 0, p95LatencyMs: 0, abstentions: 0, uncertaintyFlags: 0),
+                safetyMetrics: SafetyMetrics(totalIncidents: 0, unresolvedHighSeverity: 0, escalationsTriggered: 0, thresholdBreaches: 0)
+            )}
             errorLogger.logWarning("RPC dashboard fetch failed, falling back to views: \(error.localizedDescription)")
         }
 

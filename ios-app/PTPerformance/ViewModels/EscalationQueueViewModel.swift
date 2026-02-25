@@ -171,8 +171,7 @@ class EscalationQueueViewModel: ObservableObject {
                 .in("id", values: missingIds.map { $0.uuidString })
                 .execute()
 
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
+            let decoder = PTSupabaseClient.flexibleDecoder
 
             let loadedPatients = try decoder.decode([Patient].self, from: response.data)
 

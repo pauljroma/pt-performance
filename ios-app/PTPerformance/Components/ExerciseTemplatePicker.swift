@@ -174,16 +174,13 @@ struct ExerciseTemplatePicker: View {
         do {
             logger.info("DEBUG", "📚 Loading exercise templates")
 
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
-
             let result = try await PTSupabaseClient.shared.client
                 .from("exercise_templates")
                 .select()
                 .order("name")
                 .execute()
 
-            let templates = try decoder.decode([ExerciseTemplateData].self, from: result.data)
+            let templates = try PTSupabaseClient.flexibleDecoder.decode([ExerciseTemplateData].self, from: result.data)
 
             await MainActor.run {
                 self.availableTemplates = templates

@@ -36,7 +36,7 @@ public final class SharedDataStore {
 
     private let decoder: JSONDecoder = {
         let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
+        decoder.dateDecodingStrategy = PTSupabaseClient.flexibleDecoder.dateDecodingStrategy
         return decoder
     }()
 

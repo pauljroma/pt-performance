@@ -115,8 +115,7 @@ class PatientDetailViewModel: ObservableObject {
             .order("created_at", ascending: false)
             .execute()
 
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
+        let decoder = PTSupabaseClient.flexibleDecoder
 
         return try decoder.decode([PatientFlag].self, from: response.data)
     }

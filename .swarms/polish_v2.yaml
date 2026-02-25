@@ -1,0 +1,62 @@
+swarm: pre-release-polish-v2
+version: 2
+created: 2026-02-25
+target_build: 616
+target_grade: "95+"
+previous_grade: "B+ (89)"
+
+phases:
+  - name: "Phase 1: Infrastructure"
+    agents:
+      - id: agent-0-background-decoder
+        task: "Fix BackgroundDecoder to use flexibleDecoder as default"
+        file: Utils/BackgroundDecoder.swift
+        acceptance: "BackgroundDecoder uses flexible date strategy by default"
+
+  - name: "Phase 2: Decoder replacements (parallel)"
+    agents:
+      - id: agent-1-services-patient
+        task: "Replace iso8601 decoders in patient-facing Services"
+        files: [ManualWorkoutService.swift, WorkoutPrescriptionService.swift, ExerciseLogService.swift, IntervalTimerService.swift, ProgressionService.swift, ReadinessService.swift, FoodDatabaseService.swift, ModeService.swift, WorkoutSessionAnalytics.swift, ProgressiveOverloadAIService.swift, CrashPreventionService.swift, ContentHubService.swift]
+        acceptance: "No iso8601 decoders in patient-facing service paths"
+
+      - id: agent-2-services-analytics
+        task: "Replace iso8601 decoders in analytics/background Services"
+        files: [CohortAnalyticsService.swift, SubscriptionAnalyticsService.swift, PricingExperimentService.swift, ABTestingService.swift, ConversionFunnelTracker.swift, AffiliateService.swift, AnalyticsEventQueue.swift, FeatureUsageTracker.swift, PaywallExperimentService.swift, AIChatService.swift, VolumeAnalyticsService.swift, APIResponseCache.swift, WHOOPService.swift, NotesService.swift, TimelineService.swift]
+        acceptance: "No iso8601 decoders in analytics service paths"
+
+      - id: agent-3-services-therapist
+        task: "Replace iso8601 decoders in therapist-facing Services"
+        files: [VisitSummaryService.swift, RiskEscalationService.swift, ProvenanceService.swift, ReportGenerationService.swift, BaseballPackService.swift, WorkoutHistoryService.swift, ProgramEffectivenessService.swift, AdherenceService.swift, StrengthAnalyticsService.swift]
+        acceptance: "No iso8601 decoders in therapist service paths"
+
+      - id: agent-4-viewmodels
+        task: "Replace iso8601 decoders in all ViewModels"
+        files: [TodaySessionViewModel.swift, ProgramEditorViewModel.swift, ApprovalRequestViewModel.swift, PatientListViewModel.swift, PatientProgramProgressViewModel.swift, TherapistIntelligenceViewModel.swift, ProgramWorkoutHistoryViewModel.swift, ProgramAnalyticsViewModel.swift, TherapistProgramBuilderViewModel.swift, WorkoutTemplateBuilderViewModel.swift, ExerciseLibraryViewModel.swift, ProgramViewModel.swift, ProgramBuilderViewModel.swift, PatientDetailViewModel.swift, TherapistPrescriptionDashboardViewModel.swift, EscalationQueueViewModel.swift, PatientProfileViewModel.swift, ProgramTemplateViewModel.swift, WorkoutGridViewModel.swift]
+        acceptance: "No iso8601 decoders in ViewModel paths"
+        note: "PatientListViewModel uses keyDecodingStrategy - create local decoder with flexible dates + snake_case keys"
+
+      - id: agent-5-views
+        task: "Replace iso8601 decoders in Views and Models"
+        files: [TherapistProgramsView.swift, ProgramWorkoutScheduleView.swift, AchievementLeaderboardView.swift, PatientPickerSheet.swift, PhaseEditorSheet.swift, WorkoutAssignmentView.swift, TherapistReportingView.swift, EditSessionView.swift, EditPhaseView.swift, ProgramStructureView.swift, CoachingDashboardView.swift, AdherenceDashboardView.swift, SessionEditorView.swift, ProgramManagerView.swift, ManualWorkoutCreatorView.swift, CaseloadOverviewView.swift, TherapistSchedulingView.swift, ExerciseTemplatePicker.swift, ScheduledSession.swift, NotificationPayload.swift, SharedDataStore.swift]
+        acceptance: "No iso8601 decoders in View/Model paths"
+        note: "ManualWorkoutCreatorView uses keyDecodingStrategy - preserve that"
+
+  - name: "Phase 3: CancellationError + Accessibility (parallel)"
+    agents:
+      - id: agent-6-cancellation
+        task: "Add CancellationError handling to ReadinessService, KPITrackingService, MealPlanService"
+        files: [ReadinessService.swift, KPITrackingService.swift, MealPlanService.swift]
+        acceptance: "All catch blocks in hot paths check error.isCancellation before logging/state updates"
+
+      - id: agent-7-accessibility
+        task: "Fix 15 accessibility gaps across 6 key files"
+        files: [ProgramDetailSheet.swift, ActiveProgramDetailView.swift, ProgramWorkoutScheduleView.swift, TodayEnrolledProgramsSection.swift, WhyThisExerciseCard.swift, TodaySessionView.swift]
+        acceptance: "All HIGH priority gaps fixed, MEDIUM gaps fixed where safe"
+
+enforcement:
+  - "Build must succeed"
+  - "Lint must pass"
+  - "No new SwiftLint warnings"
+  - "No removal of existing accessibility labels"
+  - "Files using keyDecodingStrategy must preserve it"

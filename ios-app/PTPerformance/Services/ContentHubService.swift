@@ -252,8 +252,7 @@ class ContentHubService: ObservableObject {
         }
 
         do {
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
+            let decoder = PTSupabaseClient.flexibleDecoder
             return try decoder.decode([ContentArticle].self, from: data)
         } catch {
             logger.warning("ContentHubService", "Failed to decode cached articles: \(error.localizedDescription)")

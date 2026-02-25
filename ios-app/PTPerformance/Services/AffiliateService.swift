@@ -356,8 +356,7 @@ class AffiliateService: ObservableObject {
             return nil
         }
         do {
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
+            let decoder = PTSupabaseClient.flexibleDecoder
             return try decoder.decode(AffiliateInfo.self, from: data)
         } catch {
             return nil

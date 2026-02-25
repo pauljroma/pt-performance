@@ -114,11 +114,7 @@ class PaywallExperimentService: ObservableObject {
         return encoder
     }()
 
-    private nonisolated static let jsonDecoder: JSONDecoder = {
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
-        return decoder
-    }()
+    private nonisolated static let jsonDecoder: JSONDecoder = PTSupabaseClient.flexibleDecoder
 
     // MARK: - Initialization
 

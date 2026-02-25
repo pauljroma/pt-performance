@@ -43,6 +43,7 @@ struct TodayEnrolledProgramsSection: View {
                 } label: {
                     HStack {
                         Image(systemName: "play.circle.fill")
+                            .accessibilityHidden(true)
                         Text("Start a Workout")
                             .fontWeight(.semibold)
                     }

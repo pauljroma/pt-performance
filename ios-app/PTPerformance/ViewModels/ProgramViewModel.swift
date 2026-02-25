@@ -43,8 +43,7 @@ class ProgramViewModel: ObservableObject {
                 logger.log("🏋️ Program JSON: \(jsonString.prefix(500))")
             }
 
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
+            let decoder = PTSupabaseClient.flexibleDecoder
 
             // Decode as array and get first
             let programs = try decoder.decode([Program].self, from: programResponse.data)

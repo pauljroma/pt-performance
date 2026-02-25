@@ -103,6 +103,7 @@ class MealPlanService {
             logger.error("MEAL PLAN", "DECODING ERROR: \(errorMsg)")
             throw decodingError
         } catch {
+            guard !error.isCancellation else { throw error }
             logger.error("MEAL PLAN", "Query/decode error: \(error)")
             throw error
         }
@@ -194,6 +195,7 @@ class MealPlanService {
             logger.success("MEAL PLAN", "Created meal plan: \(newPlan.id)")
             return newPlan
         } catch {
+            guard !error.isCancellation else { throw error }
             logger.error("MEAL PLAN", "CREATE FAILED: \(error)")
             logger.error("MEAL PLAN", "Error details: \(String(describing: error))")
             throw error

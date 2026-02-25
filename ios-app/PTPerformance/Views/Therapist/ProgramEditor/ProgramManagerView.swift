@@ -187,9 +187,8 @@ class ProgramManagerViewModel: ObservableObject {
         logger.log("📚 Loading programs for ProgramManagerView...")
 
         do {
-            let decoder = JSONDecoder()
+            let decoder = PTSupabaseClient.flexibleDecoder
             // NOTE: Do NOT use .convertFromSnakeCase because Program model has explicit CodingKeys
-            decoder.dateDecodingStrategy = .iso8601
 
             // Use same query structure as TherapistProgramsView which works
             let query = supabase.client

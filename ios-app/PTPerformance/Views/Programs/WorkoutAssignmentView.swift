@@ -251,8 +251,7 @@ struct WorkoutAssignmentView: View {
                 .order("name", ascending: true)
                 .execute()
 
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
+            let decoder = PTSupabaseClient.flexibleDecoder
             templates = try decoder.decode([SystemWorkoutTemplate].self, from: response.data)
         } catch {
             // Log error but continue with empty templates

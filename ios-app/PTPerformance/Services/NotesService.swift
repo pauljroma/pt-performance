@@ -29,8 +29,7 @@ class NotesService {
             }
 
             // Try to decode with explicit decoder
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
+            let decoder = PTSupabaseClient.flexibleDecoder
             let notes = try decoder.decode([SessionNote].self, from: response.data)
 
             logger.log("✅ [NotesService] Decoded \(notes.count) notes", level: .success)

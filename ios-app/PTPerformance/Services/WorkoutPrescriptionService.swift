@@ -77,9 +77,7 @@ class WorkoutPrescriptionService {
                 .single()
                 .execute()
 
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
-            let prescription = try decoder.decode(WorkoutPrescription.self, from: response.data)
+            let prescription = try PTSupabaseClient.flexibleDecoder.decode(WorkoutPrescription.self, from: response.data)
 
             logger.log("[WorkoutPrescriptionService] Prescription created with ID: \(prescription.id)", level: .success)
             return prescription
@@ -109,9 +107,7 @@ class WorkoutPrescriptionService {
                 .order("prescribed_at", ascending: false)
                 .execute()
 
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
-            let prescriptions = try decoder.decode([WorkoutPrescription].self, from: response.data)
+            let prescriptions = try PTSupabaseClient.flexibleDecoder.decode([WorkoutPrescription].self, from: response.data)
 
             logger.log("[WorkoutPrescriptionService] Fetched \(prescriptions.count) prescriptions", level: .success)
             return prescriptions
@@ -139,9 +135,7 @@ class WorkoutPrescriptionService {
                 .order("due_date", ascending: true)
                 .execute()
 
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
-            let prescriptions = try decoder.decode([WorkoutPrescription].self, from: response.data)
+            let prescriptions = try PTSupabaseClient.flexibleDecoder.decode([WorkoutPrescription].self, from: response.data)
 
             logger.log("[WorkoutPrescriptionService] Fetched \(prescriptions.count) patient prescriptions", level: .success)
             return prescriptions
@@ -200,9 +194,6 @@ class WorkoutPrescriptionService {
                 .order("prescribed_at", ascending: false)
                 .execute()
 
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
-
             // Handle empty response gracefully
             guard let jsonString = String(data: response.data, encoding: .utf8),
                   !jsonString.isEmpty && jsonString != "[]" else {
@@ -210,7 +201,7 @@ class WorkoutPrescriptionService {
                 return []
             }
 
-            let prescriptions = try decoder.decode([WorkoutPrescription].self, from: response.data)
+            let prescriptions = try PTSupabaseClient.flexibleDecoder.decode([WorkoutPrescription].self, from: response.data)
             logger.log("[WorkoutPrescriptionService] Fetched \(prescriptions.count) dashboard prescriptions", level: .success)
             return prescriptions
         } catch {
@@ -238,9 +229,7 @@ class WorkoutPrescriptionService {
                 .order("due_date", ascending: true)
                 .execute()
 
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
-            let prescriptions = try decoder.decode([WorkoutPrescription].self, from: response.data)
+            let prescriptions = try PTSupabaseClient.flexibleDecoder.decode([WorkoutPrescription].self, from: response.data)
 
             logger.log("[WorkoutPrescriptionService] Fetched \(prescriptions.count) active prescriptions", level: .success)
             return prescriptions
@@ -272,9 +261,7 @@ class WorkoutPrescriptionService {
                 .order("due_date", ascending: true)
                 .execute()
 
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
-            let prescriptions = try decoder.decode([WorkoutPrescription].self, from: response.data)
+            let prescriptions = try PTSupabaseClient.flexibleDecoder.decode([WorkoutPrescription].self, from: response.data)
 
             logger.log("[WorkoutPrescriptionService] Fetched \(prescriptions.count) overdue prescriptions", level: .success)
             return prescriptions
@@ -313,9 +300,7 @@ class WorkoutPrescriptionService {
                 .order("completed_at", ascending: false)
                 .execute()
 
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
-            let prescriptions = try decoder.decode([WorkoutPrescription].self, from: response.data)
+            let prescriptions = try PTSupabaseClient.flexibleDecoder.decode([WorkoutPrescription].self, from: response.data)
 
             logger.log("[WorkoutPrescriptionService] Fetched \(prescriptions.count) recently completed prescriptions", level: .success)
             return prescriptions
@@ -354,9 +339,7 @@ class WorkoutPrescriptionService {
                 .order("due_date", ascending: true)
                 .execute()
 
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
-            let prescriptions = try decoder.decode([WorkoutPrescription].self, from: response.data)
+            let prescriptions = try PTSupabaseClient.flexibleDecoder.decode([WorkoutPrescription].self, from: response.data)
 
             logger.log("[WorkoutPrescriptionService] Fetched \(prescriptions.count) prescriptions in date range", level: .success)
             return prescriptions
@@ -385,9 +368,7 @@ class WorkoutPrescriptionService {
                 .eq("patient_id", value: patientId.uuidString)
                 .execute()
 
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
-            let prescriptions = try decoder.decode([WorkoutPrescription].self, from: response.data)
+            let prescriptions = try PTSupabaseClient.flexibleDecoder.decode([WorkoutPrescription].self, from: response.data)
 
             let stats = PatientPrescriptionStats(prescriptions: prescriptions)
             logger.log("[WorkoutPrescriptionService] Compliance rate: \(String(format: "%.1f", stats.complianceRate))%", level: .success)
@@ -483,9 +464,7 @@ class WorkoutPrescriptionService {
                 .order("due_date", ascending: true)
                 .execute()
 
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
-            let prescriptions = try decoder.decode([WorkoutPrescription].self, from: response.data)
+            let prescriptions = try PTSupabaseClient.flexibleDecoder.decode([WorkoutPrescription].self, from: response.data)
 
             logger.log("[WorkoutPrescriptionService] Fetched \(prescriptions.count) pending prescriptions", level: .success)
             return prescriptions

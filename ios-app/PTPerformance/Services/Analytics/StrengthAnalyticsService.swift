@@ -151,10 +151,7 @@ final class StrengthAnalyticsService {
                 let session_exercises: SessionExerciseJoin
             }
 
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
-
-            let rows = try decoder.decode([PrescribedLogRow].self, from: prescribedResponse.data)
+            let rows = try PTSupabaseClient.flexibleDecoder.decode([PrescribedLogRow].self, from: prescribedResponse.data)
 
             for row in rows {
                 let weight = row.actual_load ?? 0
@@ -210,10 +207,7 @@ final class StrengthAnalyticsService {
                 let manual_sessions: ManualSessionJoin
             }
 
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
-
-            let rows = try decoder.decode([ManualExerciseRow].self, from: manualResponse.data)
+            let rows = try PTSupabaseClient.flexibleDecoder.decode([ManualExerciseRow].self, from: manualResponse.data)
 
             for row in rows {
                 let weight = row.target_load ?? 0
@@ -270,10 +264,7 @@ final class StrengthAnalyticsService {
             .order("logged_at", ascending: true)
             .execute()
 
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
-
-        return try decoder.decode([ExerciseLog].self, from: result.data)
+        return try PTSupabaseClient.flexibleDecoder.decode([ExerciseLog].self, from: result.data)
     }
 
     /// Parse reps from string format (e.g., "8" or "8,8,8")

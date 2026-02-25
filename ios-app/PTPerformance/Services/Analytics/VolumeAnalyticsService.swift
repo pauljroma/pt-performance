@@ -107,8 +107,7 @@ final class VolumeAnalyticsService {
             .order("logged_at", ascending: true)
             .execute()
 
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
+        let decoder = PTSupabaseClient.flexibleDecoder
 
         return try decoder.decode([ExerciseLog].self, from: result.data)
     }

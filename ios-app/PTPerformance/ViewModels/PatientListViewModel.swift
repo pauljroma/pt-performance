@@ -126,9 +126,7 @@ class PatientListViewModel: ObservableObject {
 
             logger.log("Attempting to decode [Patient] from response data...")
             // Manually decode using the configured decoder from Supabase client
-            // The decoder should be configured with .iso8601 date strategy
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
+            let decoder = PTSupabaseClient.flexibleDecoder
             let decodedPatients = try decoder.decode([Patient].self, from: response.data)
 
             patients = decodedPatients
@@ -193,7 +191,7 @@ class PatientListViewModel: ObservableObject {
 
                 let decoder = JSONDecoder()
                 decoder.keyDecodingStrategy = .convertFromSnakeCase  // WorkloadFlag has no explicit CodingKeys
-                decoder.dateDecodingStrategy = .iso8601
+                decoder.dateDecodingStrategy = PTSupabaseClient.flexibleDecoder.dateDecodingStrategy
 
                 // Handle empty array or missing data gracefully
                 if response.data.isEmpty || String(data: response.data, encoding: .utf8) == "[]" {
@@ -311,7 +309,7 @@ class PatientListViewModel: ObservableObject {
 
             let decoder = JSONDecoder()
             decoder.keyDecodingStrategy = .convertFromSnakeCase
-            decoder.dateDecodingStrategy = .iso8601
+            decoder.dateDecodingStrategy = PTSupabaseClient.flexibleDecoder.dateDecodingStrategy
 
             if let jsonString = String(data: response.data, encoding: .utf8),
                jsonString != "[]" && !jsonString.isEmpty {

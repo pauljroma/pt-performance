@@ -495,16 +495,13 @@ class ExerciseLibraryViewModel: ObservableObject {
         do {
             logger.info("EXERCISE_LIBRARY", "Loading exercise templates for library")
 
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
-
             let result = try await PTSupabaseClient.shared.client
                 .from("exercise_templates")
                 .select()
                 .order("name")
                 .execute()
 
-            let templates = try decoder.decode([ExerciseTemplateData].self, from: result.data)
+            let templates = try PTSupabaseClient.flexibleDecoder.decode([ExerciseTemplateData].self, from: result.data)
             let items = templates.map { LibraryExerciseItem(from: $0) }
 
             allExercises = items

@@ -166,8 +166,7 @@ final class RiskEscalationService: ObservableObject {
                 .order("created_at", ascending: false)
                 .execute()
 
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
+            let decoder = PTSupabaseClient.flexibleDecoder
 
             let escalations = try decoder.decode([RiskEscalation].self, from: response.data)
 
@@ -220,8 +219,7 @@ final class RiskEscalationService: ObservableObject {
                 .order("created_at", ascending: false)
                 .execute()
 
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
+            let decoder = PTSupabaseClient.flexibleDecoder
 
             let escalations = try decoder.decode([RiskEscalation].self, from: response.data)
 
@@ -259,8 +257,7 @@ final class RiskEscalationService: ObservableObject {
                 .order("date", ascending: false)
                 .execute()
 
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
+            let decoder = PTSupabaseClient.flexibleDecoder
 
             struct ReadinessEntry: Codable {
                 let date: String
@@ -373,8 +370,7 @@ final class RiskEscalationService: ObservableObject {
                 .order("scheduled_date", ascending: false)
                 .execute()
 
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
+            let decoder = PTSupabaseClient.flexibleDecoder
 
             struct ScheduledSession: Codable {
                 let id: UUID
@@ -617,8 +613,7 @@ final class RiskEscalationService: ObservableObject {
             .single()
             .execute()
 
-        decoder.dateDecodingStrategy = .iso8601
-        let escalation = try decoder.decode(RiskEscalation.self, from: response.data)
+        let escalation = try PTSupabaseClient.flexibleDecoder.decode(RiskEscalation.self, from: response.data)
 
         debugLogger.log("[RiskEscalationService] Created escalation: \(escalation.id)", level: .success)
 
@@ -659,8 +654,7 @@ final class RiskEscalationService: ObservableObject {
             .single()
             .execute()
 
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
+        let decoder = PTSupabaseClient.flexibleDecoder
         let escalation = try decoder.decode(RiskEscalation.self, from: response.data)
 
         // Update local state
@@ -696,8 +690,7 @@ final class RiskEscalationService: ObservableObject {
             .single()
             .execute()
 
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
+        let decoder = PTSupabaseClient.flexibleDecoder
         let escalation = try decoder.decode(RiskEscalation.self, from: response.data)
 
         // Remove from active list
@@ -732,8 +725,7 @@ final class RiskEscalationService: ObservableObject {
             .single()
             .execute()
 
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
+        let decoder = PTSupabaseClient.flexibleDecoder
         let escalation = try decoder.decode(RiskEscalation.self, from: response.data)
 
         // Remove from active list

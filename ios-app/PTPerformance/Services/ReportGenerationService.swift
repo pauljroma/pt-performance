@@ -254,7 +254,7 @@ final class ReportGenerationService: ObservableObject {
             .execute()
 
         let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
+        decoder.dateDecodingStrategy = PTSupabaseClient.flexibleDecoder.dateDecodingStrategy
         return try decoder.decode([PatientGoal].self, from: response.data)
     }
 
@@ -272,7 +272,7 @@ final class ReportGenerationService: ObservableObject {
             .execute()
 
         let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
+        decoder.dateDecodingStrategy = PTSupabaseClient.flexibleDecoder.dateDecodingStrategy
         return try decoder.decode([SessionNote].self, from: response.data)
     }
 

@@ -284,8 +284,7 @@ class ProvenanceService: ObservableObject {
                 .order("created_at", ascending: false)
                 .execute()
 
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
+            let decoder = PTSupabaseClient.flexibleDecoder
             let claims = try decoder.decode([EvidenceClaim].self, from: response.data)
 
             // Update cache
@@ -332,8 +331,7 @@ class ProvenanceService: ObservableObject {
                 .single()
                 .execute()
 
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
+            let decoder = PTSupabaseClient.flexibleDecoder
 
             // Decode just the evidence_refs field
             struct EvidenceWrapper: Codable {
@@ -602,8 +600,7 @@ class ProvenanceService: ObservableObject {
                 .single()
                 .execute()
 
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
+            let decoder = PTSupabaseClient.flexibleDecoder
             let checkIn = try decoder.decode(DailyCheckIn.self, from: response.data)
 
             return EvidenceSource.CheckInData(

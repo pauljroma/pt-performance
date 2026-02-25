@@ -80,9 +80,7 @@ class ProgramTemplateViewModel: ObservableObject {
         }
 
         do {
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
-            templates = try decoder.decode([ProgramTemplate].self, from: data)
+            templates = try PTSupabaseClient.flexibleDecoder.decode([ProgramTemplate].self, from: data)
         } catch {
             errorMessage = "We couldn't load your templates. Using default templates instead."
             // Fall back to sample templates on error

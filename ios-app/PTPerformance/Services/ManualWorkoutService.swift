@@ -279,9 +279,7 @@ class ManualWorkoutService: ObservableObject {
                 .order("name", ascending: true)
                 .execute()
 
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
-            let templates = try decoder.decode([SystemWorkoutTemplate].self, from: response.data)
+            let templates = try PTSupabaseClient.flexibleDecoder.decode([SystemWorkoutTemplate].self, from: response.data)
 
             logger.log("Fetched \(templates.count) system templates", level: .success)
             return templates
@@ -319,9 +317,7 @@ class ManualWorkoutService: ObservableObject {
                 logger.log("Patient templates raw response: \(jsonString.prefix(200))", level: .diagnostic)
             }
 
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
-            let templates = try decoder.decode([PatientWorkoutTemplate].self, from: response.data)
+            let templates = try PTSupabaseClient.flexibleDecoder.decode([PatientWorkoutTemplate].self, from: response.data)
 
             logger.log("Fetched \(templates.count) patient templates", level: .success)
             return templates
@@ -387,9 +383,7 @@ class ManualWorkoutService: ObservableObject {
                 .single()
                 .execute()
 
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
-            let template = try decoder.decode(PatientWorkoutTemplate.self, from: response.data)
+            let template = try PTSupabaseClient.flexibleDecoder.decode(PatientWorkoutTemplate.self, from: response.data)
 
             logger.log("Template saved with ID: \(template.id)", level: .success)
             return template
@@ -506,9 +500,7 @@ class ManualWorkoutService: ObservableObject {
                 logger.log("📦 createSession response: \(jsonString.prefix(500))", level: .diagnostic)
             }
 
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
-            let session = try decoder.decode(ManualSession.self, from: response.data)
+            let session = try PTSupabaseClient.flexibleDecoder.decode(ManualSession.self, from: response.data)
 
             logger.log("Manual session created with ID: \(session.id)", level: .success)
             return session
@@ -564,9 +556,7 @@ class ManualWorkoutService: ObservableObject {
                 .single()
                 .execute()
 
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
-            let sessionExercise = try decoder.decode(ManualSessionExercise.self, from: response.data)
+            let sessionExercise = try PTSupabaseClient.flexibleDecoder.decode(ManualSessionExercise.self, from: response.data)
 
             logger.log("Exercise added with ID: \(sessionExercise.id)", level: .success)
             return sessionExercise
@@ -676,11 +666,8 @@ class ManualWorkoutService: ObservableObject {
                 logger.log("📦 startWorkout JSON: \(jsonString.prefix(500))", level: .diagnostic)
             }
 
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
-
             do {
-                let session = try decoder.decode(ManualSession.self, from: response.data)
+                let session = try PTSupabaseClient.flexibleDecoder.decode(ManualSession.self, from: response.data)
                 logger.log("Workout started at \(now)", level: .success)
                 return session
             } catch let decodeError {
@@ -738,9 +725,7 @@ class ManualWorkoutService: ObservableObject {
                 .single()
                 .execute()
 
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
-            let session = try decoder.decode(ManualSession.self, from: response.data)
+            let session = try PTSupabaseClient.flexibleDecoder.decode(ManualSession.self, from: response.data)
 
             logger.log("Workout completed successfully", level: .success)
 
@@ -877,9 +862,7 @@ class ManualWorkoutService: ObservableObject {
                 .single()
                 .execute()
 
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
-            let session = try decoder.decode(ManualSession.self, from: response.data)
+            let session = try PTSupabaseClient.flexibleDecoder.decode(ManualSession.self, from: response.data)
 
             logger.log("Session fetched successfully", level: .success)
             return session
@@ -903,9 +886,7 @@ class ManualWorkoutService: ObservableObject {
                 .order("created_at", ascending: true)
                 .execute()
 
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
-            let exercises = try decoder.decode([ManualSessionExercise].self, from: response.data)
+            let exercises = try PTSupabaseClient.flexibleDecoder.decode([ManualSessionExercise].self, from: response.data)
 
             logger.log("Fetched \(exercises.count) exercises for session", level: .success)
             return exercises
@@ -930,9 +911,7 @@ class ManualWorkoutService: ObservableObject {
                 .limit(limit)
                 .execute()
 
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
-            let sessions = try decoder.decode([ManualSession].self, from: response.data)
+            let sessions = try PTSupabaseClient.flexibleDecoder.decode([ManualSession].self, from: response.data)
 
             logger.log("Fetched \(sessions.count) completed sessions", level: .success)
             return sessions
@@ -1227,8 +1206,7 @@ class ManualWorkoutService: ObservableObject {
                 .eq("patient_id", value: patientId.uuidString)
                 .execute()
 
-            let decoder = JSONDecoder()
-            let rows = try decoder.decode([RecommendationRow].self, from: recResponse.data)
+            let rows = try JSONDecoder().decode([RecommendationRow].self, from: recResponse.data)
 
             if rows.isEmpty {
                 logger.log("No trainer recommendations found", level: .info)
@@ -1243,8 +1221,7 @@ class ManualWorkoutService: ObservableObject {
                 .in("id", values: templateIds)
                 .execute()
 
-            decoder.dateDecodingStrategy = .iso8601
-            let templates = try decoder.decode([SystemWorkoutTemplate].self, from: templatesResponse.data)
+            let templates = try PTSupabaseClient.flexibleDecoder.decode([SystemWorkoutTemplate].self, from: templatesResponse.data)
 
             logger.log("Fetched \(templates.count) trainer-recommended templates", level: .success)
             return templates

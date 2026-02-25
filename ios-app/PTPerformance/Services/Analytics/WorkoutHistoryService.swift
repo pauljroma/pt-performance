@@ -72,10 +72,7 @@ final class WorkoutHistoryService {
             .limit(limit)
             .execute()
 
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
-
-        return try decoder.decode([SessionSummary].self, from: response.data)
+        return try PTSupabaseClient.flexibleDecoder.decode([SessionSummary].self, from: response.data)
     }
 
     /// Fetch recent completed sessions with pagination support
@@ -105,10 +102,7 @@ final class WorkoutHistoryService {
             .range(from: offset, to: offset + limit - 1)
             .execute()
 
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
-
-        return try decoder.decode([SessionSummary].self, from: response.data)
+        return try PTSupabaseClient.flexibleDecoder.decode([SessionSummary].self, from: response.data)
     }
 
     /// Fetch exercise logs for a prescribed session with exercise names
@@ -165,10 +159,7 @@ final class WorkoutHistoryService {
             }
         }
 
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
-
-        let joined = try decoder.decode([ExerciseLogJoined].self, from: response.data)
+        let joined = try PTSupabaseClient.flexibleDecoder.decode([ExerciseLogJoined].self, from: response.data)
 
         return joined.map { log in
             ExerciseLogDetail(
@@ -286,10 +277,7 @@ final class WorkoutHistoryService {
             let exercise_template_id: UUID?
         }
 
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
-
-        let rows = try decoder.decode([ManualExerciseRow].self, from: response.data)
+        let rows = try PTSupabaseClient.flexibleDecoder.decode([ManualExerciseRow].self, from: response.data)
 
         return rows.map { row in
             // Parse target_reps string into [Int] array
@@ -369,10 +357,7 @@ final class WorkoutHistoryService {
             }
         }
 
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
-
-        let rawSessions = try decoder.decode([ManualSessionWithCount].self, from: data)
+        let rawSessions = try PTSupabaseClient.flexibleDecoder.decode([ManualSessionWithCount].self, from: data)
 
         return rawSessions.map { raw in
             ManualWorkoutSummary(

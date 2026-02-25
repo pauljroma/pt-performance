@@ -49,6 +49,7 @@ struct ProgramDetailSheet: View {
                             HStack(spacing: 4) {
                                 Image(systemName: "person.circle.fill")
                                     .foregroundColor(.secondary)
+                                    .accessibilityHidden(true)
                                 Text("by \(author)")
                                     .foregroundColor(.secondary)
                             }
@@ -144,6 +145,7 @@ struct ProgramDetailSheet: View {
                             HStack {
                                 Image(systemName: "exclamationmark.triangle.fill")
                                     .foregroundColor(.orange)
+                                    .accessibilityHidden(true)
                                 Text(error)
                                     .font(.subheadline)
                                     .foregroundColor(.secondary)
@@ -210,6 +212,8 @@ struct ProgramDetailSheet: View {
                             .font(.title2)
                             .foregroundColor(.secondary)
                     }
+                    .accessibilityLabel("Close")
+                    .accessibilityHint("Dismisses program details")
                 }
             }
             .safeAreaInset(edge: .bottom) {

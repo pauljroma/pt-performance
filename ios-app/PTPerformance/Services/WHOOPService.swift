@@ -157,8 +157,7 @@ class WHOOPService {
             throw WHOOPError.apiError("HTTP \(httpResponse.statusCode)")
         }
 
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
+        let decoder = PTSupabaseClient.flexibleDecoder
         let recoveryResponse = try decoder.decode(WHOOPRecoveryResponse.self, from: data)
 
         // Return most recent recovery
@@ -190,8 +189,7 @@ class WHOOPService {
             throw WHOOPError.apiError("HTTP \(httpResponse.statusCode)")
         }
 
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
+        let decoder = PTSupabaseClient.flexibleDecoder
         let sleepResponse = try decoder.decode(WHOOPSleepResponse.self, from: data)
 
         guard let latest = sleepResponse.records.first else {
