@@ -332,6 +332,12 @@ struct ProgramDetailSheet: View {
                 alreadyEnrolled = true
                 enrollmentError = error.localizedDescription
             }
+        } catch let error as NSError where error.code == 429 {
+            // Max enrollment limit reached
+            await MainActor.run {
+                isEnrolling = false
+                enrollmentError = error.localizedDescription
+            }
         } catch {
             await MainActor.run {
                 isEnrolling = false

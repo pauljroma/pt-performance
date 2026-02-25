@@ -176,6 +176,17 @@ class ProgramLibraryService: ObservableObject {
             throw NSError(domain: "ProgramLibraryService", code: 400, userInfo: [NSLocalizedDescriptionKey: "Invalid patient ID format"])
         }
 
+        // Enforce max 2 active enrollments
+        let activeEnrollments = try await getEnrolledPrograms(patientId: patientId, status: "active")
+        if activeEnrollments.count >= 2 {
+            logger.log("Patient already has \(activeEnrollments.count) active enrollments (max 2)", level: .warning)
+            throw NSError(
+                domain: "ProgramLibraryService",
+                code: 429,
+                userInfo: [NSLocalizedDescriptionKey: "You can have up to 2 active programs. Finish or leave a program to start a new one."]
+            )
+        }
+
         let input = CreateEnrollmentInput(
             patientId: patientUUID,
             programLibraryId: programLibraryId,
@@ -191,9 +202,7 @@ class ProgramLibraryService: ObservableObject {
                 .single()
                 .execute()
 
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
-            let enrollment = try decoder.decode(ProgramEnrollment.self, from: response.data)
+            let enrollment = try PTSupabaseClient.flexibleDecoder.decode(ProgramEnrollment.self, from: response.data)
 
             logger.log("Successfully enrolled in program with enrollment ID: \(enrollment.id)", level: .success)
             return enrollment
@@ -233,9 +242,7 @@ class ProgramLibraryService: ObservableObject {
                 .limit(100)
                 .execute()
 
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
-            let enrollments = try decoder.decode([ProgramEnrollment].self, from: response.data)
+            let enrollments = try PTSupabaseClient.flexibleDecoder.decode([ProgramEnrollment].self, from: response.data)
 
             logger.log("Fetched \(enrollments.count) enrolled programs", level: .success)
             return enrollments
@@ -485,8 +492,7 @@ class ProgramLibraryService: ObservableObject {
                 logger.log("RPC response: \(jsonString.prefix(500))", level: .diagnostic)
             }
 
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
+            let decoder = PTSupabaseClient.flexibleDecoder
             let rows = try decoder.decode([EnrollmentRow].self, from: response.data)
 
             logger.log("RPC returned \(rows.count) enrolled programs", level: .success)
@@ -545,9 +551,8 @@ class ProgramLibraryService: ObservableObject {
                 .in("id", values: programIds)
                 .execute()
 
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
-            let programs = try decoder.decode([ProgramLibrary].self, from: response.data)
+            let fallbackDecoder = PTSupabaseClient.flexibleDecoder
+            let programs = try fallbackDecoder.decode([ProgramLibrary].self, from: response.data)
 
             let programLookup = Dictionary(uniqueKeysWithValues: programs.map { ($0.id, $0) })
 

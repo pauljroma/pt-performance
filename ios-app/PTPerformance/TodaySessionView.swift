@@ -1238,6 +1238,20 @@ struct TodaySessionView: View {
                 modeStatusCard
                     .padding(.horizontal)
 
+                // Enrolled Programs Section
+                if enrolledProgramsViewModel.hasEnrolledPrograms {
+                    TodayEnrolledProgramsSection(
+                        enrolledPrograms: enrolledProgramsViewModel.enrolledPrograms,
+                        activeEnrollmentCount: enrolledProgramsViewModel.activeEnrollmentCount,
+                        isLoading: enrolledProgramsViewModel.isLoading,
+                        currentWeek: { enrolledProgramsViewModel.currentWeek(for: $0) },
+                        progressPercentage: { enrolledProgramsViewModel.progressPercentage(for: $0) },
+                        daysRemainingDisplay: { enrolledProgramsViewModel.daysRemainingDisplay(for: $0) },
+                        onStartWorkout: { activeSheet = .templateLibrary }
+                    )
+                    .padding(.horizontal)
+                }
+
                 // Show completed workouts even when no prescribed session
                 if viewModel.completedTodayCount > 0 {
                     CompletedWorkoutsSection(
@@ -1247,18 +1261,21 @@ struct TodaySessionView: View {
                     .padding(.bottom, 8)
                 }
 
-                Image(systemName: "calendar.badge.checkmark")
-                    .font(.system(size: 64))
-                    .foregroundColor(.green)
+                // Only show the "no session" empty state if also no enrolled programs
+                if !enrolledProgramsViewModel.hasEnrolledPrograms {
+                    Image(systemName: "calendar.badge.checkmark")
+                        .font(.system(size: 64))
+                        .foregroundColor(.green)
 
-                Text("No Prescribed Session Today")
-                    .font(.headline)
+                    Text("No Prescribed Session Today")
+                        .font(.headline)
 
-                Text("Great job staying on track! You can rest today, or start a manual workout from the library if you're feeling motivated.")
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, Spacing.lg)
+                    Text("Great job staying on track! You can rest today, or start a manual workout from the library if you're feeling motivated.")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, Spacing.lg)
+                }
 
                 Button {
                     HapticFeedback.light()
