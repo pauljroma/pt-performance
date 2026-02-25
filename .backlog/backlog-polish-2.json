@@ -1,0 +1,46 @@
+{
+  "swarm": "pre-release-polish-v2",
+  "build": 616,
+  "created": "2026-02-25",
+  "items": [
+    {
+      "id": "BL-010",
+      "priority": "HIGH",
+      "title": "Baseball Pack architecture refactor",
+      "description": "BaseballPackService, BaseballPackMarketingView, BaseballPackLockedView, BaseballPackBrowserView, BaseballPackPromoCard are all hardcoded to baseball. Needs sport-agnostic redesign with database-driven categories, mode-aware UI, and configurable pack definitions.",
+      "files": ["BaseballPackService.swift", "BaseballPackMarketingView.swift", "BaseballPackLockedView.swift", "BaseballPackBrowserView.swift", "BaseballPackPromoCard.swift", "PremiumPack.swift", "Config.swift"],
+      "estimate_hours": 8,
+      "type": "refactor"
+    },
+    {
+      "id": "BL-011",
+      "priority": "MEDIUM",
+      "title": "ArmCareStatusCard mode-aware recommendations",
+      "description": "ArmCareStatusCard shows throwing-specific recommendations (Full throwing program OK, Reduce throwing 50%) to all users. Recommendations should be sport-mode-aware.",
+      "files": ["ArmCareStatusCard.swift"],
+      "estimate_hours": 1
+    },
+    {
+      "id": "BL-012",
+      "priority": "MEDIUM",
+      "title": "Test file decoder modernization",
+      "description": "181 iso8601 decoder instances remain in test files. Update incrementally when touching tests.",
+      "estimate_hours": 3,
+      "type": "tech-debt"
+    },
+    {
+      "id": "BL-013",
+      "priority": "LOW",
+      "title": "Loading skeleton screens",
+      "description": "Replace spinner-based loading with skeleton/shimmer placeholders for program cards and workout lists.",
+      "estimate_hours": 4
+    },
+    {
+      "id": "BL-014",
+      "priority": "LOW",
+      "title": "Haptic feedback on key actions",
+      "description": "Add haptic feedback on enrollment success, workout complete, streak milestone.",
+      "estimate_hours": 1
+    }
+  ]
+}
