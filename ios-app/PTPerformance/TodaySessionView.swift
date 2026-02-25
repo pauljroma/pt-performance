@@ -1233,11 +1233,8 @@ struct TodaySessionView: View {
     private var noSessionView: some View {
         ScrollView {
             VStack(spacing: 20) {
-                // Daily Check-in Prompt Card - always show for better discoverability
-                CheckInPromptCard()
-                    .padding(.horizontal)
-
                 // ACP-MODE: Mode-specific status card with dashboard navigation
+                // (includes check-in functionality — no separate CheckInPromptCard needed)
                 modeStatusCard
                     .padding(.horizontal)
 
