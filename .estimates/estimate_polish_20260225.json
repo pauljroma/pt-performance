@@ -1,0 +1,18 @@
+{
+  "task": "Pre-release UI polish swarm",
+  "created": "2026-02-25T01:00:00Z",
+  "agents": [
+    { "id": "agent-1", "role": "UI Polish", "scope": "Error messages, empty states, debug UI gating" },
+    { "id": "agent-2", "role": "Sport Neutralizer", "scope": "Remove baseball/arm-care from general views" },
+    { "id": "agent-3", "role": "Decoder Fixer", "scope": "Replace iso8601 with flexibleDecoder in critical paths" },
+    { "id": "agent-4", "role": "CTA Consistency", "scope": "Standardize button styles and enrollment flow" }
+  ],
+  "estimated_time_minutes": 30,
+  "phases": 2,
+  "risks": [
+    "Breaking existing UI by removing components",
+    "ArmCareStatusCard may be needed for baseball users in future",
+    "Decoder changes could surface new decode errors if models have unexpected fields"
+  ],
+  "dependencies": ["Build 614 deployed and stable"]
+}

@@ -131,12 +131,15 @@ struct ProgramDetailSheet: View {
                             .font(.headline)
 
                         if isLoadingPhases {
-                            HStack {
+                            HStack(spacing: 8) {
                                 Spacer()
                                 ProgressView()
-                                    .padding()
+                                Text("Loading schedule...")
+                                    .font(.subheadline)
+                                    .foregroundColor(.secondary)
                                 Spacer()
                             }
+                            .padding()
                         } else if let error = phasesError {
                             HStack {
                                 Image(systemName: "exclamationmark.triangle.fill")
@@ -233,13 +236,7 @@ struct ProgramDetailSheet: View {
                         }
                         .frame(maxWidth: .infinity)
                         .padding()
-                        .background(
-                            LinearGradient(
-                                colors: [.modusCyan, .purple],
-                                startPoint: .leading,
-                                endPoint: .trailing
-                            )
-                        )
+                        .background(Color.modusCyan)
                         .foregroundColor(.white)
                         .cornerRadius(CornerRadius.lg)
                     }
@@ -301,7 +298,7 @@ struct ProgramDetailSheet: View {
             }
         } catch {
             await MainActor.run {
-                phasesError = "Unable to load phase information"
+                phasesError = "Couldn't load program details right now."
                 isLoadingPhases = false
             }
         }
@@ -311,7 +308,7 @@ struct ProgramDetailSheet: View {
 
     private func enrollInProgram() async {
         guard let patientId = supabase.userId else {
-            enrollmentError = "Unable to enroll: User not found"
+            enrollmentError = "Please sign out and sign back in to enroll."
             return
         }
 
@@ -342,7 +339,7 @@ struct ProgramDetailSheet: View {
         } catch {
             await MainActor.run {
                 isEnrolling = false
-                enrollmentError = "Something went wrong. Please try again."
+                enrollmentError = "Couldn't enroll right now. Check your connection and try again."
             }
         }
     }

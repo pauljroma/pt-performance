@@ -183,9 +183,7 @@ class ProgramLibraryService: ObservableObject {
                 .limit(200)
                 .execute()
 
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
-            let programs = try decoder.decode([ProgramLibrary].self, from: response.data)
+            let programs = try PTSupabaseClient.flexibleDecoder.decode([ProgramLibrary].self, from: response.data)
 
             logger.log("Fetched \(programs.count) programs for category '\(category)'", level: .success)
             return programs
@@ -405,8 +403,7 @@ class ProgramLibraryService: ObservableObject {
                 .eq("template_id", value: templateId.uuidString)
                 .execute()
 
-            let decoder = JSONDecoder()
-            let assignments = try decoder.decode([AssignmentRow].self, from: assignmentsResponse.data)
+            let assignments = try PTSupabaseClient.flexibleDecoder.decode([AssignmentRow].self, from: assignmentsResponse.data)
 
             if assignments.isEmpty {
                 logger.log("No program assignments found for template \(templateId) - not a program workout", level: .diagnostic)
@@ -426,7 +423,7 @@ class ProgramLibraryService: ObservableObject {
                 .in("program_library_id", values: programIds)
                 .execute()
 
-            let enrollments = try decoder.decode([ProgramEnrollment].self, from: enrollmentsResponse.data)
+            let enrollments = try PTSupabaseClient.flexibleDecoder.decode([ProgramEnrollment].self, from: enrollmentsResponse.data)
 
             if enrollments.isEmpty {
                 logger.log("Patient not enrolled in any program containing this template", level: .diagnostic)
@@ -484,8 +481,7 @@ class ProgramLibraryService: ObservableObject {
                 .eq("program_library_id", value: enrollment.programLibraryId.uuidString)
                 .execute()
 
-            let decoder = JSONDecoder()
-            let templates = try decoder.decode([TemplateRow].self, from: templatesResponse.data)
+            let templates = try PTSupabaseClient.flexibleDecoder.decode([TemplateRow].self, from: templatesResponse.data)
             let templateIds = templates.map { $0.templateId.uuidString }
 
             // Count completed workouts by checking manual_sessions with matching source_template_id
@@ -649,9 +645,7 @@ class ProgramLibraryService: ObservableObject {
                 .single()
                 .execute()
 
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
-            let program = try decoder.decode(ProgramLibrary.self, from: response.data)
+            let program = try PTSupabaseClient.flexibleDecoder.decode(ProgramLibrary.self, from: response.data)
 
             logger.log("Fetched program: \(program.title)", level: .success)
             return program
@@ -707,9 +701,7 @@ class ProgramLibraryService: ObservableObject {
 
             logger.log("Raw response size: \(response.data.count) bytes", level: .diagnostic)
 
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
-            let assignments = try decoder.decode([ProgramWorkoutAssignmentWithTemplate].self, from: response.data)
+            let assignments = try PTSupabaseClient.flexibleDecoder.decode([ProgramWorkoutAssignmentWithTemplate].self, from: response.data)
 
             logger.log("Fetched \(assignments.count) workout assignments for program_id: \(programId)", level: .diagnostic)
 
@@ -791,8 +783,7 @@ class ProgramLibraryService: ObservableObject {
                 .order("phase_number", ascending: true)
                 .execute()
 
-            let decoder = JSONDecoder()
-            let phases = try decoder.decode([ProgramPhasePreview].self, from: response.data)
+            let phases = try PTSupabaseClient.flexibleDecoder.decode([ProgramPhasePreview].self, from: response.data)
 
             logger.log("Fetched \(phases.count) phases for program preview", level: .success)
             return phases

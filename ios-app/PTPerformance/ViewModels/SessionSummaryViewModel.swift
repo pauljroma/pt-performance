@@ -76,7 +76,7 @@ class SessionSummaryViewModel: ObservableObject {
                 .execute()
 
             struct SessionExerciseId: Codable { let id: String }
-            let exerciseIds = try JSONDecoder().decode([SessionExerciseId].self, from: exerciseIdsResponse.data)
+            let exerciseIds = try PTSupabaseClient.flexibleDecoder.decode([SessionExerciseId].self, from: exerciseIdsResponse.data)
             let ids = exerciseIds.map { $0.id }
 
             DebugLogger.shared.info("SESSION_SUMMARY", "Found \(ids.count) session_exercise IDs for session \(session.id)")
@@ -112,9 +112,7 @@ class SessionSummaryViewModel: ObservableObject {
 
             let response = try await query.execute()
 
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
-            let exerciseLogs = try decoder.decode([ExerciseLogResponse].self, from: response.data)
+            let exerciseLogs = try PTSupabaseClient.flexibleDecoder.decode([ExerciseLogResponse].self, from: response.data)
 
             // Enhanced logging to verify time-based filtering worked
             let sortedLogs = exerciseLogs.sorted { $0.logged_at < $1.logged_at }
@@ -251,9 +249,7 @@ class SessionSummaryViewModel: ObservableObject {
                 .limit(100)
                 .execute()
 
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
-            let logs = try decoder.decode([ExerciseLogResponse].self, from: response.data)
+            let logs = try PTSupabaseClient.flexibleDecoder.decode([ExerciseLogResponse].self, from: response.data)
 
             // Calculate PRs: max volume for each exercise
             var prMap: [String: SessionPersonalRecord] = [:]
@@ -326,8 +322,7 @@ class SessionSummaryViewModel: ObservableObject {
                 .eq("session_id", value: session.id)
                 .execute()
 
-            let decoder = JSONDecoder()
-            let prescribedExercises = try decoder.decode([PrescribedExercise].self, from: response.data)
+            let prescribedExercises = try PTSupabaseClient.flexibleDecoder.decode([PrescribedExercise].self, from: response.data)
 
             var totalComplianceScore = 0.0
 

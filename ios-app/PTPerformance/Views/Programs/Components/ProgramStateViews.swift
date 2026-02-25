@@ -320,9 +320,9 @@ extension ProgramEmptyStateView {
     /// Empty state for program template (no customized workouts)
     static func programTemplate() -> ProgramEmptyStateView {
         ProgramEmptyStateView(
-            title: "Program Template",
-            message: "This is a program template. Workouts will appear once your therapist customizes it for you.",
-            icon: "doc.text.magnifyingglass",
+            title: "No Workouts Yet",
+            message: "Workouts for this program are being set up. Check back soon!",
+            icon: "clock.badge.checkmark",
             iconColor: .blue.opacity(0.7)
         )
     }

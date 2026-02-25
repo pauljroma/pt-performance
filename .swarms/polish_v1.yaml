@@ -1,0 +1,55 @@
+swarm: pre-release-polish
+version: 1
+created: 2026-02-25
+target_build: 615
+
+phases:
+  - name: "Phase 1: Ship-blocking fixes"
+    agents:
+      - id: agent-1-debug-gate
+        task: "Gate debug button behind #if DEBUG in TodaySessionView"
+        file: TodaySessionView.swift
+        acceptance: "Debug ant button not visible in Release builds"
+
+      - id: agent-2-arm-care-gate
+        task: "Hide ArmCareStatusCard for non-baseball users"
+        file: TodaySessionView.swift
+        acceptance: "Arm care card only shows for baseball/throwing mode"
+
+      - id: agent-3-error-messages
+        task: "Improve enrollment error messages and add retry"
+        files: [ProgramDetailSheet.swift]
+        acceptance: "No vague 'something went wrong' messages"
+
+      - id: agent-4-baseball-ui
+        task: "Remove WhyThisExerciseCard baseball references, neutralize icons"
+        file: WhyThisExerciseCard.swift
+        acceptance: "No baseball-specific strings in general components"
+
+  - name: "Phase 2: Visual polish"
+    agents:
+      - id: agent-5-cta-style
+        task: "Standardize enrollment CTA button to solid modusCyan"
+        file: ProgramDetailSheet.swift
+        acceptance: "Enrollment button matches Start Workout style"
+
+      - id: agent-6-decoders
+        task: "Replace iso8601 decoders with flexibleDecoder in critical paths"
+        files: [ProgramLibraryService.swift, QuickStartService.swift, SessionSummaryViewModel.swift]
+        acceptance: "No iso8601 decoder in Supabase query paths"
+
+      - id: agent-7-loading-text
+        task: "Add loading text to bare spinners in ProgramDetailSheet phases"
+        file: ProgramDetailSheet.swift
+        acceptance: "All loading states have descriptive text"
+
+      - id: agent-8-empty-states
+        task: "Improve empty state copy for programs with no workouts"
+        files: [ProgramDetailSheet.swift, ActiveProgramDetailView.swift]
+        acceptance: "Empty states are actionable, not vague"
+
+enforcement:
+  - "Build must succeed"
+  - "Lint must pass"
+  - "No new SwiftLint warnings"
+  - "No removal of accessibility labels"

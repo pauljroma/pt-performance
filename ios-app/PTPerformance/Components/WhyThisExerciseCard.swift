@@ -3,13 +3,13 @@
 //  PTPerformance
 //
 //  ACP-816: "Why This Exercise" Explanations Feature
-//  Displays baseball-specific benefits, muscle groups, and performance connections
+//  Displays performance benefits, muscle groups, and sport-specific connections
 //
 
 import SwiftUI
 
-/// Card component displaying "Why This Exercise" explanation with baseball-specific content
-/// Shows baseball benefit, muscle groups targeted, and performance connection
+/// Card component displaying "Why This Exercise" explanation
+/// Shows performance benefit, muscle groups targeted, and sport connection
 struct WhyThisExerciseCard: View {
     let explanation: ExerciseExplanation
 
@@ -55,7 +55,7 @@ struct WhyThisExerciseCard: View {
 
     private var headerSection: some View {
         HStack(spacing: Spacing.sm) {
-            Image(systemName: "baseball.fill")
+            Image(systemName: "lightbulb.fill")
                 .font(.title2)
                 .foregroundColor(.orange)
                 .accessibilityHidden(true)
@@ -71,7 +71,7 @@ struct WhyThisExerciseCard: View {
         .accessibilityLabel("Why This Exercise section")
     }
 
-    // MARK: - Baseball Benefit Section
+    // MARK: - Performance Benefit Section
 
     private func baseballBenefitSection(_ benefit: String) -> some View {
         VStack(alignment: .leading, spacing: Spacing.xs) {
@@ -81,7 +81,7 @@ struct WhyThisExerciseCard: View {
                     .foregroundColor(.yellow)
                     .accessibilityHidden(true)
 
-                Text("Baseball Benefit")
+                Text("Performance Benefit")
                     .font(.caption)
                     .fontWeight(.semibold)
                     .foregroundColor(.secondary)
@@ -97,7 +97,7 @@ struct WhyThisExerciseCard: View {
         .background(Color.orange.opacity(0.08))
         .cornerRadius(CornerRadius.sm)
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("Baseball benefit: \(benefit)")
+        .accessibilityLabel("Performance benefit: \(benefit)")
     }
 
     // MARK: - Muscle Groups Section
@@ -295,10 +295,10 @@ struct WhyThisExerciseCompactCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: Spacing.sm) {
-            // Baseball benefit with icon
+            // Performance benefit with icon
             if let baseballBenefit = explanation.baseballBenefit, !baseballBenefit.isEmpty {
                 HStack(alignment: .top, spacing: Spacing.xs) {
-                    Image(systemName: "baseball.fill")
+                    Image(systemName: "star.fill")
                         .font(.subheadline)
                         .foregroundColor(.orange)
                         .accessibilityHidden(true)

@@ -283,8 +283,7 @@ class QuickStartService: ObservableObject {
             .order("created_at", ascending: true)  // Changed from scheduled_time which may be null
             .execute()
 
-        let decoder = JSONDecoder()
-        let rows = try decoder.decode([ScheduledSessionRow].self, from: response.data)
+        let rows = try PTSupabaseClient.flexibleDecoder.decode([ScheduledSessionRow].self, from: response.data)
 
         logger.log("📱 [QuickStart] Found \(rows.count) scheduled sessions", level: .diagnostic)
 
@@ -368,9 +367,7 @@ class QuickStartService: ObservableObject {
             .limit(1)
             .execute()
 
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
-        let sessions = try decoder.decode([Session].self, from: response.data)
+        let sessions = try PTSupabaseClient.flexibleDecoder.decode([Session].self, from: response.data)
 
         if let session = sessions.first {
             logger.log("✅ [QuickStart] Found session: \(session.name)", level: .success)
@@ -406,9 +403,7 @@ class QuickStartService: ObservableObject {
             .limit(1)
             .execute()
 
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
-        let sessions = try decoder.decode([Session].self, from: response.data)
+        let sessions = try PTSupabaseClient.flexibleDecoder.decode([Session].self, from: response.data)
 
         if let session = sessions.first {
             logger.log("✅ [QuickStart] Found program session: \(session.name)", level: .success)
@@ -444,8 +439,7 @@ class QuickStartService: ObservableObject {
             logger.log("📱 [QuickStart] RPC response: \(jsonString)", level: .diagnostic)
         }
 
-        let decoder = JSONDecoder()
-        let rows = try decoder.decode([EnrolledSessionRow].self, from: response.data)
+        let rows = try PTSupabaseClient.flexibleDecoder.decode([EnrolledSessionRow].self, from: response.data)
 
         guard let row = rows.first else {
             logger.log("⚠️ [QuickStart] RPC returned no enrolled sessions", level: .warning)
@@ -467,9 +461,7 @@ class QuickStartService: ObservableObject {
             .limit(1)
             .execute()
 
-        let sessionDecoder = JSONDecoder()
-        sessionDecoder.dateDecodingStrategy = .iso8601
-        let sessions = try sessionDecoder.decode([Session].self, from: sessionResponse.data)
+        let sessions = try PTSupabaseClient.flexibleDecoder.decode([Session].self, from: sessionResponse.data)
 
         return sessions.first
     }
@@ -501,9 +493,7 @@ class QuickStartService: ObservableObject {
             .order("id", ascending: true)
             .execute()
 
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
-        let exercises = try decoder.decode([Exercise].self, from: response.data)
+        let exercises = try PTSupabaseClient.flexibleDecoder.decode([Exercise].self, from: response.data)
 
         logger.log("✅ [QuickStart] Loaded \(exercises.count) exercises", level: .success)
 

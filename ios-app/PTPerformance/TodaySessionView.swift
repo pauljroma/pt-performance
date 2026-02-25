@@ -336,7 +336,7 @@ class TodaySessionViewState: ObservableObject {
                 let templates = try await service.fetchSystemTemplates()
                 guard let template = templates.first(where: { $0.id == templateId }) else {
                     logger.log("System template not found: \(templateId)", level: .warning)
-                    errorMessage = "Workout template not found. The workout may have been deleted."
+                    errorMessage = "This workout is no longer available."
                     showErrorAlert = true
                     return
                 }
@@ -382,7 +382,7 @@ class TodaySessionViewState: ObservableObject {
                 let templates = try await service.fetchPatientTemplates(patientId: patientUUID)
                 guard let template = templates.first(where: { $0.id == templateId }) else {
                     logger.log("Patient template not found: \(templateId)", level: .warning)
-                    errorMessage = "Workout template not found. The workout may have been deleted."
+                    errorMessage = "This workout is no longer available."
                     showErrorAlert = true
                     return
                 }
@@ -771,6 +771,7 @@ struct TodaySessionView: View {
             }
         }
         .toolbar {
+            #if DEBUG
             ToolbarItem(placement: .navigationBarLeading) {
                 Button(action: { activeSheet = .debugLogs }) {
                     Image(systemName: "ant.circle")
@@ -779,6 +780,7 @@ struct TodaySessionView: View {
                 .accessibilityLabel("Debug logs")
                 .accessibilityHint("Opens debug log viewer")
             }
+            #endif
 
             ToolbarItem(placement: .navigationBarTrailing) {
                 HStack(spacing: 12) {
@@ -835,14 +837,16 @@ struct TodaySessionView: View {
                     .staggeredAnimation(index: 3)
                 }
 
-                // ACP-522: Arm Care Section (for baseball/throwing athletes)
-                ArmCareStatusCard(
-                    todayArmCare: viewState.todayArmCare,
-                    isLoading: viewState.isLoadingArmCare,
-                    onCheckIn: { activeSheet = .armCareAssessment },
-                    onShowDetails: { activeSheet = .armCareAssessment }
-                )
-                .staggeredAnimation(index: 4)
+                // ACP-522: Arm Care Section — only show for users with arm care data
+                if viewState.todayArmCare != nil || viewState.isLoadingArmCare {
+                    ArmCareStatusCard(
+                        todayArmCare: viewState.todayArmCare,
+                        isLoading: viewState.isLoadingArmCare,
+                        onCheckIn: { activeSheet = .armCareAssessment },
+                        onShowDetails: { activeSheet = .armCareAssessment }
+                    )
+                    .staggeredAnimation(index: 4)
+                }
 
                 // Adaptive Training: Workout Modification Suggestion
                 if adaptiveWorkoutVM.hasTodayModification, let modification = adaptiveWorkoutVM.todayModification {
