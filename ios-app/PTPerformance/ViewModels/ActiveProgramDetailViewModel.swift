@@ -284,6 +284,8 @@ class ActiveProgramDetailViewModel: ObservableObject {
             )
             logger.log("Successfully left program", level: .success)
             HapticFeedback.success()
+            // Notify Today tab to refresh enrolled programs list
+            NotificationCenter.default.post(name: .enrolledProgramsDidChange, object: nil)
         } catch {
             logger.log("Failed to leave program: \(error.localizedDescription)", level: .error)
             errorMessage = "Unable to leave program. Please try again."

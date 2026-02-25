@@ -100,6 +100,8 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
 extension Notification.Name {
     /// Posted when a notification action results in a deep link destination
     static let didReceiveNotificationDeepLink = Notification.Name("didReceiveNotificationDeepLink")
+    /// Posted when enrolled programs change (enroll, leave, pause)
+    static let enrolledProgramsDidChange = Notification.Name("enrolledProgramsDidChange")
 }
 
 // MARK: - Deep Link Destination

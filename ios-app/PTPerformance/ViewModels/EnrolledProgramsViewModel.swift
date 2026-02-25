@@ -22,12 +22,30 @@ class EnrolledProgramsViewModel: ObservableObject {
 
     private let service: ProgramLibraryService
     private let supabase: PTSupabaseClient
+    private var notificationObserver: Any?
 
     // MARK: - Initialization
 
     init(service: ProgramLibraryService = .init(), supabase: PTSupabaseClient = .shared) {
         self.service = service
         self.supabase = supabase
+
+        // Observe enrollment changes (leave, pause, enroll) to refresh list
+        notificationObserver = NotificationCenter.default.addObserver(
+            forName: .enrolledProgramsDidChange,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor [weak self] in
+                await self?.loadEnrolledPrograms()
+            }
+        }
+    }
+
+    deinit {
+        if let observer = notificationObserver {
+            NotificationCenter.default.removeObserver(observer)
+        }
     }
 
     // MARK: - Computed Properties

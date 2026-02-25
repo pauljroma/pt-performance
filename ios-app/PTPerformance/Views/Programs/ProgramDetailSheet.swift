@@ -324,6 +324,7 @@ struct ProgramDetailSheet: View {
             await MainActor.run {
                 isEnrolling = false
                 showEnrollSuccess = true
+                NotificationCenter.default.post(name: .enrolledProgramsDidChange, object: nil)
             }
         } catch let error as NSError where error.code == 409 {
             // Already enrolled — treat as success, navigate to Today

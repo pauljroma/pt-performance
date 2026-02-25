@@ -470,8 +470,9 @@ struct WorkoutStartSheet: View {
                 }
 
                 Spacer()
-
-                // Start Button
+            }
+            .safeAreaInset(edge: .bottom) {
+                // Start Button pinned to bottom
                 Button {
                     onStart()
                 } label: {
@@ -489,8 +490,8 @@ struct WorkoutStartSheet: View {
                 }
                 .accessibilityLabel("Start \(workout.name) workout")
                 .accessibilityHint("Begins the workout session")
-                .padding(.horizontal)
-                .padding(.bottom)
+                .padding()
+                .background(.ultraThinMaterial)
             }
             .navigationTitle("Ready to Start?")
             .navigationBarTitleDisplayMode(.inline)
@@ -1135,8 +1136,9 @@ struct PhaseSessionStartSheet: View {
                 }
 
                 Spacer()
-
-                // Start Button
+            }
+            .safeAreaInset(edge: .bottom) {
+                // Start Button pinned to bottom
                 Button {
                     onStart()
                 } label: {
@@ -1154,8 +1156,8 @@ struct PhaseSessionStartSheet: View {
                 }
                 .accessibilityLabel("Start \(session.session.name) workout")
                 .accessibilityHint("Begins the workout session with \(session.exercises.count) exercises")
-                .padding(.horizontal)
-                .padding(.bottom)
+                .padding()
+                .background(.ultraThinMaterial)
             }
             .navigationTitle("Ready to Start?")
             .navigationBarTitleDisplayMode(.inline)
