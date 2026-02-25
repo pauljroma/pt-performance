@@ -9,6 +9,7 @@ struct TodayEnrolledProgramsSection: View {
     let currentWeek: (EnrollmentWithProgram) -> Int
     let progressPercentage: (EnrollmentWithProgram) -> Int
     let daysRemainingDisplay: (EnrollmentWithProgram) -> String
+    var onStartWorkout: (() -> Void)?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -32,6 +33,28 @@ struct TodayEnrolledProgramsSection: View {
                 loadingView
             } else {
                 programCardsScrollView
+            }
+
+            // Start Workout button
+            if let onStartWorkout = onStartWorkout, !isLoading, !enrolledPrograms.isEmpty {
+                Button {
+                    HapticFeedback.medium()
+                    onStartWorkout()
+                } label: {
+                    HStack {
+                        Image(systemName: "play.circle.fill")
+                        Text("Start a Workout")
+                            .fontWeight(.semibold)
+                    }
+                    .font(.subheadline)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 10)
+                    .background(Color.modusCyan)
+                    .foregroundColor(.white)
+                    .cornerRadius(CornerRadius.sm)
+                }
+                .accessibilityLabel("Start a workout")
+                .accessibilityHint("Opens the workout picker to choose a workout")
             }
         }
         .padding()

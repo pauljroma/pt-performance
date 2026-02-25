@@ -640,6 +640,10 @@ struct TodaySessionView: View {
                 }
             }
         }
+        .onAppear {
+            // Refresh enrolled programs when returning from other tabs (e.g. after enrollment)
+            Task { await enrolledProgramsViewModel.loadEnrolledPrograms() }
+        }
         .onDisappear {
             // Cleanup when view disappears
         }
@@ -809,7 +813,8 @@ struct TodaySessionView: View {
                         isLoading: enrolledProgramsViewModel.isLoading,
                         currentWeek: { enrolledProgramsViewModel.currentWeek(for: $0) },
                         progressPercentage: { enrolledProgramsViewModel.progressPercentage(for: $0) },
-                        daysRemainingDisplay: { enrolledProgramsViewModel.daysRemainingDisplay(for: $0) }
+                        daysRemainingDisplay: { enrolledProgramsViewModel.daysRemainingDisplay(for: $0) },
+                        onStartWorkout: { activeSheet = .templateLibrary }
                     )
                     .staggeredAnimation(index: 2)
                 }
@@ -823,15 +828,6 @@ struct TodaySessionView: View {
                     .staggeredAnimation(index: 3)
                 }
 
-                // Readiness Section
-                ReadinessStatusCard(
-                    todayReadiness: viewState.todayReadiness,
-                    isLoading: viewState.isLoadingReadiness,
-                    onCheckIn: { activeSheet = .readinessCheckIn },
-                    onShowDashboard: { activeSheet = .readinessDashboard }
-                )
-                .staggeredAnimation(index: 4)
-
                 // ACP-522: Arm Care Section (for baseball/throwing athletes)
                 ArmCareStatusCard(
                     todayArmCare: viewState.todayArmCare,
@@ -839,7 +835,7 @@ struct TodaySessionView: View {
                     onCheckIn: { activeSheet = .armCareAssessment },
                     onShowDetails: { activeSheet = .armCareAssessment }
                 )
-                .staggeredAnimation(index: 5)
+                .staggeredAnimation(index: 4)
 
                 // Adaptive Training: Workout Modification Suggestion
                 if adaptiveWorkoutVM.hasTodayModification, let modification = adaptiveWorkoutVM.todayModification {
@@ -850,7 +846,7 @@ struct TodaySessionView: View {
                             activeSheet = .modificationSuggestion
                         }
                     )
-                    .staggeredAnimation(index: 6)
+                    .staggeredAnimation(index: 5)
                 } else if adaptiveWorkoutVM.isLoading {
                     // Loading placeholder for modification check
                     HStack(spacing: 12) {
@@ -863,7 +859,7 @@ struct TodaySessionView: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .background(Color(.secondarySystemGroupedBackground))
                     .clipShape(RoundedRectangle(cornerRadius: 12))
-                    .staggeredAnimation(index: 6)
+                    .staggeredAnimation(index: 5)
                 }
 
                 // Recovery Intelligence: Readiness-Based Workout Recommendation
