@@ -30,6 +30,18 @@ enum AchievementDashboardTab: String, CaseIterable, Identifiable {
         case .leaderboard: return "chart.bar.fill"
         }
     }
+
+    /// Tabs visible based on current feature flags
+    static var visibleCases: [AchievementDashboardTab] {
+        allCases.filter { tab in
+            switch tab {
+            case .leaderboard:
+                return FeatureFlagService.shared.isEnabled("leaderboards_enabled")
+            default:
+                return true
+            }
+        }
+    }
 }
 
 // MARK: - Achievements Dashboard View
@@ -53,10 +65,12 @@ struct AchievementsDashboardView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            // Tab selector
-            tabSelector
-                .padding(.horizontal)
-                .padding(.top, Spacing.sm)
+            // Tab selector (hidden when only one tab visible)
+            if AchievementDashboardTab.visibleCases.count > 1 {
+                tabSelector
+                    .padding(.horizontal)
+                    .padding(.top, Spacing.sm)
+            }
 
             // Content based on selected tab
             if selectedTab == .achievements {
@@ -114,7 +128,7 @@ struct AchievementsDashboardView: View {
 
     private var tabSelector: some View {
         HStack(spacing: Spacing.xs) {
-            ForEach(AchievementDashboardTab.allCases) { tab in
+            ForEach(AchievementDashboardTab.visibleCases) { tab in
                 Button(action: {
                     HapticFeedback.selectionChanged()
                     withAnimation(.easeInOut(duration: 0.2)) {
