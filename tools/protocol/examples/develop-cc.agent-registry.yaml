@@ -1,0 +1,131 @@
+# agent-registry.yaml — Declarative agent fleet definitions
+# Companion to fleet.yaml (machines/repos) and agent-contract.json (capability contracts).
+# Managed by: tools/protocol/agents CLI
+
+version: "1.0.0"
+
+defaults:
+  trust_tier: 1
+  max_concurrent: 5
+  backend_chain: [claude, codex, aider]
+  spend_cap_weekly_usd: 100
+
+agents:
+  # ── x2m-alpha (x2machines / content zones) ──────────────────────
+  x2m-alpha-engineer:
+    type: engineer
+    machine: x2machines
+    zones: [z00, z01, z02, z04, z05, z08, z09, z10, z13, z15, z16, z17, z18, z19, z20, z25]
+    backend_chain: [codex_login, claude_login, codex_api, claude_api, aider_local]
+    tags: [content, clinical, swarm, alpha]
+    sla:
+      max_latency_s: 600
+      success_rate_target: 0.85
+    spend_cap_weekly_usd: 150
+    description: "Primary engineering agent — x2m-alpha content + clinical zones"
+
+  # ── x2m-beta (quiver-dev / hitl-app) ────────────────────────────
+  x2m-beta-engineer:
+    type: engineer
+    machine: quiver-dev
+    zones: []
+    backend_chain: [claude_login, codex_login, claude_api]
+    tags: [hitl-app, paycore, beta]
+    sla:
+      max_latency_s: 600
+      success_rate_target: 0.85
+    spend_cap_weekly_usd: 150
+    description: "Engineering agent — x2m-beta hitl-app repos (apprentice, platform, dash)"
+
+  x2m-beta-reviewer:
+    type: reviewer
+    machine: quiver-dev
+    zones: []
+    backend_chain: [claude_login, claude_api]
+    tags: [hitl-app, paycore, beta, review]
+    sla:
+      max_latency_s: 300
+      success_rate_target: 0.90
+    spend_cap_weekly_usd: 60
+    description: "Code review agent — reads only, generates review reports"
+
+  # ── Orchestration (rialtic-core) ──────────────────────────────
+  rialtic-engineer:
+    type: engineer
+    machine: rialtic-core
+    zones: []
+    backend_chain: [codex_login, claude_login, codex_api]
+    tags: [paycore, orchestration, primary]
+    sla:
+      max_latency_s: 600
+      success_rate_target: 0.85
+    spend_cap_weekly_usd: 200
+    description: "Primary paycore engineering agent on rialtic-core"
+
+  # ── SWAT (fleet-wide, dispatches to any machine) ──────────────
+  swat-claude:
+    type: swat
+    machine: x2machines
+    zones: []
+    backend_chain: [claude_login, claude_api]
+    tags: [swat, escalation, fleet-wide]
+    sla:
+      max_latency_s: 900
+      success_rate_target: 0.75
+    spend_cap_weekly_usd: 400
+    description: "Claude Opus SWAT agent — auto-activated on code_error failures"
+
+  # ── Deployer ──────────────────────────────────────────────────
+  deploy-agent:
+    type: deployer
+    machine: x2machines
+    zones: []
+    backend_chain: [ssh]
+    tags: [deploy, release, alpha, beta]
+    sla:
+      max_latency_s: 1800
+      success_rate_target: 0.95
+    spend_cap_weekly_usd: 0
+    description: "Deployment agent — runs promote pipeline, verifies service health"
+
+  # ── Auditor ───────────────────────────────────────────────────
+  compliance-auditor:
+    type: auditor
+    machine: x2machines
+    zones: []
+    backend_chain: [local]
+    tags: [audit, compliance, read-only]
+    sla:
+      max_latency_s: 3600
+      success_rate_target: 1.0
+    spend_cap_weekly_usd: 0
+    description: "Compliance audit agent — reads logs, generates attestations"
+
+teams:
+  platform:
+    agents: [x2m-alpha-engineer, x2m-beta-engineer, rialtic-engineer]
+    spend_cap_weekly_usd: 500
+    description: "Core platform engineering team"
+
+  clinical:
+    agents: [x2m-alpha-engineer]
+    spend_cap_weekly_usd: 200
+    description: "Clinical/content zone agents (regulated paths)"
+
+  hitl-app:
+    agents: [x2m-beta-engineer, x2m-beta-reviewer]
+    spend_cap_weekly_usd: 210
+    description: "HITL application team"
+
+  ops:
+    agents: [swat-claude, deploy-agent, compliance-auditor]
+    spend_cap_weekly_usd: 400
+    description: "Operations: SWAT escalation + deployments + audit"
+
+slices:
+  alpha:  { agents: [x2m-alpha-engineer, swat-claude] }
+  beta:   { agents: [x2m-beta-engineer, x2m-beta-reviewer] }
+  swat:   { agents: [swat-claude] }
+  deploy: { agents: [deploy-agent] }
+  audit:  { agents: [compliance-auditor] }
+  all:    { agents: ["*"] }

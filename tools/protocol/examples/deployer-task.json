@@ -1,0 +1,24 @@
+{
+  "task_id": "task-20260305-0100",
+  "parent_task_id": null,
+  "intent": "Deploy x2machines v3.27.1 to quiver-dev (beta) — run install script, verify 22 services healthy",
+  "scope": {
+    "machine": "quiver-dev",
+    "repo": "x2machines",
+    "paths": ["deploy/x2machines/"]
+  },
+  "constraints": {
+    "method": "ssh",
+    "timeout_s": 1800,
+    "budget_usd": 0.0,
+    "trust_tier": 2,
+    "agent_type": "deployer"
+  },
+  "deadline": "2026-03-05T22:00:00Z",
+  "agent_affinity": [],
+  "priority": 3,
+  "metadata": {
+    "batch_id": "deploy-batch-20260305",
+    "zone_role": "coo"
+  }
+}

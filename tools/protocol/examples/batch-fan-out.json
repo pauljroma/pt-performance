@@ -1,0 +1,23 @@
+{
+  "task_id": "task-20260305-0200",
+  "parent_task_id": null,
+  "intent": "Fan-out: run lint + typecheck across all 15 paycore repos on rialtic-core",
+  "scope": {
+    "machine": "rialtic-core",
+    "repo": "__ALL_PAYCORE__",
+    "paths": []
+  },
+  "constraints": {
+    "method": "ssh",
+    "timeout_s": 600,
+    "budget_usd": 0.0,
+    "trust_tier": 1,
+    "agent_type": "engineer"
+  },
+  "deadline": "2026-03-05T16:00:00Z",
+  "agent_affinity": [],
+  "priority": 1,
+  "metadata": {
+    "batch_id": "nightly-lint-20260305"
+  }
+}

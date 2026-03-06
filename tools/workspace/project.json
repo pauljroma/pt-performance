@@ -1,0 +1,99 @@
+{
+  "name": "workspace",
+  "targets": {
+    "format:check": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npx prettier --check ."
+      },
+      "cache": false
+    },
+    "format:write": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npx prettier --write ."
+      },
+      "cache": false
+    },
+    "policy:lint": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npx tsx tools/policy/policy-lint.ts"
+      },
+      "inputs": [
+        "{workspaceRoot}/tools/policy/nx-targets.contract.json",
+        "{workspaceRoot}/tools/policy/project-type-mapping.json",
+        "{workspaceRoot}/tools/policy/policy-lint.ts",
+        "{projectRoot}/project.json"
+      ],
+      "outputs": ["{workspaceRoot}/dist/reports/policy/**"],
+      "cache": true
+    },
+    "security:deps": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "echo 'Wire to your scanner: pnpm audit / pip-audit / cargo-audit'"
+      },
+      "outputs": ["{workspaceRoot}/dist/reports/security/deps/**"],
+      "cache": false
+    },
+    "gate:promote": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npx tsx tools/policy/gate-promote.ts status"
+      },
+      "cache": false
+    },
+    "mcp:validate": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npx tsx tools/policy/validate-mcp.ts --all-profiles"
+      },
+      "inputs": [
+        "{workspaceRoot}/templates/golden-path/mcp.json",
+        "{workspaceRoot}/templates/golden-path/profiles/**",
+        "{workspaceRoot}/tools/policy/validate-mcp.ts"
+      ],
+      "outputs": ["{workspaceRoot}/dist/reports/policy/validate-mcp.json"],
+      "cache": true
+    },
+    "protocol:validate": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "npx tsx tools/protocol/validate-agent-contract.ts",
+          "npx tsx tools/protocol/validate-task.ts tools/protocol/examples/*.json"
+        ],
+        "parallel": false
+      },
+      "inputs": [
+        "{workspaceRoot}/tools/protocol/agent-contract.json",
+        "{workspaceRoot}/tools/protocol/task-schema.json",
+        "{workspaceRoot}/tools/protocol/examples/**",
+        "{workspaceRoot}/tools/protocol/validate-agent-contract.ts",
+        "{workspaceRoot}/tools/protocol/validate-task.ts"
+      ],
+      "outputs": ["{workspaceRoot}/dist/reports/protocol/**"],
+      "cache": true
+    },
+    "spend:status": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npx tsx tools/policy/spend-gate.ts status"
+      },
+      "cache": false
+    },
+    "agents:validate": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tools/protocol/agents validate"
+      },
+      "inputs": [
+        "{workspaceRoot}/tools/protocol/agent-registry.yaml",
+        "{workspaceRoot}/tools/protocol/agent-contract.json",
+        "{workspaceRoot}/tools/protocol/agents"
+      ],
+      "cache": false
+    }
+  }
+}

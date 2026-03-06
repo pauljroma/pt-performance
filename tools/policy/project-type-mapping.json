@@ -1,0 +1,51 @@
+{
+  "version": "1.0.0",
+  "projectTypes": {
+    "node_ts_app": {
+      "requiredTargets": ["lint", "typecheck", "test:unit", "build", "package"],
+      "optionalTargets": ["test:integration", "test:e2e", "docker:build", "docker:scan", "contract:check", "migrate:check"]
+    },
+    "node_ts_lib": {
+      "requiredTargets": ["lint", "typecheck", "test:unit", "build"],
+      "optionalTargets": ["package", "contract:check"]
+    },
+    "python_pkg": {
+      "requiredTargets": ["lint", "typecheck", "test:unit", "build"],
+      "optionalTargets": ["package", "test:integration", "contract:check"]
+    },
+    "python_cython_pkg": {
+      "requiredTargets": ["lint", "typecheck", "test:unit", "build"],
+      "optionalTargets": ["package", "test:integration", "docker:build", "docker:scan"]
+    },
+    "rust_crate": {
+      "requiredTargets": ["lint", "typecheck", "test:unit", "build"],
+      "optionalTargets": ["package", "test:integration"]
+    },
+    "service": {
+      "requiredTargets": ["lint", "typecheck", "test:unit", "build"],
+      "optionalTargets": ["test:integration", "test:e2e", "docker:build", "docker:scan", "migrate:check", "contract:check", "package"]
+    },
+    "ios_app": {
+      "requiredTargets": ["lint", "test:unit", "build"],
+      "optionalTargets": ["test:ui", "test:integration", "archive", "deploy:testflight"]
+    },
+    "ios_lib": {
+      "requiredTargets": ["lint", "test:unit", "build"],
+      "optionalTargets": ["package"]
+    }
+  },
+  "classification": {
+    "sourceOfTruth": "nx.project.json.tags",
+    "tagPrefix": "type:",
+    "examples": [
+      "type:node_ts_app",
+      "type:node_ts_lib",
+      "type:python_pkg",
+      "type:python_cython_pkg",
+      "type:rust_crate",
+      "type:service",
+      "type:ios_app",
+      "type:ios_lib"
+    ]
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "version": "1.0.0",
+  "profile": "general-dev",
+  "description": "Minimal MCP configuration for general development projects",
+
+  "servers": [
+    {
+      "name": "filesystem",
+      "transport": "stdio",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "."],
+      "env": {},
+      "enabled": false
+    }
+  ],
+
+  "tool_allowlists": {},
+
+  "resource_scoping": {}
+}

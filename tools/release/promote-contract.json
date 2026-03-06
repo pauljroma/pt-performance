@@ -1,0 +1,17 @@
+{
+  "version": "1.0.0",
+  "required_files": ["build-metadata.json", "SHA256SUMS"],
+  "environments": ["dev", "staging", "prod"],
+  "promotion_order": ["dev", "staging", "prod"],
+  "validation_rules": {
+    "require_provenance": true,
+    "require_sha256sums": true,
+    "require_git_sha": true,
+    "max_artifact_age_hours": 168
+  },
+  "artifact_store": {
+    "type": "${ARTIFACT_STORE_TYPE:-s3}",
+    "bucket": "${ARTIFACT_BUCKET:-artifacts}",
+    "prefix": "${ARTIFACT_PREFIX:-}"
+  }
+}

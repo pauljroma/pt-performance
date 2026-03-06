@@ -1,0 +1,106 @@
+{
+  "version": "1.0.0",
+  "workspaceTargets": {
+    "format:check": {
+      "scope": "workspace",
+      "deterministic": true,
+      "cacheable": true,
+      "remoteCacheable": true,
+      "outputs": []
+    },
+    "format:write": {
+      "scope": "workspace",
+      "deterministic": true,
+      "cacheable": false,
+      "remoteCacheable": false,
+      "outputs": []
+    },
+    "policy:lint": {
+      "scope": "workspace",
+      "deterministic": true,
+      "cacheable": true,
+      "remoteCacheable": true,
+      "outputs": ["dist/reports/policy/**"]
+    },
+    "security:deps": {
+      "scope": "workspace",
+      "deterministic": true,
+      "cacheable": false,
+      "remoteCacheable": false,
+      "outputs": ["dist/reports/security/deps/**"]
+    }
+  },
+  "projectTargets": {
+    "lint": {
+      "deterministic": true,
+      "cacheable": true,
+      "remoteCacheable": true,
+      "defaultOutputs": ["dist/reports/lint/**"]
+    },
+    "typecheck": {
+      "deterministic": true,
+      "cacheable": true,
+      "remoteCacheable": true,
+      "defaultOutputs": ["dist/reports/typecheck/**"]
+    },
+    "test:unit": {
+      "deterministic": true,
+      "cacheable": true,
+      "remoteCacheable": true,
+      "defaultOutputs": ["dist/reports/tests/unit/**"]
+    },
+    "build": {
+      "deterministic": true,
+      "cacheable": true,
+      "remoteCacheable": true,
+      "defaultOutputs": ["dist/**"]
+    },
+    "package": {
+      "deterministic": true,
+      "cacheable": true,
+      "remoteCacheable": true,
+      "defaultOutputs": ["dist/artifacts/**", "dist/release/**"]
+    },
+    "test:integration": {
+      "deterministic": false,
+      "cacheable": false,
+      "remoteCacheable": false,
+      "defaultOutputs": ["dist/reports/tests/integration/**"]
+    },
+    "test:e2e": {
+      "deterministic": false,
+      "cacheable": false,
+      "remoteCacheable": false,
+      "defaultOutputs": ["dist/reports/tests/e2e/**"]
+    },
+    "docker:build": {
+      "deterministic": true,
+      "cacheable": false,
+      "remoteCacheable": false,
+      "defaultOutputs": ["dist/reports/docker/build/**"]
+    },
+    "docker:scan": {
+      "deterministic": true,
+      "cacheable": false,
+      "remoteCacheable": false,
+      "defaultOutputs": ["dist/reports/security/container/**"]
+    },
+    "migrate:check": {
+      "deterministic": false,
+      "cacheable": false,
+      "remoteCacheable": false,
+      "defaultOutputs": ["dist/reports/migrations/**"]
+    },
+    "contract:check": {
+      "deterministic": true,
+      "cacheable": true,
+      "remoteCacheable": true,
+      "defaultOutputs": ["dist/reports/contracts/**"]
+    }
+  },
+  "rules": {
+    "forbiddenTargetPrefixes": ["ci:", "tmp:", "scratch:"],
+    "requireOutputsForCacheableTargets": true,
+    "requireNoNetworkForDeterministicTargets": true
+  }
+}

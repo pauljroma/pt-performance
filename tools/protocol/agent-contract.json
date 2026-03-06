@@ -1,0 +1,72 @@
+{
+  "version": "1.0.0",
+  "description": "Machine-enforceable agent capability contracts. Verified at dispatch time by develop-cc ICP gate + spend-gate.",
+
+  "agentTypes": {
+    "engineer": {
+      "allowed_methods": ["ssh", "codex", "claude", "local"],
+      "allowed_tools": ["Edit", "Write", "Read", "Bash", "Glob", "Grep"],
+      "blocked_paths": ["migrations/", "clinical-rules/", ".env", "audit_log/", "secrets/"],
+      "spend_cap_usd": 5.0,
+      "max_ttl_seconds": 600,
+      "trust_tier": 1,
+      "required_gates": ["W0", "W1"],
+      "max_retries": 3,
+      "description": "Standard engineering agent — implements features, fixes bugs, writes tests"
+    },
+    "reviewer": {
+      "allowed_methods": ["claude"],
+      "allowed_tools": ["Read", "Glob", "Grep"],
+      "blocked_paths": [],
+      "spend_cap_usd": 3.0,
+      "max_ttl_seconds": 300,
+      "trust_tier": 2,
+      "required_gates": ["W0"],
+      "max_retries": 1,
+      "description": "Read-only review agent — code review, security scan, compliance audit"
+    },
+    "swat": {
+      "allowed_methods": ["claude"],
+      "allowed_tools": ["Edit", "Write", "Read", "Bash", "Glob", "Grep"],
+      "blocked_paths": [],
+      "spend_cap_usd": 20.0,
+      "max_ttl_seconds": 900,
+      "trust_tier": 3,
+      "required_gates": ["W0", "W1", "W2"],
+      "max_retries": 2,
+      "description": "Claude Opus escalation agent — diagnoses and fixes code_error failures from standard agents"
+    },
+    "deployer": {
+      "allowed_methods": ["ssh", "local"],
+      "allowed_tools": ["Bash", "Read"],
+      "blocked_paths": ["src/", "packages/", "apps/"],
+      "spend_cap_usd": 0.0,
+      "max_ttl_seconds": 1800,
+      "trust_tier": 2,
+      "required_gates": ["W0", "W1", "W2"],
+      "max_retries": 1,
+      "description": "Deployment-only agent — runs install scripts, verifies service health, no code changes"
+    },
+    "auditor": {
+      "allowed_methods": ["local"],
+      "allowed_tools": ["Read", "Glob", "Grep"],
+      "blocked_paths": [],
+      "spend_cap_usd": 0.0,
+      "max_ttl_seconds": 3600,
+      "trust_tier": 1,
+      "required_gates": [],
+      "max_retries": 0,
+      "read_only": true,
+      "description": "Compliance audit agent — read-only, generates audit reports, no dispatch spend"
+    }
+  },
+
+  "rules": {
+    "forbiddenMethods": [],
+    "requireGateForRegulatedPaths": true,
+    "maxSpendPerJobUsd": 25.0,
+    "enforceTrustTierForDispatch": true,
+    "validGates": ["W0", "W1", "W2", "W3"],
+    "validMethods": ["ssh", "codex", "claude", "local"]
+  }
+}

@@ -1,0 +1,234 @@
+#!/usr/bin/env bash
+# generate — Nx project scaffolding generator
+# Creates compliant new projects from templates with correct type tags and targets.
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+TEMPLATES_DIR="$SCRIPT_DIR/templates"
+MAPPING="$REPO_ROOT/tools/policy/project-type-mapping.json"
+GOLDEN_PATH="$REPO_ROOT/templates/golden-path"
+
+# ── Colors ────────────────────────────────────────────────────
+
+RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[0;33m'
+CYAN='\033[0;36m'; BOLD='\033[1m'; NC='\033[0m'
+
+# ── Helpers ───────────────────────────────────────────────────
+
+get_valid_types() {
+  python3 -c "
+import json
+with open('$MAPPING') as f:
+    data = json.load(f)
+for t in data['projectTypes']:
+    print(t)
+" 2>/dev/null
+}
+
+default_location() {
+  local project_type="$1"
+  case "$project_type" in
+    node_ts_app|service) echo "apps" ;;
+    rust_crate) echo "crates" ;;
+    ios_app) echo "." ;;
+    ios_lib) echo "packages" ;;
+    *) echo "packages" ;;
+  esac
+}
+
+generate_project_json() {
+  local project_type="$1" name="$2" location="$3"
+  python3 -c "
+import json
+
+with open('$MAPPING') as f:
+    mapping = json.load(f)
+
+spec = mapping['projectTypes']['$project_type']
+required = spec['requiredTargets']
+
+project = {
+    'name': '$name',
+    'tags': ['type:$project_type'],
+    'targets': {}
+}
+
+# Generate targets based on type
+type_configs = {
+    'node_ts_app': {
+        'lint': {'executor': '@nx/eslint:lint', 'options': {'lintFilePatterns': ['$location/$name/**/*.ts']}, 'outputs': ['{workspaceRoot}/dist/reports/lint/{projectName}'], 'cache': True},
+        'typecheck': {'executor': 'nx:run-commands', 'options': {'command': 'tsc -p $location/$name/tsconfig.json --noEmit'}, 'outputs': ['{workspaceRoot}/dist/reports/typecheck/{projectName}'], 'cache': True},
+        'test:unit': {'executor': '@nx/vite:test', 'options': {'config': '$location/$name/vitest.config.ts'}, 'outputs': ['{workspaceRoot}/dist/reports/tests/unit/{projectName}'], 'cache': True},
+        'build': {'executor': '@nx/esbuild:esbuild', 'options': {'outputPath': 'dist/$location/$name', 'main': '$location/$name/src/main.ts', 'tsConfig': '$location/$name/tsconfig.json'}, 'outputs': ['{workspaceRoot}/dist/$location/{projectName}'], 'cache': True, 'dependsOn': ['typecheck']},
+        'package': {'executor': 'nx:run-commands', 'options': {'commands': ['tar -czf dist/artifacts/$name.tar.gz -C dist/$location/$name .']}, 'outputs': ['{workspaceRoot}/dist/artifacts/{projectName}*'], 'cache': True, 'dependsOn': ['build']},
+    },
+    'node_ts_lib': {
+        'lint': {'executor': '@nx/eslint:lint', 'options': {'lintFilePatterns': ['$location/$name/**/*.ts']}, 'outputs': ['{workspaceRoot}/dist/reports/lint/{projectName}'], 'cache': True},
+        'typecheck': {'executor': 'nx:run-commands', 'options': {'command': 'tsc -p $location/$name/tsconfig.json --noEmit'}, 'outputs': ['{workspaceRoot}/dist/reports/typecheck/{projectName}'], 'cache': True},
+        'test:unit': {'executor': '@nx/vite:test', 'options': {'config': '$location/$name/vitest.config.ts'}, 'outputs': ['{workspaceRoot}/dist/reports/tests/unit/{projectName}'], 'cache': True},
+        'build': {'executor': 'nx:run-commands', 'options': {'command': 'tsc -p $location/$name/tsconfig.build.json'}, 'outputs': ['{workspaceRoot}/dist/libs/{projectName}'], 'cache': True, 'dependsOn': ['typecheck']},
+    },
+    'python_pkg': {
+        'lint': {'executor': 'nx:run-commands', 'options': {'command': 'ruff check $location/$name/', 'cwd': '{workspaceRoot}'}, 'outputs': ['{workspaceRoot}/dist/reports/lint/{projectName}'], 'cache': True},
+        'typecheck': {'executor': 'nx:run-commands', 'options': {'command': 'mypy $location/$name/src/', 'cwd': '{workspaceRoot}'}, 'outputs': ['{workspaceRoot}/dist/reports/typecheck/{projectName}'], 'cache': True},
+        'test:unit': {'executor': 'nx:run-commands', 'options': {'command': 'python -m pytest $location/$name/tests/ -m \"not integration\" --junitxml=dist/reports/tests/unit/$name/results.xml', 'cwd': '{workspaceRoot}'}, 'outputs': ['{workspaceRoot}/dist/reports/tests/unit/{projectName}'], 'cache': True},
+        'build': {'executor': 'nx:run-commands', 'options': {'commands': ['python -m build $location/$name/ --wheel --outdir dist/libs/$name/'], 'cwd': '{workspaceRoot}'}, 'outputs': ['{workspaceRoot}/dist/libs/{projectName}'], 'cache': True},
+    },
+    'python_cython_pkg': {
+        'lint': {'executor': 'nx:run-commands', 'options': {'command': 'ruff check $location/$name/', 'cwd': '{workspaceRoot}'}, 'outputs': ['{workspaceRoot}/dist/reports/lint/{projectName}'], 'cache': True},
+        'typecheck': {'executor': 'nx:run-commands', 'options': {'command': 'mypy $location/$name/src/', 'cwd': '{workspaceRoot}'}, 'outputs': ['{workspaceRoot}/dist/reports/typecheck/{projectName}'], 'cache': True},
+        'test:unit': {'executor': 'nx:run-commands', 'options': {'command': 'python -m pytest $location/$name/tests/ -m \"not integration\" --junitxml=dist/reports/tests/unit/$name/results.xml', 'cwd': '{workspaceRoot}'}, 'outputs': ['{workspaceRoot}/dist/reports/tests/unit/{projectName}'], 'cache': True},
+        'build': {'executor': 'nx:run-commands', 'options': {'commands': ['python -m build $location/$name/ --wheel --outdir dist/libs/$name/'], 'cwd': '{workspaceRoot}'}, 'outputs': ['{workspaceRoot}/dist/libs/{projectName}'], 'cache': True},
+        'package': {'executor': 'nx:run-commands', 'options': {'commands': ['cp dist/libs/$name/*.whl dist/artifacts/'], 'cwd': '{workspaceRoot}'}, 'outputs': ['{workspaceRoot}/dist/artifacts/{projectName}*'], 'cache': True, 'dependsOn': ['build']},
+    },
+    'rust_crate': {
+        'lint': {'executor': 'nx:run-commands', 'options': {'command': 'cargo clippy --manifest-path $location/$name/Cargo.toml -- -D warnings', 'cwd': '{workspaceRoot}'}, 'outputs': ['{workspaceRoot}/dist/reports/lint/{projectName}'], 'cache': True},
+        'typecheck': {'executor': 'nx:run-commands', 'options': {'command': 'cargo check --manifest-path $location/$name/Cargo.toml', 'cwd': '{workspaceRoot}'}, 'outputs': ['{workspaceRoot}/dist/reports/typecheck/{projectName}'], 'cache': True},
+        'test:unit': {'executor': 'nx:run-commands', 'options': {'command': 'cargo test --manifest-path $location/$name/Cargo.toml --lib', 'cwd': '{workspaceRoot}'}, 'outputs': ['{workspaceRoot}/dist/reports/tests/unit/{projectName}'], 'cache': True},
+        'build': {'executor': 'nx:run-commands', 'options': {'command': 'cargo build --manifest-path $location/$name/Cargo.toml --release', 'cwd': '{workspaceRoot}'}, 'outputs': ['{workspaceRoot}/target/release/{projectName}'], 'cache': True},
+        'package': {'executor': 'nx:run-commands', 'options': {'commands': ['mkdir -p dist/artifacts/$name', 'cp target/release/$name dist/artifacts/$name/', 'cd dist/artifacts && sha256sum $name/$name > $name/SHA256SUMS'], 'cwd': '{workspaceRoot}'}, 'outputs': ['{workspaceRoot}/dist/artifacts/{projectName}/**'], 'cache': True, 'dependsOn': ['build']},
+    },
+    'service': {
+        'lint': {'executor': '@nx/eslint:lint', 'options': {'lintFilePatterns': ['$location/$name/**/*.ts']}, 'outputs': ['{workspaceRoot}/dist/reports/lint/{projectName}'], 'cache': True},
+        'typecheck': {'executor': 'nx:run-commands', 'options': {'command': 'tsc -p $location/$name/tsconfig.json --noEmit'}, 'outputs': ['{workspaceRoot}/dist/reports/typecheck/{projectName}'], 'cache': True},
+        'test:unit': {'executor': '@nx/vite:test', 'options': {'config': '$location/$name/vitest.config.ts'}, 'outputs': ['{workspaceRoot}/dist/reports/tests/unit/{projectName}'], 'cache': True},
+        'build': {'executor': '@nx/esbuild:esbuild', 'options': {'outputPath': 'dist/$location/$name', 'main': '$location/$name/src/main.ts', 'tsConfig': '$location/$name/tsconfig.json'}, 'outputs': ['{workspaceRoot}/dist/$location/{projectName}'], 'cache': True, 'dependsOn': ['typecheck']},
+        'package': {'executor': 'nx:run-commands', 'options': {'commands': ['tar -czf dist/artifacts/$name.tar.gz -C dist/$location/$name .']}, 'outputs': ['{workspaceRoot}/dist/artifacts/{projectName}*'], 'cache': True, 'dependsOn': ['build']},
+        'docker:build': {'executor': 'nx:run-commands', 'options': {'command': 'docker build -t $name:local -f $location/$name/Dockerfile .'}, 'cache': False, 'dependsOn': ['build']},
+    },
+    'ios_app': {
+        'lint': {'executor': 'nx:run-commands', 'options': {'command': 'swiftlint --reporter emoji', 'cwd': '{workspaceRoot}'}, 'outputs': ['{workspaceRoot}/dist/reports/lint/{projectName}'], 'cache': True},
+        'test:unit': {'executor': 'nx:run-commands', 'options': {'command': "xcodebuild test -scheme $name -destination 'platform=iOS Simulator,name=iPhone 16 Pro' -enableCodeCoverage YES | xcpretty --color 2>/dev/null || cat", 'cwd': '{workspaceRoot}'}, 'outputs': ['{workspaceRoot}/dist/reports/tests/unit/{projectName}'], 'cache': False},
+        'build': {'executor': 'nx:run-commands', 'options': {'command': "xcodebuild build -scheme $name -configuration Debug -destination 'platform=iOS Simulator,name=iPhone 16 Pro' -derivedDataPath build/DerivedData | xcpretty --color 2>/dev/null || cat", 'cwd': '{workspaceRoot}'}, 'outputs': ['{workspaceRoot}/build/DerivedData/Build/Products/Debug-iphonesimulator/{projectName}.app'], 'cache': False},
+    },
+    'ios_lib': {
+        'lint': {'executor': 'nx:run-commands', 'options': {'command': 'swiftlint --reporter emoji', 'cwd': '{workspaceRoot}'}, 'outputs': ['{workspaceRoot}/dist/reports/lint/{projectName}'], 'cache': True},
+        'test:unit': {'executor': 'nx:run-commands', 'options': {'command': "swift test --package-path $location/$name 2>&1 | tail -20", 'cwd': '{workspaceRoot}'}, 'outputs': ['{workspaceRoot}/dist/reports/tests/unit/{projectName}'], 'cache': False},
+        'build': {'executor': 'nx:run-commands', 'options': {'command': "swift build --package-path $location/$name -c release 2>&1 | tail -20", 'cwd': '{workspaceRoot}'}, 'outputs': ['{workspaceRoot}/$location/$name/.build/release'], 'cache': False},
+    },
+}
+
+config = type_configs.get('$project_type', {})
+for target in required:
+    if target in config:
+        project['targets'][target] = config[target]
+    else:
+        project['targets'][target] = {
+            'executor': 'nx:run-commands',
+            'options': {'command': f'echo \"TODO: wire {target} for $name\"'},
+            'cache': False
+        }
+
+# Add optional targets that have configs (like docker:build for service)
+for target, cfg in config.items():
+    if target not in project['targets']:
+        project['targets'][target] = cfg
+
+print(json.dumps(project, indent=2))
+" 2>/dev/null
+}
+
+substitute_placeholder() {
+  local file="$1" name="$2"
+  if [[ "$(uname)" == "Darwin" ]]; then
+    sed -i '' "s/__NAME__/$name/g" "$file"
+  else
+    sed -i "s/__NAME__/$name/g" "$file"
+  fi
+}
+
+# ── Main ──────────────────────────────────────────────────────
+
+usage() {
+  cat <<USAGE
+generate — Nx project scaffolding generator
+
+Usage: generate <type> <name> [--location apps|packages|crates]
+
+Project types:
+$(get_valid_types | sed 's/^/  /')
+
+Options:
+  --location DIR    Override default directory (apps/packages/crates)
+  -h, --help        Show this help
+
+Examples:
+  generate node_ts_app my-api
+  generate python_pkg data-utils --location packages
+  generate rust_crate auth-core
+  generate service payment-gateway
+USAGE
+}
+
+main() {
+  local project_type="${1:-}" name="${2:-}" location=""
+  shift 2 2>/dev/null || true
+
+  # Parse remaining options
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --location) location="$2"; shift 2 ;;
+      -h|--help)  usage; exit 0 ;;
+      *)          echo "Unknown option: $1"; exit 1 ;;
+    esac
+  done
+
+  [[ -z "$project_type" || -z "$name" ]] && { usage; exit 1; }
+
+  # Validate type
+  local valid_types
+  valid_types=$(get_valid_types)
+  if ! echo "$valid_types" | grep -qx "$project_type"; then
+    echo -e "${RED}ERROR${NC} Invalid type '$project_type'. Valid types:"
+    echo "$valid_types" | sed 's/^/  /'
+    exit 1
+  fi
+
+  # Default location
+  [[ -z "$location" ]] && location=$(default_location "$project_type")
+
+  local project_dir="$location/$name"
+
+  # Check for conflicts
+  if [[ -d "$project_dir" ]]; then
+    echo -e "${RED}ERROR${NC} Directory already exists: $project_dir"
+    exit 1
+  fi
+
+  echo -e "${BOLD}Generating $project_type project: $name${NC}"
+  echo "  Location: $project_dir"
+
+  # Create project directory
+  mkdir -p "$project_dir"
+
+  # Copy template files
+  local tmpl_dir="$TEMPLATES_DIR/$project_type"
+  if [[ -d "$tmpl_dir" ]]; then
+    cp -r "$tmpl_dir/"* "$project_dir/" 2>/dev/null || true
+    # Substitute placeholders
+    find "$project_dir" -type f | while read -r file; do
+      substitute_placeholder "$file" "$name"
+    done
+    echo -e "  ${GREEN}✓${NC} Template files copied"
+  fi
+
+  # Generate project.json
+  generate_project_json "$project_type" "$name" "$location" > "$project_dir/project.json"
+  echo -e "  ${GREEN}✓${NC} project.json generated"
+
+  # Copy appropriate CLAUDE.md
+  case "$location" in
+    apps)     cp "$GOLDEN_PATH/apps/CLAUDE.md" "$project_dir/CLAUDE.md" 2>/dev/null || true ;;
+    *)        cp "$GOLDEN_PATH/packages/CLAUDE.md" "$project_dir/CLAUDE.md" 2>/dev/null || true ;;
+  esac
+  echo -e "  ${GREEN}✓${NC} CLAUDE.md copied"
+
+  echo ""
+  echo -e "${GREEN}Project created at $project_dir${NC}"
+  echo ""
+  echo "Files:"
+  find "$project_dir" -type f | sort | sed 's/^/  /'
+}
+
+main "$@"

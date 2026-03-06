@@ -1,0 +1,114 @@
+name: ci-nightly
+
+on:
+  schedule:
+    # 03:00 UTC daily (outside peak hours)
+    - cron: "0 3 * * *"
+  workflow_dispatch:
+    inputs:
+      suite:
+        description: "Which suite to run (all|integration|e2e|security)"
+        required: false
+        default: "all"
+      cache_bypass:
+        description: "Set to 1 to skip all caches"
+        required: false
+        default: ""
+
+permissions:
+  contents: read
+  security-events: write  # for security scan results
+
+env:
+  NODE_VERSION: "20.11.1"
+  PNPM_VERSION: "9.15.0"
+  NX_SKIP_NX_CACHE: ${{ inputs.cache_bypass == '1' && 'true' || '' }}
+
+jobs:
+  # ──────────────────────────────────────────────────────────────
+  # Tier-3: Full integration suite (all projects, not just affected)
+  # ──────────────────────────────────────────────────────────────
+  integration-full:
+    if: inputs.suite == 'all' || inputs.suite == 'integration' || inputs.suite == ''
+    runs-on: [self-hosted, linux, x64]
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Full integration test suite
+        shell: bash
+        run: |
+          set -euo pipefail
+          pnpm install --frozen-lockfile
+          pnpm nx run-many -t build --all --parallel=3
+          pnpm nx run-many -t test:integration --all --parallel=2
+
+  # ──────────────────────────────────────────────────────────────
+  # Tier-4: End-to-end tests
+  # ──────────────────────────────────────────────────────────────
+  e2e-full:
+    if: inputs.suite == 'all' || inputs.suite == 'e2e' || inputs.suite == ''
+    runs-on: [self-hosted, linux, x64]
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Full e2e test suite
+        shell: bash
+        run: |
+          set -euo pipefail
+          pnpm install --frozen-lockfile
+          pnpm nx run-many -t build --all --parallel=3
+          pnpm nx run-many -t test:e2e --all --parallel=1
+
+  # ──────────────────────────────────────────────────────────────
+  # Security scans (dependency + container)
+  # ──────────────────────────────────────────────────────────────
+  security-scans:
+    if: inputs.suite == 'all' || inputs.suite == 'security' || inputs.suite == ''
+    runs-on: [self-hosted, linux, x64]
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Dependency audit
+        shell: bash
+        run: |
+          set -euo pipefail
+          pnpm install --frozen-lockfile
+          pnpm nx run workspace:security:deps
+        continue-on-error: true
+
+      - name: Container scans (affected)
+        shell: bash
+        run: |
+          set -euo pipefail
+          pnpm nx run-many -t docker:scan --all --parallel=2 || true
+          # Wire to trivy/grype/snyk as needed
+
+      - name: Upload security reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nightly-security-${{ github.sha }}
+          path: dist/reports/security/
+          retention-days: 30
+
+  # ──────────────────────────────────────────────────────────────
+  # Notify on failure
+  # ──────────────────────────────────────────────────────────────
+  notify:
+    needs: [integration-full, e2e-full, security-scans]
+    if: failure()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Nightly failure notification
+        shell: bash
+        run: |
+          echo "::error ::Nightly CI failed — ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          # Wire to Slack/PagerDuty/email:
+          # curl -X POST "$SLACK_WEBHOOK" -d '{"text":"Nightly CI failed: ..."}'

@@ -1,0 +1,31 @@
+version: "1.0.0"
+tier: 1
+
+project:
+  name: "pt-performance"
+  org: "x2machines"
+  domain: "healthcare"
+  platform: "ios"
+  scheme: "PTPerformance"
+  bundle_id: "com.ptperformance.app"
+
+regulated_paths:
+  - ".env"
+  - "secrets/"
+  - "migrations/"
+  - "clinical-rules/"
+  - "audit_log/"
+  - "certs/"
+
+mcp_profile: "healthcare"
+
+machines: {}
+
+nx_cache:
+  url: "http://100.84.49.12:7777"
+  token: ""
+
+upstream:
+  type: "git"
+  remote: ""
+  ref: ""          # pin to a tag (e.g., "v1.2.0") or leave empty for latest main

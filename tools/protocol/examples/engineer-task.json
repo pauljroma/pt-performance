@@ -1,0 +1,26 @@
+{
+  "task_id": "task-20260305-0001",
+  "parent_task_id": null,
+  "intent": "Fix routing bug in z02_coordination zone that causes ghost retries after max attempts",
+  "scope": {
+    "machine": "x2machines",
+    "repo": "x2machines",
+    "zone": "z02_coordination",
+    "paths": ["workspace/z02_coordination/coordinator.py"]
+  },
+  "constraints": {
+    "method": "claude",
+    "timeout_s": 600,
+    "budget_usd": 4.50,
+    "trust_tier": 1,
+    "agent_type": "engineer"
+  },
+  "deadline": "2026-03-05T18:00:00Z",
+  "agent_affinity": ["x2m-alpha-engineer"],
+  "priority": 2,
+  "metadata": {
+    "linear_id": "PAY-1234",
+    "icp_admission_id": "adm-20260305-0042",
+    "zone_role": "engineer"
+  }
+}

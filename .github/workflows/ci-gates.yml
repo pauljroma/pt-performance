@@ -1,0 +1,286 @@
+name: ci-gates
+
+on:
+  pull_request:
+    branches: ["**"]
+  push:
+    branches: ["main", "release/**"]
+  workflow_dispatch:
+    inputs:
+      release_mode:
+        description: "Override release mode (DEV|STABILIZATION|RELEASE)"
+        required: false
+        default: ""
+      cache_bypass:
+        description: "Set to 1 to skip all caches"
+        required: false
+        default: ""
+
+# Principle: One control plane (GitHub Actions).
+# Heavy compute runs on self-hosted ephemeral runners.
+# Untrusted PRs must never receive secrets.
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-gates-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: "20.11.1"
+  PNPM_VERSION: "9.15.0"
+  NX_BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+  NX_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+  NX_SKIP_NX_CACHE: ${{ inputs.cache_bypass == '1' && 'true' || '' }}
+  CACHE_BYPASS: ${{ inputs.cache_bypass }}
+
+jobs:
+  # ──────────────────────────────────────────────────────────────
+  # Mode detection: trust lane + release mode
+  # ──────────────────────────────────────────────────────────────
+  determine-mode:
+    runs-on: ubuntu-latest
+    outputs:
+      trust_lane: ${{ steps.mode.outputs.trust_lane }}
+      release_mode: ${{ steps.mode.outputs.release_mode }}
+    steps:
+      - name: Determine trust lane and release mode
+        id: mode
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            if [[ "${{ github.event.pull_request.head.repo.full_name }}" != "${{ github.repository }}" ]]; then
+              TRUST_LANE="untrusted"
+            else
+              TRUST_LANE="trusted"
+            fi
+          else
+            TRUST_LANE="trusted"
+          fi
+
+          OVERRIDE="${{ inputs.release_mode }}"
+          if [[ -n "$OVERRIDE" ]]; then
+            MODE="$OVERRIDE"
+          else
+            REF="${{ github.ref }}"
+            if [[ "$REF" == refs/heads/release/* ]]; then
+              MODE="RELEASE"
+            elif [[ "$REF" == refs/heads/main ]]; then
+              MODE="STABILIZATION"
+            else
+              MODE="DEV"
+            fi
+          fi
+
+          echo "trust_lane=$TRUST_LANE" >> "$GITHUB_OUTPUT"
+          echo "release_mode=$MODE" >> "$GITHUB_OUTPUT"
+          echo "::notice ::Trust=$TRUST_LANE  Mode=$MODE"
+
+  # ──────────────────────────────────────────────────────────────
+  # Tier-2: Fast gates (always blocking, GitHub-hosted)
+  # ──────────────────────────────────────────────────────────────
+  tier2-fast-blocking:
+    needs: [determine-mode]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      pull-requests: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Enable Corepack + pin pnpm
+        shell: bash
+        run: |
+          set -euo pipefail
+          corepack enable
+          corepack prepare pnpm@${{ env.PNPM_VERSION }} --activate
+
+      - name: Cache pnpm store
+        if: inputs.cache_bypass != '1'
+        uses: actions/cache@v4
+        with:
+          path: ~/.local/share/pnpm/store/v3
+          key: pnpm-${{ env.PNPM_VERSION }}-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: pnpm-${{ env.PNPM_VERSION }}-
+
+      - name: Install deps
+        shell: bash
+        run: pnpm install --frozen-lockfile
+
+      - name: Format check
+        shell: bash
+        run: pnpm nx run workspace:format:check
+
+      - name: Policy lint (target taxonomy)
+        shell: bash
+        run: pnpm nx run workspace:policy:lint
+
+      - name: Security deps (workspace)
+        shell: bash
+        run: pnpm nx run workspace:security:deps || true
+        # Non-blocking until stable; remove `|| true` when ready to enforce
+
+      - name: Affected (lint/typecheck/unit)
+        shell: bash
+        run: |
+          pnpm nx affected -t lint,typecheck,test:unit \
+            --base=${{ env.NX_BASE }} \
+            --head=${{ env.NX_HEAD }} \
+            --parallel=3
+
+  # ──────────────────────────────────────────────────────────────
+  # Tier-3: Heavy gates — DEV mode (non-blocking)
+  # ──────────────────────────────────────────────────────────────
+  tier3-heavy-dev:
+    needs: [determine-mode, tier2-fast-blocking]
+    if: >-
+      needs.determine-mode.outputs.trust_lane == 'trusted' &&
+      needs.determine-mode.outputs.release_mode == 'DEV'
+    runs-on: [self-hosted, linux, x64]
+    timeout-minutes: 90
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run heavy affected targets (DEV, non-blocking)
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Self-hosted runner image includes pinned toolchains (see templates/toolchain/).
+          pnpm install --frozen-lockfile
+          pnpm nx affected -t build,test:integration \
+            --base=${{ env.NX_BASE }} \
+            --head=${{ env.NX_HEAD }} \
+            --parallel=2
+
+  # ──────────────────────────────────────────────────────────────
+  # Tier-3: Heavy gates — STABILIZATION mode (blocking)
+  # ──────────────────────────────────────────────────────────────
+  tier3-heavy-stabilization:
+    needs: [determine-mode, tier2-fast-blocking]
+    if: >-
+      needs.determine-mode.outputs.trust_lane == 'trusted' &&
+      needs.determine-mode.outputs.release_mode == 'STABILIZATION'
+    runs-on: [self-hosted, linux, x64]
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Heavy affected targets (STABILIZATION, blocking)
+        shell: bash
+        run: |
+          set -euo pipefail
+          pnpm install --frozen-lockfile
+          pnpm nx affected -t build,test:integration \
+            --base=${{ env.NX_BASE }} \
+            --head=${{ env.NX_HEAD }} \
+            --parallel=2
+
+  # ──────────────────────────────────────────────────────────────
+  # Tier-3: Heavy gates — RELEASE mode (blocking)
+  # Builds + packages artifacts, uploads for provenance job.
+  # ──────────────────────────────────────────────────────────────
+  tier3-heavy-release:
+    needs: [determine-mode, tier2-fast-blocking]
+    if: >-
+      needs.determine-mode.outputs.trust_lane == 'trusted' &&
+      needs.determine-mode.outputs.release_mode == 'RELEASE'
+    runs-on: [self-hosted, linux, x64]
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Build + package + integration (RELEASE, blocking)
+        shell: bash
+        run: |
+          set -euo pipefail
+          pnpm install --frozen-lockfile
+          pnpm nx affected -t build,package,test:integration \
+            --base=${{ env.NX_BASE }} \
+            --head=${{ env.NX_HEAD }} \
+            --parallel=2
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-build-${{ github.sha }}
+          path: |
+            dist/artifacts/
+            dist/release/
+          retention-days: 30
+
+  # ──────────────────────────────────────────────────────────────
+  # Tier-4: Release provenance (build-once promote-many)
+  # Downloads artifacts from tier3; does NOT rebuild.
+  # ──────────────────────────────────────────────────────────────
+  release-provenance:
+    needs: [determine-mode, tier3-heavy-release]
+    if: >-
+      needs.determine-mode.outputs.trust_lane == 'trusted' &&
+      needs.determine-mode.outputs.release_mode == 'RELEASE'
+    runs-on: [self-hosted, linux, x64]
+    timeout-minutes: 30
+    permissions:
+      contents: write  # for signed tags
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: release-build-${{ github.sha }}
+          path: dist/
+
+      - name: Generate build metadata
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p dist/release
+          TIMESTAMP="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          cat > dist/release/build-metadata.json <<METADATA
+          {
+            "repo": "${{ github.repository }}",
+            "sha": "${{ github.sha }}",
+            "ref": "${{ github.ref }}",
+            "run_id": "${{ github.run_id }}",
+            "run_attempt": "${{ github.run_attempt }}",
+            "workflow": "${{ github.workflow }}",
+            "timestamp": "${TIMESTAMP}",
+            "node_version": "${{ env.NODE_VERSION }}",
+            "pnpm_version": "${{ env.PNPM_VERSION }}"
+          }
+          METADATA
+          echo "::notice ::Build metadata written to dist/release/build-metadata.json"
+
+      - name: Upload provenance artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-provenance-${{ github.sha }}
+          path: dist/release/build-metadata.json
+          retention-days: 90
+
+      - name: Upload to artifact store (placeholder)
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Wire to your S3/MinIO bucket:
+          #   aws s3 cp --recursive dist/ \
+          #     s3://artifacts/${{ github.repository }}/${{ github.sha }}/
+          echo "::notice ::Artifact upload placeholder — wire to your S3/MinIO bucket"
