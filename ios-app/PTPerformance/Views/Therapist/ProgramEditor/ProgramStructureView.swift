@@ -126,7 +126,7 @@ struct ProgramStructureView: View {
                 logger.log("✅ Batch-loaded \(allSessions.count) total sessions", level: .success)
 
                 // Group sessions by phase_id
-                sessionsByPhase = Dictionary(grouping: allSessions, by: { $0.phase_id.uuidString })
+                sessionsByPhase = allSessions.safeGrouped(by: { $0.phase_id.uuidString })
                 logger.log("   Distributed to \(sessionsByPhase.keys.count) phases")
             }
         } catch {

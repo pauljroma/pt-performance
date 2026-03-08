@@ -534,10 +534,10 @@ class PendingChangesQueue: ObservableObject {
         let failed = changes.filter { $0.status == .failed }
         let expired = changes.filter { $0.status == .expired }
 
-        let byType = Dictionary(grouping: changes, by: { $0.type })
+        let byType = changes.safeGrouped(by: { $0.type })
             .mapValues { $0.count }
 
-        let byPriority = Dictionary(grouping: changes, by: { $0.priority })
+        let byPriority = changes.safeGrouped(by: { $0.priority })
             .mapValues { $0.count }
 
         return QueueStatistics(

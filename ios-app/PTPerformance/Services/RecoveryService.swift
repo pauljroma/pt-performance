@@ -180,7 +180,7 @@ final class RecoveryService: ObservableObject {
 
         let totalMinutes = weeklySessions.reduce(0) { $0 + $1.durationMinutes }
 
-        let protocolCounts = Dictionary(grouping: weeklySessions, by: { $0.protocolType })
+        let protocolCounts = weeklySessions.safeGrouped(by: { $0.protocolType })
         let favorite = protocolCounts.max(by: { $0.value.count < $1.value.count })?.key
 
         return (weeklySessions.count, totalMinutes, favorite)
@@ -336,10 +336,10 @@ final class RecoveryService: ObservableObject {
         let calendar = Calendar.current
 
         // Group sessions by protocol type
-        let sessionsByProtocol = Dictionary(grouping: sessions, by: { $0.protocolType })
+        let sessionsByProtocol = sessions.safeGrouped(by: { $0.protocolType })
 
         // Group health data by metric
-        let healthByMetric = Dictionary(grouping: healthData, by: { $0.metric })
+        let healthByMetric = healthData.safeGrouped(by: { $0.metric })
 
         for (protocolType, protocolSessions) in sessionsByProtocol {
             for (metric, metricData) in healthByMetric {
@@ -524,7 +524,7 @@ final class RecoveryService: ObservableObject {
 
         // Group positive insights by protocol
         let positiveInsights = insights.filter { $0.impactPercentage > 3 && $0.confidence > 0.5 }
-        let insightsByProtocol = Dictionary(grouping: positiveInsights, by: { $0.protocolType })
+        let insightsByProtocol = positiveInsights.safeGrouped(by: { $0.protocolType })
 
         for (protocolType, protocolInsights) in insightsByProtocol {
             guard let topInsight = protocolInsights.first else { continue }

@@ -33,7 +33,7 @@ struct HelpView: View {
     }
 
     var articlesByCategory: [HelpCategory: [HelpArticle]] {
-        Dictionary(grouping: filteredArticles) { $0.category }
+        filteredArticles.safeGrouped { $0.category }
     }
 
     var body: some View {

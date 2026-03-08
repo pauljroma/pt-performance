@@ -584,7 +584,7 @@ private struct SportPickerSheet: View {
     }
 
     private var groupedSports: [RTSSportCategory: [RTSSport]] {
-        Dictionary(grouping: filteredSports, by: { $0.category })
+        filteredSports.safeGrouped(by: { $0.category })
     }
 
     var body: some View {

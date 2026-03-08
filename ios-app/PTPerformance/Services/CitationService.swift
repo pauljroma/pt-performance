@@ -192,7 +192,7 @@ final class CitationService: ObservableObject {
     /// - Parameter citations: Array of citations to group
     /// - Returns: Dictionary mapping source types to citations
     func groupBySourceType(_ citations: [EvidenceCitation]) -> [CitationSourceType: [EvidenceCitation]] {
-        Dictionary(grouping: citations) { $0.sourceType }
+        citations.safeGrouped { $0.sourceType }
     }
 
     /// Get citations grouped and sorted for display

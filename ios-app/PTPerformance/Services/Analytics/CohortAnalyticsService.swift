@@ -247,7 +247,7 @@ final class CohortAnalyticsService {
         }
 
         // Group by program
-        let grouped = Dictionary(grouping: enrollments) { $0.program_id }
+        let grouped = enrollments.safeGrouped { $0.program_id }
 
         var programSummaries: [ProgramOutcomeSummary] = []
 

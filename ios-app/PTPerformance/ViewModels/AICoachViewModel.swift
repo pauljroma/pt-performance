@@ -216,7 +216,7 @@ final class AICoachViewModel: ObservableObject {
 
     /// Insights grouped by category
     var insightsByCategory: [(CoachingCategory, [CoachingInsight])] {
-        let grouped = Dictionary(grouping: insights, by: { $0.category })
+        let grouped = insights.safeGrouped(by: { $0.category })
         return grouped.sorted { $0.key.rawValue < $1.key.rawValue }
     }
 

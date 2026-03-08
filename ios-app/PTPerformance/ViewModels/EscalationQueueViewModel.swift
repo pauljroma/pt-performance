@@ -66,7 +66,7 @@ class EscalationQueueViewModel: ObservableObject {
 
     /// Escalations grouped by severity
     var groupedBySeverity: [EscalationSeverity: [RiskEscalation]] {
-        Dictionary(grouping: filteredEscalations) { $0.severity }
+        filteredEscalations.safeGrouped { $0.severity }
     }
 
     /// Count of pending (unacknowledged) escalations
@@ -339,9 +339,9 @@ extension EscalationQueueViewModel {
     var statistics: EscalationStatistics {
         EscalationStatistics(
             total: escalations.count,
-            bySeverity: Dictionary(grouping: escalations) { $0.severity }
+            bySeverity: escalations.safeGrouped { $0.severity }
                 .mapValues { $0.count },
-            byType: Dictionary(grouping: escalations) { $0.escalationType }
+            byType: escalations.safeGrouped { $0.escalationType }
                 .mapValues { $0.count },
             pendingCount: escalations.filter { $0.acknowledgedAt == nil }.count,
             acknowledgedCount: escalations.filter { $0.acknowledgedAt != nil && $0.resolvedAt == nil }.count,

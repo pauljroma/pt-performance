@@ -182,7 +182,7 @@ class TherapistPrescriptionDashboardViewModel: ObservableObject {
 
     /// Compliance rate by patient
     var complianceByPatient: [PatientCompliance] {
-        let grouped = Dictionary(grouping: prescriptions) { $0.patient.id }
+        let grouped = prescriptions.safeGrouped { $0.patient.id }
 
         return grouped.compactMap { (_, items) -> PatientCompliance? in
             guard let patient = items.first?.patient else { return nil }

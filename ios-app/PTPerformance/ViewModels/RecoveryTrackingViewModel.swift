@@ -81,7 +81,7 @@ final class RecoveryTrackingViewModel: ObservableObject {
         let totalMinutes = weeklySessions.reduce(0) { $0 + $1.durationMinutes }
 
         // Find most used protocol
-        let protocolCounts = Dictionary(grouping: weeklySessions, by: { $0.protocolType })
+        let protocolCounts = weeklySessions.safeGrouped(by: { $0.protocolType })
         let favoriteType = protocolCounts.max(by: { $0.value.count < $1.value.count })?.key
 
         return WeeklyRecoveryStats(
@@ -96,7 +96,7 @@ final class RecoveryTrackingViewModel: ObservableObject {
         let weekAgo = Calendar.current.date(byAdding: .day, value: -7, to: Date()) ?? Date()
         let weeklySessions = recentSessions.filter { $0.loggedAt >= weekAgo }
 
-        let grouped = Dictionary(grouping: weeklySessions, by: { $0.protocolType })
+        let grouped = weeklySessions.safeGrouped(by: { $0.protocolType })
 
         return grouped.map { type, sessions in
             RecoveryTypeBreakdown(

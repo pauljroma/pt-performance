@@ -36,7 +36,7 @@ final class SupplementCatalogViewModel: ObservableObject {
     }
 
     var catalogByCategory: [(SupplementCatalogCategory, [CatalogSupplement])] {
-        let grouped = Dictionary(grouping: filteredCatalog, by: { $0.category })
+        let grouped = filteredCatalog.safeGrouped(by: { $0.category })
         return grouped.sorted { $0.key.displayName < $1.key.displayName }
     }
 

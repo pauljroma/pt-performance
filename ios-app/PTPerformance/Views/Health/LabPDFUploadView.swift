@@ -535,7 +535,7 @@ final class LabPDFUploadViewModel: ObservableObject {
     var groupedBiomarkers: [(String, [ParsedBiomarker])] {
         guard let biomarkers = parsedResult?.biomarkers else { return [] }
 
-        let grouped = Dictionary(grouping: biomarkers) { $0.category ?? "Other" }
+        let grouped = biomarkers.safeGrouped { $0.category ?? "Other" }
         return grouped.sorted { $0.key < $1.key }
     }
 

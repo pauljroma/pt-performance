@@ -406,7 +406,7 @@ struct ROMSummaryCard: View {
 
     // Group measurements by joint
     private var jointGroups: [(String, [ROMeasurement])] {
-        Dictionary(grouping: measurements, by: { $0.joint })
+        measurements.safeGrouped(by: { $0.joint })
             .sorted { $0.key < $1.key }
     }
 

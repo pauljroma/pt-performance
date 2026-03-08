@@ -515,7 +515,7 @@ class OptimisticUpdateManager: ObservableObject {
         DebugLogger.shared.log("📤 Starting sync of \(updatesToSync.count) updates...", level: .diagnostic)
 
         // Group updates by type to enable batching and minimize DB roundtrips.
-        let grouped = Dictionary(grouping: updatesToSync) { $0.type }
+        let grouped = updatesToSync.safeGrouped { $0.type }
 
         // 1. No-op types: these are local-only or aggregated into exercise completion.
         //    Resolve them immediately without any API call.

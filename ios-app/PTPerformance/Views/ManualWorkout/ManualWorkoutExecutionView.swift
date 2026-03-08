@@ -245,7 +245,7 @@ class ManualWorkoutExecutionViewModel: ObservableObject {
     /// BUILD 220: Sort by proper workout order (warm-up first, recovery last)
     /// BUILD 309: Added secondary sort by block name to prevent unstable category header reordering
     var exercisesByBlock: [(blockType: String, exercises: [ManualSessionExercise])] {
-        let grouped = Dictionary(grouping: exercises) { $0.blockType ?? "General" }
+        let grouped = exercises.safeGrouped { $0.blockType ?? "General" }
         // Sort by workout block order with secondary sort by name for stability
         return grouped.sorted { lhs, rhs in
             let order1 = WorkoutBlockType.sortOrder(for: lhs.key)

@@ -83,7 +83,7 @@ struct CalendarPickerView: View {
     }
 
     private var groupedCalendars: [String: [CalendarInfo]] {
-        Dictionary(grouping: filteredCalendars) { $0.source }
+        filteredCalendars.safeGrouped { $0.source }
     }
 
     private var sortedSources: [String] {

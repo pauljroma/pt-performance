@@ -244,7 +244,7 @@ class ProgramAnalyticsViewModel: ObservableObject {
         let enrollments = try decoder.decode([EnrollmentSummaryRow].self, from: enrollmentsResponse.data)
 
         // Group enrollments by program
-        let enrollmentsByProgram = Dictionary(grouping: enrollments) { $0.programLibraryId }
+        let enrollmentsByProgram = enrollments.safeGrouped { $0.programLibraryId }
 
         // Build analytics for each program
         let analytics = libraryPrograms.map { program -> ProgramAnalytics in

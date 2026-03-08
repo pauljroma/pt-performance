@@ -30,7 +30,7 @@ final class SupplementStacksViewModel: ObservableObject {
     }
 
     var stacksByCategory: [(StackCategory, [SupplementStack])] {
-        let grouped = Dictionary(grouping: filteredStacks, by: { mapGoalToCategory($0.goal) })
+        let grouped = filteredStacks.safeGrouped(by: { mapGoalToCategory($0.goal) })
         return grouped.sorted { $0.key.displayName < $1.key.displayName }
     }
 

@@ -495,7 +495,7 @@ class ProgramBuilderService: ObservableObject {
                 .value
 
             // Group assignments by phase
-            let assignmentsByPhase = Dictionary(grouping: assignments) { $0.phaseId }
+            let assignmentsByPhase = assignments.safeGrouped { $0.phaseId }
 
             // Build phases with assignments
             let phasesWithAssignments = phases.map { phase -> PhaseWithAssignments in

@@ -75,7 +75,7 @@ class TimerPickerViewModel: ObservableObject {
 
     /// Presets grouped by category for sectioned display
     var categorizedPresets: [TimerCategory: [TimerPreset]] {
-        Dictionary(grouping: filteredPresets) { $0.category }
+        filteredPresets.safeGrouped { $0.category }
     }
 
     /// Whether we have any filtered results

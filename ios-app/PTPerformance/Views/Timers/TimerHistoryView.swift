@@ -531,7 +531,7 @@ struct TimerHistoryView: View {
     }
 
     private var groupedAndSortedDates: [Date] {
-        let grouped = Dictionary(grouping: filteredAndSearchedSessions()) { session in
+        let grouped = filteredAndSearchedSessions().safeGrouped { session in
             Calendar.current.startOfDay(for: session.startedAt)
         }
         return Array(grouped.keys).sorted(by: >)

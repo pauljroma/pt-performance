@@ -108,7 +108,7 @@ struct PhaseEditorSheet: View {
                 emptyAssignmentsView
             } else {
                 // Group assignments by week
-                let groupedAssignments = Dictionary(grouping: phase.workoutAssignments) { $0.weekNumber }
+                let groupedAssignments = phase.workoutAssignments.safeGrouped { $0.weekNumber }
                 let sortedWeeks = groupedAssignments.keys.sorted()
 
                 ForEach(sortedWeeks, id: \.self) { week in

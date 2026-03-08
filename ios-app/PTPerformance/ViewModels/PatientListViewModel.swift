@@ -397,7 +397,7 @@ class PatientListViewModel: ObservableObject {
         summary += String(repeating: "=", count: 50) + "\n\n"
 
         // Group by sport if available
-        let patientsBySport = Dictionary(grouping: selectedPatients) { $0.sport ?? "No Sport" }
+        let patientsBySport = selectedPatients.safeGrouped { $0.sport ?? "No Sport" }
 
         for (sport, sportPatients) in patientsBySport.sorted(by: { $0.key < $1.key }) {
             summary += "[\(sport)]\n"

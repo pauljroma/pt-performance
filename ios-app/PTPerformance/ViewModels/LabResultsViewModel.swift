@@ -101,7 +101,7 @@ final class LabResultsViewModel: ObservableObject {
     // MARK: - Computed Properties
 
     var groupedResults: [(LabTestType, [LabResult])] {
-        let grouped = Dictionary(grouping: labResults, by: { $0.testTypeValue })
+        let grouped = labResults.safeGrouped(by: { $0.testTypeValue })
         return grouped.sorted { $0.key.displayName < $1.key.displayName }
     }
 

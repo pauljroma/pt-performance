@@ -152,7 +152,7 @@ struct LearningCategoryArticleListView: View {
 
     // Group articles by subcategory
     var articlesBySubcategory: [(String, [LearningArticle])] {
-        let grouped = Dictionary(grouping: filteredArticles) { article -> String in
+        let grouped = filteredArticles.safeGrouped { article -> String in
             article.subcategory ?? "General"
         }
         return grouped.sorted { $0.key < $1.key }

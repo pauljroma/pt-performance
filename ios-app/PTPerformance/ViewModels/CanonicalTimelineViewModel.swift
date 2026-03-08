@@ -235,7 +235,7 @@ final class CanonicalTimelineViewModel: ObservableObject {
 
     /// Events grouped by section date for display
     var groupedEvents: [(String, [TimelineEvent])] {
-        let grouped = Dictionary(grouping: events) { $0.sectionDate }
+        let grouped = events.safeGrouped { $0.sectionDate }
 
         // Sort sections: Today first, then Yesterday, etc.
         let sectionOrder = ["Today", "Yesterday", "This Week", "This Month"]

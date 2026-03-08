@@ -50,7 +50,7 @@ struct ProgramDiffView: View {
 
     /// Group edits by the field they changed for visual organization
     private var groupedByField: [(field: String, edits: [ProgramEdit])] {
-        let grouped = Dictionary(grouping: activeEdits) { $0.fieldChanged }
+        let grouped = activeEdits.safeGrouped { $0.fieldChanged }
         return grouped.sorted { $0.key < $1.key }.map { (field: $0.key, edits: $0.value) }
     }
 

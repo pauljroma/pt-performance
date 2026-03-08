@@ -467,14 +467,14 @@ final class ConflictResolutionService: ObservableObject {
             let dismissed = allConflicts.filter { $0.status == .dismissed }.count
 
             // Find most common metric
-            let metricCounts = Dictionary(grouping: allConflicts, by: { $0.metricType })
+            let metricCounts = allConflicts.safeGrouped(by: { $0.metricType })
             let mostCommon = metricCounts.max(by: { $0.value.count < $1.value.count })?.key
 
             // Find most frequent conflict source pair
             let sourcePairs = allConflicts.flatMap { conflict -> [String] in
                 conflict.sources.map { $0.sourceType }
             }
-            let sourceFrequency = Dictionary(grouping: sourcePairs, by: { $0 })
+            let sourceFrequency = sourcePairs.safeGrouped(by: { $0 })
             let mostFrequentSource = sourceFrequency.max(by: { $0.value.count < $1.value.count })?.key
 
             return ConflictSummary(

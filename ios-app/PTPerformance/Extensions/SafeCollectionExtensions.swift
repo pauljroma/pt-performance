@@ -35,6 +35,22 @@ extension Dictionary {
     }
 }
 
+// MARK: - Safe Dictionary Grouping
+
+extension Array {
+    /// Safe alternative to Dictionary(grouping:by:) that avoids a Swift stdlib crash
+    /// on iOS 26 beta where the inlined specialization of Dictionary.init(grouping:by:)
+    /// traps (brk #1) with certain value witnesses (e.g. Date).
+    func safeGrouped<Key: Hashable>(by keyForValue: (Element) -> Key) -> [Key: [Element]] {
+        var result = [Key: [Element]]()
+        for element in self {
+            let key = keyForValue(element)
+            result[key, default: []].append(element)
+        }
+        return result
+    }
+}
+
 // MARK: - Safe Optional Unwrapping
 
 extension Optional {

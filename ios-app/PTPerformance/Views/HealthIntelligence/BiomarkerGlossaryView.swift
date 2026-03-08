@@ -131,7 +131,7 @@ final class BiomarkerGlossaryViewModel: ObservableObject {
     }
 
     var educationByCategory: [String: [BiomarkerEducation]] {
-        Dictionary(grouping: allEducation, by: { $0.category })
+        allEducation.safeGrouped(by: { $0.category })
     }
 
     var categoriesWithContent: [BiomarkerEducationCategory] {
@@ -154,7 +154,7 @@ final class BiomarkerGlossaryViewModel: ObservableObject {
     }
 
     var filteredEducationByCategory: [String: [BiomarkerEducation]] {
-        Dictionary(grouping: filteredEducation, by: { $0.category })
+        filteredEducation.safeGrouped(by: { $0.category })
     }
 
     var categoriesWithFilteredContent: [BiomarkerEducationCategory] {

@@ -544,8 +544,8 @@ class ProgramEditorViewModel: ObservableObject {
             }
 
             // Group sessions by phase_id and exercises by session_id in memory
-            let sessionsByPhase = Dictionary(grouping: allSessions) { $0.phaseId }
-            let exercisesBySession = Dictionary(grouping: allExercises) { $0.sessionId }
+            let sessionsByPhase = allSessions.safeGrouped { $0.phaseId }
+            let exercisesBySession = allExercises.safeGrouped { $0.sessionId }
 
             // Log the grouped results for diagnostic purposes
             for phase in phases {

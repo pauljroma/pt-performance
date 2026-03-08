@@ -68,7 +68,7 @@ class TimerHistoryViewModel: ObservableObject {
 
     /// Sessions grouped by date (start of day)
     var groupedSessions: [Date: [WorkoutTimer]] {
-        Dictionary(grouping: sessions) { session in
+        sessions.safeGrouped { session in
             Calendar.current.startOfDay(for: session.startedAt)
         }
     }
@@ -114,7 +114,7 @@ class TimerHistoryViewModel: ObservableObject {
 
     /// Grouped filtered sessions
     var groupedFilteredSessions: [Date: [WorkoutTimer]] {
-        Dictionary(grouping: filteredSessions) { session in
+        filteredSessions.safeGrouped { session in
             Calendar.current.startOfDay(for: session.startedAt)
         }
     }

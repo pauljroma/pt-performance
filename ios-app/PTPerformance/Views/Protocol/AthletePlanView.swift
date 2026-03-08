@@ -261,7 +261,7 @@ struct AthletePlanView: View {
                 .font(.headline)
 
             // Group tasks by date
-            let groupedTasks = Dictionary(grouping: plan.tasks) { task in
+            let groupedTasks = plan.tasks.safeGrouped { task in
                 Calendar.current.startOfDay(for: task.dueDate)
             }
 

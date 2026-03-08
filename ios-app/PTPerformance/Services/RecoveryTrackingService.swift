@@ -44,7 +44,7 @@ final class RecoveryTrackingService: ObservableObject {
         let avgDuration = totalSessions > 0 ? totalMinutes / totalSessions : 0
 
         // Calculate by protocol type
-        let byType = Dictionary(grouping: sessions, by: { $0.protocolType })
+        let byType = sessions.safeGrouped(by: { $0.protocolType })
         let breakdowns = byType.map { type, typeSessions in
             RecoveryTypeStats(
                 protocolType: type,
@@ -314,7 +314,7 @@ final class RecoveryTrackingService: ObservableObject {
         let calendar = Calendar.current
         let filteredSessions = sessions(from: startDate, to: endDate)
 
-        return Dictionary(grouping: filteredSessions) { session in
+        return filteredSessions.safeGrouped { session in
             calendar.startOfDay(for: session.loggedAt)
         }
     }
@@ -331,7 +331,7 @@ final class RecoveryTrackingService: ObservableObject {
         var recommendations: [RecoveryRecommendation] = []
 
         // Analyze which protocols work best (most frequently used + positive feedback)
-        let sessionsByType = Dictionary(grouping: recoveryService.sessions, by: { $0.protocolType })
+        let sessionsByType = recoveryService.sessions.safeGrouped(by: { $0.protocolType })
         let sortedTypes = sessionsByType.sorted { $0.value.count > $1.value.count }
 
         for (index, (type, sessions)) in sortedTypes.prefix(3).enumerated() {

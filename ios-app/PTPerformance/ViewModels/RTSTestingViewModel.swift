@@ -200,7 +200,7 @@ class RTSTestingViewModel: ObservableObject {
 
     /// Criteria grouped by category
     var criteriaByCategory: [RTSCriterionCategory: [RTSMilestoneCriterion]] {
-        Dictionary(grouping: criteria, by: { $0.category })
+        criteria.safeGrouped(by: { $0.category })
     }
 
     /// Categories that have criteria (sorted)

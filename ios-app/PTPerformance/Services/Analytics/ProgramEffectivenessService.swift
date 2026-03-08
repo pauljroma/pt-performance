@@ -162,7 +162,7 @@ final class ProgramEffectivenessService {
         let sessions = try decoder.decode([SessionStatus].self, from: sessionsResponse.data)
 
         // Group by patient and determine outcomes
-        let patientSessions = Dictionary(grouping: sessions) { $0.patientId }
+        let patientSessions = sessions.safeGrouped { $0.patientId }
 
         var successCount = 0
         var partialCount = 0
@@ -277,7 +277,7 @@ final class ProgramEffectivenessService {
             }
 
             // Completing patients = patients who completed all sessions in this phase
-            let patientsWithCompletedSessions = Dictionary(grouping: phaseSessions) { $0.patientId }
+            let patientsWithCompletedSessions = phaseSessions.safeGrouped { $0.patientId }
                 .filter { _, sessions in
                     sessions.allSatisfy { $0.status == "completed" }
                 }
@@ -510,7 +510,7 @@ final class ProgramEffectivenessService {
             guard !exerciseRows.isEmpty else { return 0 }
 
             // Group by patient and compute per-patient gain
-            let byPatient = Dictionary(grouping: exerciseRows) { $0.patientId }
+            let byPatient = exerciseRows.safeGrouped { $0.patientId }
             var gains: [Double] = []
 
             for (_, logs) in byPatient {
@@ -591,7 +591,7 @@ final class ProgramEffectivenessService {
         let sessions = try decoder.decode([SessionWithPatient].self, from: response.data)
 
         // Group sessions by patient
-        let patientSessions = Dictionary(grouping: sessions) { $0.patientId }
+        let patientSessions = sessions.safeGrouped { $0.patientId }
 
         // Fetch actual enrollment dates from patient_programs for all patients in this program
         let enrollmentDates = await fetchEnrollmentDates(
@@ -709,7 +709,7 @@ final class ProgramEffectivenessService {
         }
 
         // Group by patient
-        let patientSessions = Dictionary(grouping: sessions) { $0.patientId }
+        let patientSessions = sessions.safeGrouped { $0.patientId }
 
         var totalEnrollments = patientSessions.count
         var activeEnrollments = 0

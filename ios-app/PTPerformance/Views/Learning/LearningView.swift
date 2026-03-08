@@ -32,7 +32,7 @@ struct LearningView: View {
     }
 
     var articlesByCategory: [LearningCategory: [LearningArticle]] {
-        Dictionary(grouping: filteredArticles) { $0.category }
+        filteredArticles.safeGrouped { $0.category }
     }
 
     var body: some View {

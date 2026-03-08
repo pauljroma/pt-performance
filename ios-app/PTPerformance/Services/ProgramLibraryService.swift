@@ -706,7 +706,7 @@ class ProgramLibraryService: ObservableObject {
             logger.log("Fetched \(assignments.count) workout assignments for program_id: \(programId)", level: .diagnostic)
 
             // Group by week
-            let groupedByWeek = Dictionary(grouping: assignments) { $0.weekNumber }
+            let groupedByWeek = assignments.safeGrouped { $0.weekNumber }
 
             // Build week schedule
             var weeks: [ProgramScheduleWeek] = []
@@ -715,7 +715,7 @@ class ProgramLibraryService: ObservableObject {
                 let weekAssignments = groupedByWeek[weekNumber] ?? []
 
                 // Group by day within the week
-                let groupedByDay = Dictionary(grouping: weekAssignments) { $0.dayOfWeek }
+                let groupedByDay = weekAssignments.safeGrouped { $0.dayOfWeek }
 
                 var days: [ProgramScheduleDay] = []
                 for dayNumber in 1...7 {

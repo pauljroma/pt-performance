@@ -566,6 +566,6 @@ extension BiomarkerEducation {
 
     /// Group all education content by category
     static var groupedByCategory: [String: [BiomarkerEducation]] {
-        Dictionary(grouping: allEducation, by: { $0.category })
+        allEducation.safeGrouped(by: { $0.category })
     }
 }

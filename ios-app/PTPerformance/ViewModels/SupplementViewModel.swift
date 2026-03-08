@@ -195,13 +195,13 @@ final class SupplementViewModel: ObservableObject {
 
     /// Today's doses grouped by timing
     var dosesByTiming: [(SupplementTiming, [TodaySupplementDose])] {
-        let grouped = Dictionary(grouping: todayDoses, by: { $0.timing })
+        let grouped = todayDoses.safeGrouped(by: { $0.timing })
         return grouped.sorted { $0.key.sortOrder < $1.key.sortOrder }
     }
 
     /// Routines grouped by timing
     var routinesByTiming: [(SupplementTiming, [SupplementRoutine])] {
-        let grouped = Dictionary(grouping: routines.filter { $0.isActive }, by: { $0.timing })
+        let grouped = routines.filter { $0.isActive }.safeGrouped(by: { $0.timing })
         return grouped.sorted { $0.key.sortOrder < $1.key.sortOrder }
     }
 
@@ -236,7 +236,7 @@ final class SupplementViewModel: ObservableObject {
 
     /// Catalog grouped by category
     var catalogByCategory: [(SupplementCatalogCategory, [CatalogSupplement])] {
-        let grouped = Dictionary(grouping: filteredCatalog, by: { $0.category })
+        let grouped = filteredCatalog.safeGrouped(by: { $0.category })
         return grouped.sorted { $0.key.displayName < $1.key.displayName }
     }
 
@@ -266,7 +266,7 @@ final class SupplementViewModel: ObservableObject {
     }
 
     var supplementsByCategory: [(SupplementCategory, [Supplement])] {
-        let grouped = Dictionary(grouping: supplements, by: { $0.category })
+        let grouped = supplements.safeGrouped(by: { $0.category })
         return grouped.sorted { $0.key.displayName < $1.key.displayName }
     }
 

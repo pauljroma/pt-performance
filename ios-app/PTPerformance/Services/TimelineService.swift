@@ -165,17 +165,17 @@ final class TimelineService: ObservableObject {
         let calendar = Calendar.current
 
         // Group events by date
-        let eventsByDate = Dictionary(grouping: events) { event in
+        let eventsByDate = events.safeGrouped { event in
             calendar.startOfDay(for: event.timestamp)
         }
 
         for (date, dateEvents) in eventsByDate {
             // Check for conflicts within each event type on the same date
-            let eventsByType = Dictionary(grouping: dateEvents) { $0.eventType }
+            let eventsByType = dateEvents.safeGrouped { $0.eventType }
 
             for (type, typeEvents) in eventsByType {
                 // Check for duplicate entries from different sources
-                let sourceGroups = Dictionary(grouping: typeEvents) { $0.sourceType }
+                let sourceGroups = typeEvents.safeGrouped { $0.sourceType }
                 if sourceGroups.count > 1 {
                     // Multiple sources for same event type on same day
                     let eventIds = typeEvents.map { $0.id }
@@ -340,7 +340,7 @@ final class TimelineService: ObservableObject {
             var events: [TimelineEvent] = []
 
             // Group by workout session
-            let sessionGroups = Dictionary(grouping: json) { record -> String in
+            let sessionGroups = json.safeGrouped { record -> String in
                 (record["workout_id"] as? String) ?? (record["scheduled_workout_id"] as? String) ?? UUID().uuidString
             }
 

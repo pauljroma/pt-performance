@@ -84,7 +84,7 @@ class ConflictResolutionViewModel: ObservableObject {
 
     /// Group pending conflicts by date
     var groupedPendingConflicts: [(String, [DataConflict])] {
-        let grouped = Dictionary(grouping: filteredPendingConflicts) { conflict in
+        let grouped = filteredPendingConflicts.safeGrouped { conflict in
             conflict.relativeDateString
         }
 
@@ -109,7 +109,7 @@ class ConflictResolutionViewModel: ObservableObject {
 
     /// Group resolved conflicts by date
     var groupedResolvedConflicts: [(String, [DataConflict])] {
-        let grouped = Dictionary(grouping: filteredResolvedConflicts) { conflict in
+        let grouped = filteredResolvedConflicts.safeGrouped { conflict in
             conflict.relativeDateString
         }
 
