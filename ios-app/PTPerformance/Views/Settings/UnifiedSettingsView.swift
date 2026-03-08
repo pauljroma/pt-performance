@@ -136,36 +136,6 @@ struct UnifiedSettingsView: View {
                 .accessibilityLabel("Notifications")
                 .accessibilityValue(settingsViewModel.notificationsEnabled ? "On" : "Off")
                 .accessibilityHint("Toggle to enable or disable push notifications")
-
-                Divider()
-                    .padding(.vertical, Spacing.xxs)
-
-                // Haptic Feedback Toggle
-                QuickToggleRow(
-                    icon: "hand.tap.fill",
-                    iconColor: .modusTealAccent,
-                    title: "Haptic Feedback",
-                    isOn: $settingsViewModel.hapticFeedbackEnabled,
-                    action: { await settingsViewModel.toggleHapticFeedback() }
-                )
-                .accessibilityLabel("Haptic Feedback")
-                .accessibilityValue(settingsViewModel.hapticFeedbackEnabled ? "On" : "Off")
-                .accessibilityHint("Toggle to enable or disable haptic feedback throughout the app")
-
-                Divider()
-                    .padding(.vertical, Spacing.xxs)
-
-                // Dark Mode Toggle (System vs Manual)
-                QuickToggleRow(
-                    icon: "moon.fill",
-                    iconColor: .modusDeepTeal,
-                    title: "Dark Mode",
-                    isOn: $settingsViewModel.darkModeEnabled,
-                    action: { await settingsViewModel.toggleDarkMode() }
-                )
-                .accessibilityLabel("Dark Mode")
-                .accessibilityValue(settingsViewModel.darkModeEnabled ? "On" : "Off")
-                .accessibilityHint("Toggle dark mode appearance")
             }
             .padding(.vertical, Spacing.xs)
         } header: {
@@ -175,8 +145,6 @@ struct UnifiedSettingsView: View {
                 Text("Quick Toggles")
             }
             .accessibilityAddTraits(.isHeader)
-        } footer: {
-            Text("Quickly toggle commonly used preferences")
         }
     }
 
@@ -558,30 +526,6 @@ struct UnifiedSettingsView: View {
     private var preferencesSection: SettingsSection {
         var items: [SettingItem] = []
 
-        // Units & Measurements
-        items.append(SettingItem(
-            id: "units",
-            icon: "ruler",
-            iconColor: .modusCyan,
-            title: "Units & Measurements",
-            subtitle: "Weight, distance, temperature",
-            type: .navigation(
-                AnyView(Text("Units Settings (To Be Implemented)"))
-            )
-        ))
-
-        // Theme
-        items.append(SettingItem(
-            id: "theme",
-            icon: "paintbrush.fill",
-            iconColor: .modusTealAccent,
-            title: "Appearance",
-            subtitle: settingsViewModel.darkModeEnabled ? "Dark" : "Light",
-            type: .navigation(
-                AnyView(Text("Theme Settings (To Be Implemented)"))
-            )
-        ))
-
         // Notifications Detail
         items.append(SettingItem(
             id: "notifications",
@@ -603,18 +547,6 @@ struct UnifiedSettingsView: View {
             subtitle: "Quality, playback speed, captions",
             type: .navigation(
                 AnyView(VideoSettingsView())
-            )
-        ))
-
-        // Haptic Feedback Detail
-        items.append(SettingItem(
-            id: "haptics",
-            icon: "hand.tap.fill",
-            iconColor: .modusTealAccent,
-            title: "Haptic Feedback",
-            subtitle: settingsViewModel.hapticFeedbackEnabled ? "Enabled" : "Disabled",
-            type: .navigation(
-                AnyView(Text("Haptic Settings (To Be Implemented)"))
             )
         ))
 
@@ -645,18 +577,6 @@ struct UnifiedSettingsView: View {
             )
         ))
 
-        // Wearable Devices
-        items.append(SettingItem(
-            id: "wearables",
-            icon: "applewatch",
-            iconColor: .modusCyan,
-            title: "Wearable Devices",
-            subtitle: "Connect fitness trackers",
-            type: .navigation(
-                AnyView(WearableSettingsView().environmentObject(WearableConnectionManager.shared))
-            )
-        ))
-
         // Export My Data - Navigate to full export view (ACP-1047: GDPR/CCPA Data Export)
         items.append(SettingItem(
             id: "export",
@@ -668,18 +588,6 @@ struct UnifiedSettingsView: View {
             badgeColor: .modusTealAccent,
             type: .navigation(
                 AnyView(DataExportView())
-            )
-        ))
-
-        // Calendar Sync
-        items.append(SettingItem(
-            id: "calendar",
-            icon: "calendar",
-            iconColor: .orange,
-            title: "Calendar Sync",
-            subtitle: "Sync workouts with calendar",
-            type: .navigation(
-                AnyView(CalendarSettingsView())
             )
         ))
 
@@ -1028,7 +936,7 @@ enum SettingItemType {
 @MainActor
 class SettingsViewModel: ObservableObject {
     @Published var notificationsEnabled = true
-    @Published var hapticFeedbackEnabled = true
+    @Published var hapticFeedbackEnabled = false
     @Published var darkModeEnabled = false
     @Published var appVersion = "1.0"
 
@@ -1045,12 +953,13 @@ class SettingsViewModel: ObservableObject {
     func loadPreferences() {
         // Load from UserDefaults or service
         notificationsEnabled = UserDefaults.standard.bool(forKey: "notificationsEnabled")
+        // Haptic feedback defaults to off — UserDefaults.bool returns false if not set
         hapticFeedbackEnabled = UserDefaults.standard.bool(forKey: "hapticFeedbackEnabled")
         darkModeEnabled = UserDefaults.standard.bool(forKey: "darkModeEnabled")
     }
 
     func toggleNotifications() async {
-        notificationsEnabled.toggle()
+        // Note: value is already set by the Toggle binding; just persist it
         UserDefaults.standard.set(notificationsEnabled, forKey: "notificationsEnabled")
 
         if notificationsEnabled {
@@ -1061,7 +970,7 @@ class SettingsViewModel: ObservableObject {
     }
 
     func toggleHapticFeedback() async {
-        hapticFeedbackEnabled.toggle()
+        // Note: value is already set by the Toggle binding; just persist it
         UserDefaults.standard.set(hapticFeedbackEnabled, forKey: "hapticFeedbackEnabled")
 
         if hapticFeedbackEnabled {
@@ -1070,7 +979,7 @@ class SettingsViewModel: ObservableObject {
     }
 
     func toggleDarkMode() async {
-        darkModeEnabled.toggle()
+        // Note: value is already set by the Toggle binding; just persist it
         UserDefaults.standard.set(darkModeEnabled, forKey: "darkModeEnabled")
         HapticFeedback.toggle()
     }
