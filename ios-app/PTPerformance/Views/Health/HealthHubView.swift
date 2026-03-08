@@ -74,9 +74,6 @@ struct HealthHubView: View {
                 // Quick Actions Grid (using new component)
                 quickActionsGridSection
 
-                // AI Insights Section (using new component)
-                aiInsightsSection
-
                 // Detailed Views Navigation
                 detailedViewsSection
             }
