@@ -425,12 +425,21 @@ final class BiomarkerDashboardViewModel: ObservableObject {
 
     /// Biomarkers grouped by category
     /// Uses caching to avoid redundant grouping operations
+    /// Note: Uses explicit iteration instead of Dictionary(grouping:by:) to avoid a
+    /// Swift stdlib crash on iOS 26 beta where the inlined specialization of
+    /// Dictionary.init(grouping:by:) traps (brk #1) with Date value witnesses.
     var groupedBiomarkers: [BiomarkerCategory: [BiomarkerSummary]] {
         if let cached = cachedGroupedBiomarkers {
             return cached
         }
 
-        let grouped = Dictionary(grouping: filteredBiomarkers, by: { $0.category })
+        var grouped = [BiomarkerCategory: [BiomarkerSummary]]()
+        for biomarker in filteredBiomarkers {
+            let cat = biomarker.category
+            var list = grouped[cat] ?? []
+            list.append(biomarker)
+            grouped[cat] = list
+        }
         cachedGroupedBiomarkers = grouped
         return grouped
     }
