@@ -299,14 +299,14 @@ struct HealthHubView: View {
                     taken: viewModel.supplementsTaken,
                     total: viewModel.supplementsTotal
                 ),
-                labAlerts: viewModel.biomarkersNeedingAttention,
+                labAlerts: 0,
                 lastUpdated: Date()
             ),
             isLoading: viewModel.isLoading,
             onRecoveryTap: { showRecoveryTracking = true },
             onFastingTap: { showFastingTracker = true },
             onSupplementsTap: { showSupplementDashboard = true },
-            onLabAlertsTap: { showBiomarkerDashboard = true }
+            onLabAlertsTap: nil
         )
     }
 
@@ -368,9 +368,9 @@ struct HealthHubView: View {
         case .logRecovery:
             showRecoveryTracking = true
         case .viewLabs:
-            showLabResults = true
+            break // Labs coming soon
         case .viewBiomarkers:
-            showBiomarkerDashboard = true
+            break // Biomarkers coming soon
         case .aiCoach:
             showAICoach = true
         }
@@ -512,11 +512,9 @@ struct HealthHubView: View {
                     destination: .recovery
                 )
 
-                LegacyQuickActionButton(
+                ComingSoonQuickActionButton(
                     title: "Labs",
-                    icon: "drop.fill",
-                    gradientColors: [.red, .pink],
-                    destination: .biomarkers
+                    icon: "drop.fill"
                 )
             }
         }
@@ -866,6 +864,48 @@ private struct LegacyQuickActionButton: View {
         case .aiCoach:
             UnifiedAICoachView()
         }
+    }
+}
+
+// MARK: - Coming Soon Quick Action Button
+
+private struct ComingSoonQuickActionButton: View {
+    let title: String
+    let icon: String
+
+    var body: some View {
+        VStack(spacing: Spacing.xs) {
+            ZStack {
+                Circle()
+                    .fill(Color(.systemGray4))
+                    .frame(width: 48, height: 48)
+
+                Image(systemName: icon)
+                    .font(.title3)
+                    .foregroundColor(.white.opacity(0.7))
+            }
+            .overlay(alignment: .topTrailing) {
+                Text("Soon")
+                    .font(.system(size: 8, weight: .bold))
+                    .foregroundColor(.white)
+                    .padding(.horizontal, 4)
+                    .padding(.vertical, 1)
+                    .background(Color.gray)
+                    .cornerRadius(4)
+                    .offset(x: 4, y: -4)
+            }
+            .accessibilityHidden(true)
+
+            Text(title)
+                .font(.caption)
+                .fontWeight(.medium)
+                .foregroundColor(.secondary)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, Spacing.sm)
+        .background(Color(.secondarySystemGroupedBackground))
+        .cornerRadius(CornerRadius.md)
+        .accessibilityLabel("\(title), coming soon")
     }
 }
 
