@@ -232,8 +232,21 @@ final class RecoveryTrackingViewModel: ObservableObject {
         currentStreak = streak
 
         // Calculate longest streak (look through all sessions)
-        let sessionDates = Set(recentSessions.map { calendar.startOfDay(for: $0.loggedAt) })
-        let sortedDates = sessionDates.sorted()
+        // Avoid Set with Date values — iOS 26 beta crashes on Date value witnesses.
+        // Use manual deduplication instead.
+        var seenDays = [Date]()
+        for session in recentSessions {
+            let day = calendar.startOfDay(for: session.loggedAt)
+            if !seenDays.contains(where: { calendar.isDate($0, inSameDayAs: day) }) {
+                seenDays.append(day)
+            }
+        }
+        let sortedDates = seenDays.sorted()
+
+        guard sortedDates.count > 1 else {
+            longestStreak = max(sortedDates.isEmpty ? 0 : 1, streak)
+            return
+        }
 
         var tempStreak = 1
         for i in 1..<sortedDates.count {
