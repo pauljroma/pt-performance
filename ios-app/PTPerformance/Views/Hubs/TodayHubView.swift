@@ -74,10 +74,6 @@ struct TodayHubView: View {
                     ToolbarItem(placement: .navigationBarLeading) {
                         streakIndicatorButton
                     }
-
-                    ToolbarItem(placement: .navigationBarTrailing) {
-                        quickAccessMenu
-                    }
                 }
                 .sheetWithHaptic(isPresented: $state.showQuickPick) {
                     WorkoutPickerView()
