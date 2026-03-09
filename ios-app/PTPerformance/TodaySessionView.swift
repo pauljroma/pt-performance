@@ -848,55 +848,6 @@ struct TodaySessionView: View {
                     .staggeredAnimation(index: 4)
                 }
 
-                // Adaptive Training: Workout Modification Suggestion
-                if adaptiveWorkoutVM.hasTodayModification, let modification = adaptiveWorkoutVM.todayModification {
-                    WorkoutModificationCardCompact(
-                        modification: modification,
-                        onTap: {
-                            HapticFeedback.light()
-                            activeSheet = .modificationSuggestion
-                        }
-                    )
-                    .staggeredAnimation(index: 5)
-                } else if adaptiveWorkoutVM.isLoading {
-                    // Loading placeholder for modification check
-                    HStack(spacing: 12) {
-                        ProgressView()
-                        Text("Checking for workout adjustments...")
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-                    }
-                    .padding()
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(Color(.secondarySystemGroupedBackground))
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
-                    .staggeredAnimation(index: 5)
-                }
-
-                // Recovery Intelligence: Readiness-Based Workout Recommendation
-                if let adaptation = viewState.workoutAdaptation {
-                    ReadinessWorkoutRecommendationCard(
-                        adaptation: adaptation,
-                        onViewRecoveryProtocol: { activeSheet = .recoveryProtocol },
-                        onViewInsights: { activeSheet = .readinessInsights },
-                        onStartAlternative: { alternative in
-                            guard let patientId = appState.userId else { return }
-                            Task {
-                                await viewState.startAlternativeWorkout(
-                                    alternative,
-                                    patientId: patientId,
-                                    onPresent: { cover in activeFullScreenCover = cover },
-                                    onDismiss: { activeFullScreenCover = nil }
-                                )
-                            }
-                        }
-                    )
-                    .staggeredAnimation(index: 7)
-                } else if viewState.isLoadingAdaptation {
-                    ReadinessWorkoutRecommendationCard.loadingPlaceholder
-                        .staggeredAnimation(index: 7)
-                }
-
                 // Prescribed Workouts from Therapist
                 if viewState.isLoadingPrescriptions || !viewState.pendingPrescriptions.isEmpty {
                     PrescribedWorkoutsCard(
