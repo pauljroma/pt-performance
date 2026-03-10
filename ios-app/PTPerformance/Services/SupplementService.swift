@@ -174,43 +174,36 @@ final class SupplementService: ObservableObject {
             throw SupplementServiceError.noPatientId
         }
 
-        // Database schema (patient_supplement_routines):
-        // dose (NUMERIC), dose_unit (TEXT), timing (supplement_timing_type), days_of_week (INTEGER[])
-        // is_active, start_date, end_date, notes
-        // NO: dosage, frequency, with_food columns
+        // Database schema (patient_supplement_stacks):
+        // dosage (NUMERIC), dosage_unit (TEXT), frequency (TEXT),
+        // timing (supplement_timing), is_active, started_at (TIMESTAMPTZ), notes
         struct RoutineInsert: Encodable {
             let id: UUID
             let patient_id: UUID
             let supplement_id: UUID
-            let dose: Double
-            let dose_unit: String
+            let dosage: Double
+            let dosage_unit: String
+            let frequency: String
             let timing: String
-            let days_of_week: [Int]?
             let notes: String?
             let is_active: Bool
-            let start_date: String
+            let started_at: String
         }
-
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "yyyy-MM-dd"
 
         // Parse dosage string to extract number and unit (e.g., "500mg" -> 500, "mg")
         let (doseValue, doseUnit) = parseDosage(dosage)
-
-        // Map frequency to days_of_week array
-        let daysOfWeek: [Int]? = frequency == .daily ? [0, 1, 2, 3, 4, 5, 6] : nil
 
         let insert = RoutineInsert(
             id: UUID(),
             patient_id: patientId,
             supplement_id: supplementId,
-            dose: doseValue,
-            dose_unit: doseUnit,
+            dosage: doseValue,
+            dosage_unit: doseUnit,
+            frequency: frequency.rawValue,
             timing: timing.rawValue,
-            days_of_week: daysOfWeek,
             notes: notes,
             is_active: true,
-            start_date: dateFormatter.string(from: Date())
+            started_at: ISO8601DateFormatter().string(from: Date())
         )
 
         // Write to patient_supplement_stacks (same table we read from in fetchRoutines)
@@ -245,12 +238,12 @@ final class SupplementService: ObservableObject {
     func removeFromRoutine(_ routineId: UUID) async throws {
         struct RoutineDeactivate: Encodable {
             let is_active: Bool
-            let end_date: String
+            let ended_at: String
         }
 
         let update = RoutineDeactivate(
             is_active: false,
-            end_date: ISO8601DateFormatter().string(from: Date())
+            ended_at: ISO8601DateFormatter().string(from: Date())
         )
 
         // Update patient_supplement_stacks (same table we read from in fetchRoutines)
@@ -275,14 +268,13 @@ final class SupplementService: ObservableObject {
         withFood: Bool? = nil,
         notes: String? = nil
     ) async throws {
-        // Database schema (patient_supplement_routines):
-        // dose, dose_unit, timing, days_of_week, is_active, start_date, end_date, notes
-        // NO: dosage, frequency, with_food columns
+        // Database schema (patient_supplement_stacks):
+        // dosage (NUMERIC), dosage_unit (TEXT), frequency (TEXT), timing, notes
         struct RoutineUpdate: Encodable {
-            var dose: Double?
-            var dose_unit: String?
+            var dosage: Double?
+            var dosage_unit: String?
+            var frequency: String?
             var timing: String?
-            var days_of_week: [Int]?
             var notes: String?
         }
 
@@ -295,24 +287,11 @@ final class SupplementService: ObservableObject {
             doseUnit = parsed.1
         }
 
-        // Map frequency to days_of_week if provided
-        var daysOfWeek: [Int]?
-        if let frequency = frequency {
-            switch frequency {
-            case .daily:
-                daysOfWeek = [0, 1, 2, 3, 4, 5, 6]
-            case .weekly:
-                daysOfWeek = [0] // Sunday only
-            default:
-                daysOfWeek = nil
-            }
-        }
-
         let update = RoutineUpdate(
-            dose: doseValue,
-            dose_unit: doseUnit,
+            dosage: doseValue,
+            dosage_unit: doseUnit,
+            frequency: frequency?.rawValue,
             timing: timing?.rawValue,
-            days_of_week: daysOfWeek,
             notes: notes
         )
 
@@ -455,7 +434,7 @@ final class SupplementService: ObservableObject {
             id: UUID(),
             patient_id: patientId,
             supplement_id: dose.supplementId,
-            dosage: 0, // 0 indicates skipped
+            dosage: 0.001, // Near-zero indicates skipped; DB CHECK requires dosage > 0
             dosage_unit: doseUnit,
             logged_at: dateFormatter.string(from: Date()),
             timing: dose.timing.rawValue,

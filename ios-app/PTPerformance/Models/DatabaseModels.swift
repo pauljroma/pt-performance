@@ -243,7 +243,7 @@ struct DBSupplementLog: Identifiable, Codable, Hashable, Equatable {
     /// Convert to app's SupplementLogEntry model
     func toLogEntry(supplementName: String = "Unknown") -> SupplementLogEntry {
         let supplementTiming = SupplementTiming(rawValue: timing) ?? .morning
-        let isSkipped = dosage == 0 || (notes?.contains("[SKIPPED]") ?? false)
+        let isSkipped = dosage < 0.01 || (notes?.contains("[SKIPPED]") ?? false)
 
         return SupplementLogEntry(
             id: id,
