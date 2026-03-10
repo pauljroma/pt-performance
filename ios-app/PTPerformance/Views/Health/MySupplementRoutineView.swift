@@ -88,7 +88,10 @@ struct MySupplementRoutineView: View {
             }
             .sheet(isPresented: $state.showingAddSupplement) {
                 SupplementRoutineAddSheet(state: state, onAdd: { routineSupplement in
+                    // Delay data reload until sheet dismiss animation completes
+                    // to avoid SwiftUI crash from state update during transition
                     Task {
+                        try? await Task.sleep(nanoseconds: 500_000_000)
                         await viewModel.addToRoutine(routineSupplement)
                     }
                 })
@@ -99,6 +102,7 @@ struct MySupplementRoutineView: View {
                     routineSupplement: supplement,
                     onSave: { updated in
                         Task {
+                            try? await Task.sleep(nanoseconds: 500_000_000)
                             await viewModel.updateRoutineSupplement(updated)
                         }
                     }
