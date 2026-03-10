@@ -687,7 +687,7 @@ private struct SupplementRoutineAddSheet: View {
         HapticFeedback.success()
 
         let routineSupplement = RoutineSupplement(
-            id: UUID(),
+            id: supplement.id,
             name: supplement.name,
             brand: supplement.brand,
             category: mapSupplementCategoryToCatalog(supplement.category),
