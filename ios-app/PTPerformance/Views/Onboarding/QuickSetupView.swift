@@ -17,8 +17,8 @@ struct QuickSetupView: View {
 
     var body: some View {
         ZStack {
-            // Background
-            Color(.systemGroupedBackground)
+            // Atmospheric background
+            Color.modusAtmosphere
                 .ignoresSafeArea()
 
             VStack(spacing: 0) {
@@ -94,7 +94,7 @@ struct QuickSetupView: View {
                             .foregroundColor(.modusCyan)
                             .frame(height: 50)
                             .frame(maxWidth: .infinity)
-                            .background(Color(.secondarySystemGroupedBackground))
+                            .background(Color.modusSurface)
                             .cornerRadius(CornerRadius.md)
                         }
                         .accessibilityLabel("Back")
@@ -223,13 +223,32 @@ struct WelcomeStepView: View {
 
             // Icon
             ZStack {
+                // Outer glow
                 Circle()
-                    .fill(Color.modusCyan.opacity(0.1))
-                    .frame(width: 120, height: 120)
+                    .fill(
+                        RadialGradient(
+                            colors: [Color.modusTealAccent.opacity(0.15), Color.clear],
+                            center: .center,
+                            startRadius: 40,
+                            endRadius: 75
+                        )
+                    )
+                    .frame(width: 130, height: 130)
+
+                Circle()
+                    .fill(
+                        LinearGradient(
+                            colors: [.modusCyan, .modusTealAccent],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+                    .frame(width: 88, height: 88)
+                    .shadow(color: .modusTealAccent.opacity(0.25), radius: 16, y: 4)
 
                 Image(systemName: "sparkles")
-                    .font(.system(size: 56))
-                    .foregroundColor(.modusCyan)
+                    .font(.system(size: 38, weight: .medium))
+                    .foregroundColor(.white)
             }
             .padding(.bottom, Spacing.xs)
 
@@ -379,8 +398,9 @@ struct ModeCard: View {
                 }
             }
             .padding()
-            .background(Color(.secondarySystemGroupedBackground))
+            .background(Color.modusSurface)
             .cornerRadius(CornerRadius.lg)
+            .shadow(color: .black.opacity(0.04), radius: 4, y: 2)
             .overlay(
                 RoundedRectangle(cornerRadius: CornerRadius.lg)
                     .stroke(isSelected ? Color.modusCyan : Color.clear, lineWidth: 2)
@@ -497,8 +517,9 @@ struct GoalVisualCard: View {
             .frame(maxWidth: .infinity)
             .padding(.vertical, Spacing.md)
             .padding(.horizontal, Spacing.sm)
-            .background(Color(.secondarySystemGroupedBackground))
+            .background(Color.modusSurface)
             .cornerRadius(CornerRadius.md)
+            .shadow(color: .black.opacity(0.04), radius: 4, y: 2)
             .overlay(
                 RoundedRectangle(cornerRadius: CornerRadius.md)
                     .stroke(isSelected ? goal.color : Color.clear, lineWidth: 2.5)

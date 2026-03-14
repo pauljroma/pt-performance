@@ -288,7 +288,7 @@ struct Card<Content: View>: View {
     var body: some View {
         content
             .padding(padding)
-            .background(Color(.systemBackground))
+            .background(Color.modusSurface)
             .cornerRadius(cornerRadius)
             .shadow(
                 color: shadow.color(for: colorScheme),
@@ -328,7 +328,7 @@ struct TappableCard<Content: View>: View {
         }) {
             content
                 .padding(padding)
-                .background(Color(.systemBackground))
+                .background(Color.modusSurface)
                 .cornerRadius(cornerRadius)
                 .shadow(
                     color: Shadow.medium.color(for: colorScheme),
@@ -433,7 +433,7 @@ struct CardStyleModifier: ViewModifier {
     func body(content: Content) -> some View {
         content
             .padding(padding)
-            .background(Color(.systemBackground))
+            .background(Color.modusSurface)
             .cornerRadius(cornerRadius)
             .shadow(
                 color: shadow.color(for: colorScheme),

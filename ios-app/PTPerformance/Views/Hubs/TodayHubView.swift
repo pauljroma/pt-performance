@@ -297,18 +297,19 @@ struct TodayHubView: View {
         }) {
             HStack(spacing: 4) {
                 Image(systemName: "flame.fill")
-                    .foregroundColor(streakViewModel.isAtRisk ? .orange : .red)
+                    .foregroundColor(streakViewModel.isAtRisk ? .orange : .modusTealAccent)
                     .font(.system(size: 14))
 
                 Text("\(streakViewModel.currentStreak)")
                     .font(.system(size: 14, weight: .bold, design: .rounded))
-                    .foregroundColor(.primary)
+                    .foregroundColor(.modusDeepTeal)
             }
             .padding(.horizontal, Spacing.xs)
             .padding(.vertical, Spacing.xxs)
             .background(
                 Capsule()
-                    .fill(Color(.secondarySystemGroupedBackground))
+                    .fill(Color.modusSurface)
+                    .shadow(color: .black.opacity(0.06), radius: 3, y: 1)
             )
         }
         .accessibilityLabel("Current streak: \(streakViewModel.currentStreak) days")

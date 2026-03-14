@@ -74,10 +74,29 @@ extension Color {
     /// Background color for cards and containers (adaptive)
     static var modusBackground: Color { modusLightTeal }
 
+    // MARK: - Atmospheric Colors
+
+    /// Surface color for elevated cards (slightly lifted from background)
+    static var modusSurface: Color {
+        Color(UIColor { traitCollection in
+            traitCollection.userInterfaceStyle == .dark
+                ? UIColor(red: 22/255, green: 40/255, blue: 42/255, alpha: 1.0)
+                : UIColor(red: 248/255, green: 253/255, blue: 252/255, alpha: 1.0)
+        })
+    }
+
+    /// Muted text for labels and captions
+    static var modusMuted: Color {
+        Color(UIColor { traitCollection in
+            traitCollection.userInterfaceStyle == .dark
+                ? UIColor(red: 140/255, green: 170/255, blue: 168/255, alpha: 1.0)
+                : UIColor(red: 100/255, green: 120/255, blue: 118/255, alpha: 1.0)
+        })
+    }
+
     // MARK: - Gradients
 
     /// Primary brand gradient (bottom-left to top-right)
-    /// Adapts to dark mode with brighter colors
     static var modusGradient: LinearGradient {
         LinearGradient(
             colors: [modusDeepTeal, modusTealAccent],
@@ -119,6 +138,26 @@ extension Color {
             ],
             startPoint: .topLeading,
             endPoint: .bottomTrailing
+        )
+    }
+
+    /// Atmospheric background gradient for auth/landing screens
+    static var modusAtmosphere: LinearGradient {
+        LinearGradient(
+            colors: [
+                Color(UIColor { tc in
+                    tc.userInterfaceStyle == .dark
+                        ? UIColor(red: 10/255, green: 25/255, blue: 28/255, alpha: 1.0)
+                        : UIColor(red: 240/255, green: 253/255, blue: 250/255, alpha: 1.0)
+                }),
+                Color(UIColor { tc in
+                    tc.userInterfaceStyle == .dark
+                        ? UIColor(red: 8/255, green: 18/255, blue: 20/255, alpha: 1.0)
+                        : UIColor.white
+                })
+            ],
+            startPoint: .top,
+            endPoint: .bottom
         )
     }
 }
