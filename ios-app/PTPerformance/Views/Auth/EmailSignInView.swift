@@ -34,6 +34,7 @@ struct EmailSignInView: View {
                         .keyboardType(.emailAddress)
                         .autocapitalization(.none)
                         .autocorrectionDisabled()
+                        .submitLabel(.next)
                         .accessibilityIdentifier("emailTextField")
                         .accessibilityLabel("Email")
                         .accessibilityHint("Enter your email address")
@@ -53,6 +54,12 @@ struct EmailSignInView: View {
                 VStack(alignment: .leading, spacing: Spacing.xxs) {
                     SecureField("Password", text: $password)
                         .textContentType(.password)
+                        .submitLabel(.go)
+                        .onSubmit {
+                            guard isFormValid && !isLoading else { return }
+                            HapticFeedback.medium()
+                            Task { await signIn() }
+                        }
                         .accessibilityIdentifier("passwordSecureField")
                         .accessibilityLabel("Password")
                         .accessibilityHint("Enter your password")

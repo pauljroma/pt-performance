@@ -26,45 +26,15 @@ class HelpContentLoader: ObservableObject {
         }
     }
 
-    /// Load help articles from Supabase
+    /// Load help articles — general fitness content for 1.0 launch
+    /// Note: Database content_items table contains sport-specific articles (archived for post-launch).
+    /// For MVP, we serve curated general fitness articles directly.
     @MainActor
     func loadArticles() async {
         isLoading = true
         error = nil
 
-        do {
-            // Fetch published articles from content_items table (194 baseball articles)
-            let response: [SupabaseContentItem] = try await supabase
-                .from("content_items")
-                .select("""
-                    id,
-                    slug,
-                    title,
-                    category,
-                    subcategory,
-                    content,
-                    tags,
-                    excerpt,
-                    is_published
-                """)
-                .eq("is_published", value: true)
-                .order("category", ascending: true)
-                .order("title", ascending: true)
-                .execute()
-                .value
-
-            // Map to app models
-            articles = response.compactMap { mapContentItemFromDB($0) }
-
-            DebugLogger.shared.log("[HelpContentLoader] Loaded \(articles.count) help articles from Supabase", level: .success)
-
-        } catch {
-            self.error = "Failed to load help articles: \(error.localizedDescription)"
-            DebugLogger.shared.log("[HelpContentLoader] Error loading help articles: \(error.localizedDescription)", level: .error)
-
-            // Load sample articles as fallback
-            loadSampleArticles()
-        }
+        loadSampleArticles()
 
         isLoading = false
     }
@@ -152,126 +122,280 @@ class HelpContentLoader: ObservableObject {
             return
         }
 
-        // Fallback to hardcoded sample articles if JSON file not found
+        // General fitness help articles for 1.0 launch
         articles = [
+            // MARK: Getting Started
             HelpArticle(
-                id: UUID(uuidString: "00000000-0000-0000-0000-000000000001") ?? UUID(),
-                title: "Getting Started with Modus",
+                id: UUID(uuidString: "a0000000-0000-0000-0000-000000000001") ?? UUID(),
+                title: "Welcome to Modus",
                 content: """
                 # Welcome to Modus
 
-                Modus helps you track your training, monitor progress, and work with your therapist to achieve your athletic goals.
+                Modus helps you train smarter and recover faster. Whether you're rehabbing an injury, building strength, or chasing performance goals, the app keeps you on track.
 
-                ## Key Features
+                ## What You Can Do
 
-                - **Programs**: Follow structured training programs designed by your therapist
-                - **Workouts**: Complete daily sessions with exercise tracking
-                - **Analytics**: View your progress over time
-                - **Communication**: Stay connected with your therapist
+                - **Follow Programs**: Work through structured training plans with phases, weeks, and daily sessions
+                - **Track Workouts**: Log sets, reps, and weights for every exercise
+                - **Monitor Progress**: See your streaks, volume trends, and weekly summaries
+                - **Check In Daily**: Rate your readiness so the app can guide your intensity
 
-                ## Getting Started
+                ## Quick Start
 
-                1. Complete your profile setup
-                2. Review your assigned program
-                3. Start your first workout
-                4. Track your progress
-
-                Need help? Tap the help icon anytime.
+                1. Open the **Today** tab to see your scheduled workout
+                2. Tap **Start Workout** to begin logging
+                3. Complete each exercise and mark sets as done
+                4. Check your streak on the Today tab — consistency is key
                 """,
                 category: .gettingStarted,
-                keywords: ["welcome", "introduction", "setup", "basics"]
+                keywords: ["welcome", "introduction", "setup", "basics", "getting started"]
             ),
             HelpArticle(
-                id: UUID(uuidString: "00000000-0000-0000-0000-000000000002") ?? UUID(),
-                title: "Creating Your First Program",
+                id: UUID(uuidString: "a0000000-0000-0000-0000-000000000002") ?? UUID(),
+                title: "Setting Up Your Profile",
                 content: """
-                # Creating a Training Program
+                # Setting Up Your Profile
 
-                Programs are structured training plans that guide your athletic development.
+                Your profile personalizes the app to match your training goals.
+
+                ## Quick Setup
+
+                When you first open Modus, you'll go through a short setup:
+
+                1. **Choose Your Mode** — Rehab, Strength, or Performance. This customizes your dashboard
+                2. **Pick Your Goals** — Select up to 3 focus areas to track
+
+                You can change these anytime in **Settings**.
+
+                ## Your Dashboard
+
+                After setup, your Today tab shows:
+                - Today's scheduled workout
+                - Your current streak
+                - Quick access to timers and check-ins
+
+                ## Settings
+
+                Visit Settings to update your profile, manage notifications, and adjust preferences.
+                """,
+                category: .gettingStarted,
+                keywords: ["profile", "setup", "mode", "goals", "preferences"]
+            ),
+
+            // MARK: Programs
+            HelpArticle(
+                id: UUID(uuidString: "a0000000-0000-0000-0000-000000000003") ?? UUID(),
+                title: "Understanding Your Program",
+                content: """
+                # Understanding Your Program
+
+                Programs are structured training plans organized into phases, weeks, and sessions.
 
                 ## Program Structure
 
-                - **Phases**: Programs are divided into training phases (e.g., Off-Season, Pre-Season)
-                - **Weeks**: Each phase contains weekly training schedules
-                - **Sessions**: Individual workouts scheduled throughout the week
+                - **Program**: Your overall training plan (e.g., "12-Week Strength Builder")
+                - **Phases**: Blocks within the program (e.g., "Foundation", "Build", "Peak")
+                - **Sessions**: Individual workouts scheduled on specific days
 
-                ## Creating a Program
+                ## Following Your Program
 
-                1. Go to Programs tab
-                2. Tap "New Program"
-                3. Choose your sport and focus area
-                4. Select duration and frequency
-                5. Review and save
+                1. Go to the **Today** tab to see today's session
+                2. Each session lists exercises with target sets, reps, and weights
+                3. Complete the exercises and log your actual performance
+                4. The app tracks your progress across the full program
 
-                Your therapist can also create programs for you.
+                ## Program Progression
+
+                As you complete sessions, the app tracks your volume and consistency. Your therapist or coach can adjust the program based on your progress.
                 """,
                 category: .programs,
-                keywords: ["program", "create", "training plan", "structure"]
+                keywords: ["program", "phase", "training plan", "structure", "schedule"]
             ),
             HelpArticle(
-                id: UUID(uuidString: "00000000-0000-0000-0000-000000000003") ?? UUID(),
-                title: "Completing Your Workouts",
+                id: UUID(uuidString: "a0000000-0000-0000-0000-000000000004") ?? UUID(),
+                title: "Streaks and Consistency",
                 content: """
-                # How to Complete Workouts
+                # Streaks and Consistency
 
-                Follow these steps to log your training sessions effectively.
+                Your streak tracks consecutive days of completing workouts. Consistency is the single biggest predictor of results.
 
-                ## During Your Workout
+                ## How Streaks Work
 
-                1. **Start Session**: Tap on today's scheduled workout
-                2. **Follow Exercises**: Complete each exercise in order
-                3. **Log Performance**: Enter sets, reps, and weights
-                4. **Add Notes**: Record how you felt or any issues
+                - Complete at least one workout to keep your streak alive
+                - Your streak counter appears on the Today tab
+                - Miss a day and your streak resets
 
-                ## Exercise Tracking
+                ## Streak Dashboard
 
-                - Tap checkmark after completing each set
-                - Use video demonstrations for proper form
-                - Adjust weights based on your readiness
+                Tap the flame icon to see:
+                - Your current streak length
+                - Your longest streak ever
+                - Weekly workout history
 
-                ## After Completion
+                ## Tips for Building Consistency
 
-                - Rate your session difficulty
-                - Share notes with your therapist
-                - Review your progress
+                - Start with shorter, manageable workouts
+                - Schedule workouts at the same time each day
+                - Use the daily check-in to stay accountable
+                """,
+                category: .programs,
+                keywords: ["streak", "consistency", "habit", "motivation", "daily"]
+            ),
+
+            // MARK: Workouts
+            HelpArticle(
+                id: UUID(uuidString: "a0000000-0000-0000-0000-000000000005") ?? UUID(),
+                title: "Completing a Workout",
+                content: """
+                # Completing a Workout
+
+                Follow these steps to get the most out of each training session.
+
+                ## Starting Your Workout
+
+                1. Open the **Today** tab
+                2. Tap **Start Workout** on your scheduled session
+                3. The exercise list appears with target sets, reps, and weights
+
+                ## Logging Sets
+
+                For each exercise:
+                - Enter your actual weight and reps
+                - Tap the checkmark to complete the set
+                - Add notes if needed (e.g., "felt easy", "form breakdown")
+
+                ## Finishing Up
+
+                When all exercises are complete:
+                - Review your session summary
+                - Your streak updates automatically
+                - Volume data feeds into your weekly summary
                 """,
                 category: .workouts,
-                keywords: ["workout", "exercise", "log", "complete", "tracking"]
+                keywords: ["workout", "exercise", "log", "sets", "reps", "complete"]
             ),
             HelpArticle(
-                id: UUID(uuidString: "00000000-0000-0000-0000-000000000004") ?? UUID(),
-                title: "Understanding Your Analytics",
+                id: UUID(uuidString: "a0000000-0000-0000-0000-000000000006") ?? UUID(),
+                title: "Exercise Substitutions",
                 content: """
-                # Analytics & Progress Tracking
+                # Exercise Substitutions
 
-                Modus tracks your progress automatically.
+                Can't do a prescribed exercise? Modus can suggest alternatives.
 
-                ## Key Metrics
+                ## When to Substitute
 
-                - **Volume**: Total training load over time
-                - **Readiness**: Daily readiness scores
-                - **Compliance**: Workout completion rate
-                - **Performance**: Strength and skill improvements
+                - Equipment isn't available
+                - An exercise causes discomfort
+                - You need a regression or progression
 
-                ## Charts & Trends
+                ## How It Works
 
-                - View weekly and monthly trends
-                - Compare phases of training
-                - Identify patterns
+                1. During a workout, tap the exercise name
+                2. Select **Substitute Exercise**
+                3. The app suggests alternatives that target the same muscle groups
+                4. Pick a substitute and continue your workout
 
-                ## Sharing with Your Therapist
+                ## Important Notes
 
-                Your therapist can see all your data to:
-                - Adjust your program
-                - Monitor recovery
-                - Prevent overtraining
+                - Substitutions are logged so your therapist can review them
+                - If an exercise causes pain, stop and note it — don't just substitute
+                - Your program's overall volume is maintained with smart substitutions
+                """,
+                category: .workouts,
+                keywords: ["substitute", "alternative", "exercise", "swap", "equipment"]
+            ),
+            HelpArticle(
+                id: UUID(uuidString: "a0000000-0000-0000-0000-000000000007") ?? UUID(),
+                title: "Using Timers",
+                content: """
+                # Using Timers
+
+                Rest timers help you maintain proper recovery between sets.
+
+                ## Rest Timer
+
+                - Set a rest period (30s, 60s, 90s, or custom)
+                - The timer starts automatically after completing a set
+                - You'll get a notification when rest is over
+
+                ## Workout Timer
+
+                - Tracks total workout duration
+                - Runs in the background while you exercise
+                - Shows elapsed time on the Today tab
+
+                ## Tips
+
+                - Stick to prescribed rest periods for best results
+                - Shorter rest (30-60s) for endurance and muscle building
+                - Longer rest (2-3 min) for heavy strength work
+                """,
+                category: .workouts,
+                keywords: ["timer", "rest", "interval", "countdown", "recovery"]
+            ),
+
+            // MARK: Analytics
+            HelpArticle(
+                id: UUID(uuidString: "a0000000-0000-0000-0000-000000000008") ?? UUID(),
+                title: "Weekly Summaries",
+                content: """
+                # Weekly Summaries
+
+                Every week, Modus generates a summary of your training.
+
+                ## What's Included
+
+                - **Workouts Completed**: How many sessions you finished
+                - **Total Volume**: Combined weight moved across all exercises
+                - **Streak Status**: Your current and longest streaks
+                - **Trends**: Whether your volume is increasing, stable, or decreasing
+
+                ## Viewing Your Summary
+
+                - Summaries appear automatically at the end of each week
+                - Access past summaries from the Today tab menu
+                - Share summaries with your therapist or coach
+
+                ## Using Summaries to Improve
+
+                - Look for consistent upward trends in volume
+                - If volume drops, check if you're recovering enough
+                - Aim for at least 80% workout completion each week
                 """,
                 category: .analytics,
-                keywords: ["analytics", "progress", "metrics", "charts", "tracking"]
+                keywords: ["weekly", "summary", "volume", "trends", "progress"]
+            ),
+            HelpArticle(
+                id: UUID(uuidString: "a0000000-0000-0000-0000-000000000009") ?? UUID(),
+                title: "Daily Readiness Check-In",
+                content: """
+                # Daily Readiness Check-In
+
+                The daily check-in helps you train at the right intensity.
+
+                ## How It Works
+
+                1. Open the check-in from the Today tab
+                2. Rate how you feel across key areas (sleep, energy, soreness)
+                3. Get a readiness score that guides your training intensity
+
+                ## Readiness Scores
+
+                - **High (80+)**: You're fresh — push hard today
+                - **Moderate (60-79)**: Normal training, stay on program
+                - **Low (40-59)**: Consider reducing intensity or volume
+                - **Very Low (<40)**: Focus on recovery — light movement only
+
+                ## Why It Matters
+
+                Training hard when you're not recovered leads to overtraining and injury. The readiness check-in helps you make smart decisions about intensity every day.
+                """,
+                category: .analytics,
+                keywords: ["readiness", "check-in", "recovery", "sleep", "energy", "soreness"]
             )
         ]
 
-        DebugLogger.shared.log("[HelpContentLoader] Using hardcoded sample articles (JSON file and database unavailable)", level: .warning)
+        DebugLogger.shared.log("[HelpContentLoader] Loaded \(articles.count) general fitness help articles", level: .success)
     }
 }
 
