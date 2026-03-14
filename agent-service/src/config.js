@@ -14,13 +14,17 @@ const __dirname = dirname(__filename);
 dotenv.config({ path: resolve(__dirname, '../.env') });
 
 // Validate required environment variables
+// In test mode, skip validation so tests can run without full env setup
 const required = ['SUPABASE_URL', 'SUPABASE_SERVICE_ROLE_KEY', 'LINEAR_API_KEY'];
+const isTestEnv = process.env.NODE_ENV === 'test';
 const missing = required.filter(key => !process.env[key]);
 
-if (missing.length > 0) {
-  console.error(`❌ ERROR: Missing required environment variables: ${missing.join(', ')}`);
+if (missing.length > 0 && !isTestEnv) {
+  console.error(`ERROR: Missing required environment variables: ${missing.join(', ')}`);
   console.error('Please ensure .env file exists in agent-service/ directory');
   process.exit(1);
+} else if (missing.length > 0 && isTestEnv) {
+  console.warn(`WARNING: Missing env vars (test mode): ${missing.join(', ')}`);
 }
 
 export const config = {

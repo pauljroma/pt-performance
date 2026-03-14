@@ -111,7 +111,9 @@ struct UnifiedSettingsView: View {
             .navigationTitle("Settings")
             .navigationBarTitleDisplayMode(.large)
             .task {
-                await therapistLinkingVM.checkLinkStatus()
+                if isTherapistLinkingEnabled {
+                    await therapistLinkingVM.checkLinkStatus()
+                }
                 settingsViewModel.loadPreferences()
             }
             .fullScreenCoverWithHaptic(isPresented: $showQuickSetup) {
@@ -427,17 +429,19 @@ struct UnifiedSettingsView: View {
             )
         ))
 
-        // Therapist Linking
-        items.append(SettingItem(
-            id: "therapist",
-            icon: therapistLinkingVM.isLinked ? "person.2.fill" : "person.badge.plus",
-            iconColor: therapistLinkingVM.isLinked ? .green : .modusCyan,
-            title: "Therapist Linking",
-            subtitle: therapistLinkStatusText,
-            type: .navigation(
-                AnyView(TherapistLinkingView())
-            )
-        ))
+        // Therapist Linking (gated behind feature flag)
+        if isTherapistLinkingEnabled {
+            items.append(SettingItem(
+                id: "therapist",
+                icon: therapistLinkingVM.isLinked ? "person.2.fill" : "person.badge.plus",
+                iconColor: therapistLinkingVM.isLinked ? .green : .modusCyan,
+                title: "Therapist Linking",
+                subtitle: therapistLinkStatusText,
+                type: .navigation(
+                    AnyView(TherapistLinkingView())
+                )
+            ))
+        }
 
         // ACP-1061: Data Sharing Management
         items.append(SettingItem(
@@ -809,6 +813,10 @@ struct UnifiedSettingsView: View {
     }
 
     // MARK: - Helper Properties
+
+    private var isTherapistLinkingEnabled: Bool {
+        FeatureFlagService.shared.isEnabled("therapist_linking_enabled")
+    }
 
     // ACP-986: Updated to use SubscriptionManager tier display
     private var subscriptionPlanText: String {

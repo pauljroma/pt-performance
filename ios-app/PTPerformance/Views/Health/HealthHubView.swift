@@ -177,36 +177,19 @@ struct HealthHubView: View {
             Spacer()
 
             // Health Score Badge
-            NavigationLink {
-                AIHealthCoachView()
-            } label: {
-                VStack(spacing: 2) {
-                    ZStack {
-                        Circle()
-                            .stroke(Color.gray.opacity(0.2), lineWidth: 4)
-                            .frame(width: 48, height: 48)
-
-                        Circle()
-                            .trim(from: 0, to: Double(viewModel.recoveryScore) / 100)
-                            .stroke(viewModel.recoveryStatusColor, style: StrokeStyle(lineWidth: 4, lineCap: .round))
-                            .frame(width: 48, height: 48)
-                            .rotationEffect(.degrees(-90))
-
-                        Text("\(viewModel.recoveryScore)")
-                            .font(.caption)
-                            .fontWeight(.bold)
-                            .foregroundColor(.modusDeepTeal)
+            Group {
+                if Config.MVPConfig.aiHealthCoachEnabled {
+                    NavigationLink {
+                        AIHealthCoachView()
+                    } label: {
+                        healthScoreBadgeLabel
                     }
-                    .accessibilityHidden(true)
-
-                    Text("Score")
-                        .font(.caption2)
-                        .foregroundColor(.secondary)
+                    .accessibilityHint("Double tap to view detailed health insights")
+                } else {
+                    healthScoreBadgeLabel
                 }
-                .frame(minWidth: 44, minHeight: 44) // Minimum touch target
             }
             .accessibilityLabel("Health score \(viewModel.recoveryScore) percent")
-            .accessibilityHint("Double tap to view detailed health insights")
             .accessibilityIdentifier("healthScoreBadge")
         }
         .accessibilityElement(children: .contain)
@@ -223,6 +206,33 @@ struct HealthHubView: View {
     }
 
     // MARK: - Lab Upload CTA Card
+
+    private var healthScoreBadgeLabel: some View {
+        VStack(spacing: 2) {
+            ZStack {
+                Circle()
+                    .stroke(Color.gray.opacity(0.2), lineWidth: 4)
+                    .frame(width: 48, height: 48)
+
+                Circle()
+                    .trim(from: 0, to: Double(viewModel.recoveryScore) / 100)
+                    .stroke(viewModel.recoveryStatusColor, style: StrokeStyle(lineWidth: 4, lineCap: .round))
+                    .frame(width: 48, height: 48)
+                    .rotationEffect(.degrees(-90))
+
+                Text("\(viewModel.recoveryScore)")
+                    .font(.caption)
+                    .fontWeight(.bold)
+                    .foregroundColor(.modusDeepTeal)
+            }
+            .accessibilityHidden(true)
+
+            Text("Score")
+                .font(.caption2)
+                .foregroundColor(.secondary)
+        }
+        .frame(minWidth: 44, minHeight: 44)
+    }
 
     private var labUploadCTACard: some View {
         VStack(spacing: Spacing.md) {
@@ -292,17 +302,23 @@ struct HealthHubView: View {
                     targetHours: nil,
                     currentProtocol: nil
                 ),
-                supplementsCompliance: HealthSnapshotData.SupplementsCompliance(
-                    taken: viewModel.supplementsTaken,
-                    total: viewModel.supplementsTotal
-                ),
+                supplementsCompliance: FeatureFlagService.shared.isEnabled("supplements_enabled")
+                    ? HealthSnapshotData.SupplementsCompliance(
+                        taken: viewModel.supplementsTaken,
+                        total: viewModel.supplementsTotal
+                    )
+                    : HealthSnapshotData.SupplementsCompliance(taken: 0, total: 0),
                 labAlerts: 0,
                 lastUpdated: Date()
             ),
             isLoading: viewModel.isLoading,
             onRecoveryTap: { showRecoveryTracking = true },
-            onFastingTap: { showFastingTracker = true },
-            onSupplementsTap: { showSupplementDashboard = true },
+            onFastingTap: Config.MVPConfig.fastingTrackerEnabled
+                ? { showFastingTracker = true }
+                : nil,
+            onSupplementsTap: FeatureFlagService.shared.isEnabled("supplements_enabled")
+                ? { showSupplementDashboard = true }
+                : nil,
             onLabAlertsTap: nil
         )
     }
@@ -359,9 +375,13 @@ struct HealthHubView: View {
     private func handleQuickAction(_ action: QuickAction.QuickActionType) {
         switch action {
         case .startFast:
-            showFastingTracker = true
+            if Config.MVPConfig.fastingTrackerEnabled {
+                showFastingTracker = true
+            }
         case .logSupplements:
-            showSupplementDashboard = true
+            if FeatureFlagService.shared.isEnabled("supplements_enabled") {
+                showSupplementDashboard = true
+            }
         case .logRecovery:
             showRecoveryTracking = true
         case .viewLabs:
@@ -580,17 +600,19 @@ struct HealthHubView: View {
                     destination: RecoveryTrackingView()
                 )
 
-                // Supplements — always visible (MVP core)
-                Divider()
-                    .padding(.leading, 56)
+                // Supplements — gated by feature flag
+                if FeatureFlagService.shared.isEnabled("supplements_enabled") {
+                    Divider()
+                        .padding(.leading, 56)
 
-                DetailedViewRow(
-                    title: "Supplements",
-                    subtitle: "Daily stack and compliance",
-                    icon: "pills.circle.fill",
-                    iconColor: .purple,
-                    destination: SupplementDashboardView()
-                )
+                    DetailedViewRow(
+                        title: "Supplements",
+                        subtitle: "Daily stack and compliance",
+                        icon: "pills.circle.fill",
+                        iconColor: .purple,
+                        destination: SupplementDashboardView()
+                    )
+                }
 
                 // Fasting Tracker — gated by feature flag
                 if Config.MVPConfig.fastingTrackerEnabled {

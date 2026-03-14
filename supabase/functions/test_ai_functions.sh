@@ -224,16 +224,21 @@ echo -e "${GREEN}Passed: $TESTS_PASSED${NC}"
 echo -e "${RED}Failed: $TESTS_FAILED${NC}"
 echo ""
 
-if [ $TESTS_FAILED -eq 0 ]; then
-    echo -e "${GREEN}All validation and error handling tests passed!${NC}"
-    echo ""
-    echo "For full integration testing:"
-    echo "1. Start functions: supabase functions serve ai-chat-completion --env-file supabase/.env.local"
-    echo "2. In another terminal: curl -X POST http://localhost:54321/functions/v1/ai-chat-completion -H 'Content-Type: application/json' -d '{...}'"
-    exit 0
-else
-    echo -e "${RED}Some tests failed. Check logs:${NC}"
+TESTS_SKIPPED=2  # chat_completion and exercise_substitution not run above
+
+if [ $TESTS_FAILED -gt 0 ]; then
+    echo -e "${RED}FAILED: $TESTS_FAILED test(s) failed. Check logs:${NC}"
     echo "  /tmp/ai-chat-completion.log"
     echo "  /tmp/ai-exercise-substitution.log"
     exit 1
+elif [ $TESTS_SKIPPED -gt 0 ]; then
+    echo -e "${YELLOW}PARTIAL: $TESTS_PASSED passed, $TESTS_SKIPPED skipped (integration tests need seeded DB)${NC}"
+    echo ""
+    echo "To run full integration tests:"
+    echo "1. Seed test data (patients + exercise_templates)"
+    echo "2. Add test_chat_completion and test_exercise_substitution calls above"
+    exit 2  # Exit 2 = partial, distinguishable from success (0) and failure (1)
+else
+    echo -e "${GREEN}All tests passed!${NC}"
+    exit 0
 fi

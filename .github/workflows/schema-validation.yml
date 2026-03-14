@@ -1,0 +1,63 @@
+name: Schema Validation
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'ios-app/PTPerformance/Models/**'
+      - 'supabase/migrations/**'
+      - 'scripts/validate_ios_schema.py'
+  push:
+    branches: [main]
+    paths:
+      - 'ios-app/PTPerformance/Models/**'
+      - 'supabase/migrations/**'
+
+jobs:
+  validate-schema:
+    name: Validate iOS Schema Against Database
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install PostgreSQL client
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client
+
+      - name: Check for database credentials
+        id: check_creds
+        run: |
+          if [ -z "${{ secrets.SUPABASE_DB_URL }}" ]; then
+            echo "skip=true" >> $GITHUB_OUTPUT
+            echo "::warning ::SUPABASE_DB_URL secret not configured - skipping schema validation"
+          else
+            echo "skip=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Run schema validation
+        if: steps.check_creds.outputs.skip != 'true'
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          python3 scripts/validate_ios_schema.py --verbose
+
+      - name: Comment PR with results
+        if: github.event_name == 'pull_request' && steps.check_creds.outputs.skip != 'true' && always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `## Schema Validation\n\n${{ job.status == 'success' ? 'All schemas match.' : 'Schema mismatches detected. Please fix before merging.' }}`
+            });

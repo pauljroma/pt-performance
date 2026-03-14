@@ -40,16 +40,16 @@ final class FeatureFlagService: ObservableObject {
     /// Hardcoded defaults used before remote fetch completes or when offline.
     /// These must stay in sync with the seed data in the feature_flags migration.
     private static let defaults: [String: Bool] = [
-        // AI feature flags
-        "ai_chat_enabled": true,
-        "ai_substitution_enabled": true,
-        "ai_safety_enabled": true,
-        "ai_progressive_overload_enabled": true,
-        "ai_soap_suggestions_enabled": true,
-        "ai_nutrition_enabled": true,
+        // AI feature flags — only ship proven, low-risk AI in 1.0
+        "ai_chat_enabled": false,           // Defer: chat-first UX adds trust risk
+        "ai_substitution_enabled": true,    // Keep: reduces friction during workouts
+        "ai_safety_enabled": true,          // Keep: safety-critical
+        "ai_progressive_overload_enabled": true, // Keep: core workout value
+        "ai_soap_suggestions_enabled": false, // Defer: therapist-only feature
+        "ai_nutrition_enabled": false,       // Defer: broad health scope, not 1.0
         "whoop_integration_enabled": false,
-        "baseball_pack_enabled": true,
-        "elite_tier_enabled": true,
+        "baseball_pack_enabled": false,      // Defer: sport-specific premium pack
+        "elite_tier_enabled": false,         // Defer: no verified subscription path yet
 
         // MVP flags — controls what's visible at launch
         "mvp_mode": true,
@@ -73,7 +73,8 @@ final class FeatureFlagService: ObservableObject {
         "weekly_summary_enabled": true,
         "streak_dashboard_enabled": true,
         "body_comp_tools_enabled": false,
-        "therapist_linking_enabled": false
+        "therapist_linking_enabled": false,
+        "supplements_enabled": false          // Defer: broad health scope, not 1.0
     ]
 
     // MARK: - Cache Configuration

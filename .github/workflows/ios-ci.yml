@@ -1,0 +1,92 @@
+name: iOS CI
+
+# Core CI pipeline: lint -> test -> build
+# All jobs are blocking — failures prevent merge.
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  lint:
+    name: SwiftLint
+    runs-on: macos-15
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: ios-app/PTPerformance
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install SwiftLint
+        run: brew install swiftlint
+
+      - name: Run SwiftLint
+        run: swiftlint lint --config .swiftlint.yml --strict --reporter github-actions-logging
+
+  test:
+    name: Unit Tests
+    runs-on: macos-15
+    timeout-minutes: 30
+    needs: lint
+    defaults:
+      run:
+        working-directory: ios-app/PTPerformance
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Show Xcode version
+        run: xcodebuild -version
+
+      - name: Resolve SPM dependencies
+        run: |
+          xcodebuild -resolvePackageDependencies \
+            -scheme PTPerformance \
+            -clonedSourcePackagesDirPath ../../.spm-cache
+
+      - name: Run unit tests
+        run: |
+          xcodebuild test \
+            -scheme PTPerformance \
+            -destination 'platform=iOS Simulator,name=iPhone 16 Pro' \
+            -clonedSourcePackagesDirPath ../../.spm-cache \
+            -enableCodeCoverage YES \
+            -resultBundlePath TestResults.xcresult \
+            | xcpretty --color || exit 1
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: ios-app/PTPerformance/TestResults.xcresult
+          retention-days: 7
+
+  build:
+    name: Build (Debug Simulator)
+    runs-on: macos-15
+    timeout-minutes: 30
+    needs: lint
+    defaults:
+      run:
+        working-directory: ios-app/PTPerformance
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Resolve SPM dependencies
+        run: |
+          xcodebuild -resolvePackageDependencies \
+            -scheme PTPerformance \
+            -clonedSourcePackagesDirPath ../../.spm-cache
+
+      - name: Build for simulator
+        run: |
+          xcodebuild build \
+            -scheme PTPerformance \
+            -configuration Debug \
+            -destination 'platform=iOS Simulator,name=iPhone 16 Pro' \
+            -clonedSourcePackagesDirPath ../../.spm-cache \
+            | xcpretty --color || exit 1

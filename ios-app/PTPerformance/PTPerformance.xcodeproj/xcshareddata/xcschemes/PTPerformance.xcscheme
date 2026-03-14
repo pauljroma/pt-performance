@@ -83,6 +83,11 @@
             value = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJwYnhlYXhsYW95b3Frb2h5dGx3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ5OTkwMTgsImV4cCI6MjA4MDU3NTAxOH0.7RHRs-pdfbqQf9SYvg5C0e5OGktuXHVrJtsm7-fXxLo"
             isEnabled = "YES">
          </EnvironmentVariable>
+         <EnvironmentVariable
+            key = "SENTRY_DSN"
+            value = ""
+            isEnabled = "YES">
+         </EnvironmentVariable>
       </EnvironmentVariables>
    </LaunchAction>
    <ProfileAction

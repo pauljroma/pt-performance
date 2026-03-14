@@ -292,26 +292,28 @@ struct ProfileHubView: View {
             .accessibilityValue(healthKitService.isAuthorized ? "Connected" : "Not connected")
             .accessibilityHint("Configure Apple Health integration")
 
-            // Nutrition
-            NavigationLink {
-                premiumGatedView(
-                    premium: { ModusNutritionDashboardView() },
-                    locked: { PremiumLockedView(feature: "Nutrition", icon: "fork.knife", description: "Personalized nutrition targets, meal tracking, and portion guides") }
-                )
-            } label: {
-                HStack {
-                    Image(systemName: "fork.knife")
-                        .foregroundColor(.green)
-                        .frame(width: 24)
-                        .accessibilityHidden(true)
-                    Text("Nutrition")
-                        .foregroundColor(.primary)
-                    Spacer()
-                    premiumBadgeIfNeeded
+            // Nutrition — gated by feature flag
+            if FeatureFlagService.shared.isEnabled("ai_nutrition_enabled") {
+                NavigationLink {
+                    premiumGatedView(
+                        premium: { ModusNutritionDashboardView() },
+                        locked: { PremiumLockedView(feature: "Nutrition", icon: "fork.knife", description: "Personalized nutrition targets, meal tracking, and portion guides") }
+                    )
+                } label: {
+                    HStack {
+                        Image(systemName: "fork.knife")
+                            .foregroundColor(.green)
+                            .frame(width: 24)
+                            .accessibilityHidden(true)
+                        Text("Nutrition")
+                            .foregroundColor(.primary)
+                        Spacer()
+                        premiumBadgeIfNeeded
+                    }
                 }
+                .accessibilityLabel("Nutrition" + (storeKit.isPremium ? "" : ", Premium feature"))
+                .accessibilityHint("Personalized nutrition targets, meal tracking, and portion guides")
             }
-            .accessibilityLabel("Nutrition" + (storeKit.isPremium ? "" : ", Premium feature"))
-            .accessibilityHint("Personalized nutrition targets, meal tracking, and portion guides")
 
             // Readiness
             if let patientIdString = supabase.userId,
@@ -564,26 +566,28 @@ struct ProfileHubView: View {
 
     private var supportSection: some View {
         Section("Support & Learning") {
-            // AI Assistant
-            NavigationLink {
-                premiumGatedView(
-                    premium: { AIChatView() },
-                    locked: { PremiumLockedView(feature: "AI Assistant", icon: "brain.head.profile", description: "AI-powered exercise recommendations and coaching") }
-                )
-            } label: {
-                HStack {
-                    Image(systemName: "brain.head.profile")
-                        .foregroundColor(.purple)
-                        .frame(width: 24)
-                        .accessibilityHidden(true)
-                    Text("AI Assistant")
-                        .foregroundColor(.primary)
-                    Spacer()
-                    premiumBadgeIfNeeded
+            // AI Assistant — gated by feature flag
+            if FeatureFlagService.shared.isEnabled("ai_chat_enabled") {
+                NavigationLink {
+                    premiumGatedView(
+                        premium: { AIChatView() },
+                        locked: { PremiumLockedView(feature: "AI Assistant", icon: "brain.head.profile", description: "AI-powered exercise recommendations and coaching") }
+                    )
+                } label: {
+                    HStack {
+                        Image(systemName: "brain.head.profile")
+                            .foregroundColor(.purple)
+                            .frame(width: 24)
+                            .accessibilityHidden(true)
+                        Text("AI Assistant")
+                            .foregroundColor(.primary)
+                        Spacer()
+                        premiumBadgeIfNeeded
+                    }
                 }
+                .accessibilityLabel("AI Assistant" + (storeKit.isPremium ? "" : ", Premium feature"))
+                .accessibilityHint("AI-powered exercise recommendations and coaching")
             }
-            .accessibilityLabel("AI Assistant" + (storeKit.isPremium ? "" : ", Premium feature"))
-            .accessibilityHint("AI-powered exercise recommendations and coaching")
 
             // Learn
             NavigationLink {
