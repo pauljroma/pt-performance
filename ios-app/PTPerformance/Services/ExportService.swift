@@ -67,9 +67,9 @@ class ExportService {
 
         // Create PDF document
         let pdfMetadata = [
-            kCGPDFContextTitle: "Modus History",
-            kCGPDFContextAuthor: "Modus",
-            kCGPDFContextCreator: "Modus iOS App"
+            kCGPDFContextTitle: "Korza Training History",
+            kCGPDFContextAuthor: "Korza Training",
+            kCGPDFContextCreator: "Korza Training iOS App"
         ]
 
         let format = UIGraphicsPDFRendererFormat()

@@ -1,11 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
 import { SMTPClient } from "https://deno.land/x/denomailer@1.6.0/mod.ts"
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+import { corsHeaders, handleCors } from "../_shared/cors.ts"
 
 // Branded confirmation email HTML - Dark theme with visible branding
 const getConfirmationEmailHTML = (email: string) => `
@@ -23,8 +19,8 @@ const getConfirmationEmailHTML = (email: string) => `
           <!-- Header with gradient background -->
           <tr>
             <td style="background: linear-gradient(135deg, #007AFF 0%, #00D4AA 100%); padding: 40px 40px 32px; text-align: center;">
-              <img src="https://getmodus.app/icon.png" alt="Modus" width="72" height="72" style="width: 72px; height: 72px; border-radius: 16px; margin-bottom: 16px; box-shadow: 0 8px 24px rgba(0,0,0,0.3);">
-              <h1 style="margin: 0; font-size: 36px; font-weight: 800; color: #FFFFFF; letter-spacing: -0.5px;">Modus</h1>
+              <img src="https://getkorza.app/icon.png" alt="Korza Training" width="72" height="72" style="width: 72px; height: 72px; border-radius: 16px; margin-bottom: 16px; box-shadow: 0 8px 24px rgba(0,0,0,0.3);">
+              <h1 style="margin: 0; font-size: 36px; font-weight: 800; color: #FFFFFF; letter-spacing: -0.5px;">Korza Training</h1>
               <p style="margin: 8px 0 0 0; font-size: 14px; color: rgba(255,255,255,0.9);">Smarter Training</p>
             </td>
           </tr>
@@ -47,7 +43,7 @@ const getConfirmationEmailHTML = (email: string) => `
                 <tr>
                   <td align="center" style="padding-bottom: 32px;">
                     <p style="margin: 0; font-size: 16px; line-height: 1.6; color: #AAAAAA;">
-                      Thanks for joining the Modus waitlist. You'll be among the first to experience smarter training when we launch.
+                      Thanks for joining the Korza Training waitlist. You'll be among the first to experience smarter training when we launch.
                     </p>
                   </td>
                 </tr>
@@ -84,7 +80,7 @@ const getConfirmationEmailHTML = (email: string) => `
                 <tr>
                   <td align="center">
                     <p style="margin: 0; font-size: 14px; color: #888888;">
-                      We'll email you when Modus is ready.<br>Stay tuned!
+                      We'll email you when Korza Training is ready.<br>Stay tuned!
                     </p>
                   </td>
                 </tr>
@@ -99,8 +95,8 @@ const getConfirmationEmailHTML = (email: string) => `
                 <tr>
                   <td align="center">
                     <p style="margin: 0; font-size: 12px; color: #666666;">
-                      © 2026 Modus · Smarter Training<br>
-                      <a href="https://getmodus.app" style="color: #007AFF; text-decoration: none;">getmodus.app</a>
+                      © 2026 Korza Training · Smarter Training<br>
+                      <a href="https://getkorza.app" style="color: #007AFF; text-decoration: none;">getkorza.app</a>
                     </p>
                   </td>
                 </tr>
@@ -120,7 +116,7 @@ async function sendConfirmationEmail(email: string) {
   const smtpPort = parseInt(Deno.env.get('SMTP_PORT') || '465')
   const smtpUser = Deno.env.get('SMTP_USER')
   const smtpPass = Deno.env.get('SMTP_PASS')
-  const fromEmail = Deno.env.get('SMTP_FROM') || 'hello@getmodus.app'
+  const fromEmail = Deno.env.get('SMTP_FROM') || 'hello@getkorza.app'
 
   if (!smtpHost || !smtpUser || !smtpPass) {
     console.log('SMTP not configured, skipping confirmation email')
@@ -148,7 +144,7 @@ async function sendConfirmationEmail(email: string) {
     await client.send({
       from: fromEmail,
       to: email,
-      subject: "You're on the Modus waitlist! 🎉",
+      subject: "You're on the Korza Training waitlist! 🎉",
       html: getConfirmationEmailHTML(email),
     })
 
@@ -164,9 +160,11 @@ async function sendConfirmationEmail(email: string) {
 
 serve(async (req) => {
   // Handle CORS preflight
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
-  }
+  const corsResponse = handleCors(req)
+  if (corsResponse) return corsResponse
+
+  const origin = req.headers.get('Origin')
+  const headers = { ...corsHeaders(origin), 'Content-Type': 'application/json' }
 
   try {
     const { email, source = 'website' } = await req.json()
@@ -174,7 +172,7 @@ serve(async (req) => {
     if (!email || !email.includes('@')) {
       return new Response(
         JSON.stringify({ error: 'Valid email required' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 400, headers }
       )
     }
 
@@ -195,7 +193,7 @@ serve(async (req) => {
     if (existing) {
       return new Response(
         JSON.stringify({ success: true, message: 'Already on waitlist' }),
-        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 200, headers }
       )
     }
 
@@ -214,14 +212,14 @@ serve(async (req) => {
 
     return new Response(
       JSON.stringify({ success: true, message: 'Added to waitlist' }),
-      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { status: 200, headers }
     )
 
   } catch (error) {
     console.error('Error:', error)
     return new Response(
       JSON.stringify({ error: 'Failed to join waitlist' }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { status: 500, headers }
     )
   }
 })

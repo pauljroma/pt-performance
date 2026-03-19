@@ -129,7 +129,7 @@ enum DeepLinkDestination: Equatable {
 
     /// Parse URL into destination
     static func from(url: URL) -> DeepLinkDestination? {
-        guard url.scheme == "modus" else { return nil }
+        guard url.scheme == "korza" else { return nil }
 
         let host = url.host ?? ""
         let pathComponents = url.pathComponents.filter { $0 != "/" }
@@ -139,7 +139,7 @@ enum DeepLinkDestination: Equatable {
         case "readiness":
             return .readiness
         case "workout":
-            // Handle modus://workout/{sessionId}
+            // Handle korza://workout/{sessionId}
             if let sessionId = pathComponents.first {
                 return .workout(sessionId: sessionId)
             }
@@ -383,8 +383,8 @@ struct PTPerformanceApp: App {
         }
 
         // Handle auth deep links
-        // modus://auth - Magic link login (just logs user in)
-        // modus://reset-password - Legacy password reset (shows password form)
+        // korza://auth - Magic link login (just logs user in)
+        // korza://reset-password - Legacy password reset (shows password form)
         let isMagicLink = url.host == "auth"
         let isPasswordReset = url.host == "reset-password"
 

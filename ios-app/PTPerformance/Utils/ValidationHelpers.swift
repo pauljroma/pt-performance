@@ -193,7 +193,17 @@ struct ValidationHelpers {
         return .valid
     }
 
-    /// Validates a password
+    /// Validates a password for sign-in (minimal — server handles auth)
+    /// - Parameter password: The password to validate
+    /// - Returns: ValidationResult indicating if valid or error message
+    static func validatePasswordForSignIn(_ password: String) -> ValidationResult {
+        if password.isEmpty {
+            return .invalid("Password cannot be empty")
+        }
+        return .valid
+    }
+
+    /// Validates a password for registration (full complexity rules)
     /// - Parameter password: The password to validate
     /// - Returns: ValidationResult indicating if valid or error message
     static func validatePassword(_ password: String) -> ValidationResult {

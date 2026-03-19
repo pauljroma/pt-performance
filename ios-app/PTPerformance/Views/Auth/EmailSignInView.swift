@@ -65,7 +65,7 @@ struct EmailSignInView: View {
                         .accessibilityHint("Enter your password")
                         .onChange(of: password) { _, newValue in
                             if !newValue.isEmpty {
-                                passwordValidation = ValidationHelpers.validatePassword(newValue)
+                                passwordValidation = ValidationHelpers.validatePasswordForSignIn(newValue)
                             } else {
                                 passwordValidation = nil
                             }

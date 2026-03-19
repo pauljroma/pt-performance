@@ -223,7 +223,7 @@ extension PushNotificationPayload {
             body: "Time to complete your daily check-in. How are you feeling today?",
             data: [
                 "patient_id": patientId.uuidString,
-                "deep_link": "modus://check-in"
+                "deep_link": "korza://check-in"
             ],
             scheduledFor: scheduledFor,
             priority: .normal
@@ -257,7 +257,7 @@ extension PushNotificationPayload {
                 "plan_id": planId.uuidString,
                 "patient_id": patientId.uuidString,
                 "task_type": task.taskType.rawValue,
-                "deep_link": "modus://task/\(task.id.uuidString)"
+                "deep_link": "korza://task/\(task.id.uuidString)"
             ],
             scheduledFor: reminderDate,
             priority: .normal
@@ -279,7 +279,7 @@ extension PushNotificationPayload {
                 "patient_id": patientId.uuidString,
                 "therapist_id": therapistId.uuidString,
                 "brief_id": briefId.uuidString,
-                "deep_link": "modus://brief/\(briefId.uuidString)"
+                "deep_link": "korza://brief/\(briefId.uuidString)"
             ],
             scheduledFor: nil,
             priority: .normal
@@ -304,7 +304,7 @@ extension PushNotificationPayload {
                 "therapist_id": therapistId.uuidString,
                 "incident_id": incidentId.uuidString,
                 "severity": severity,
-                "deep_link": "modus://patient/\(patientId.uuidString)/safety"
+                "deep_link": "korza://patient/\(patientId.uuidString)/safety"
             ],
             scheduledFor: nil,
             priority: .high
@@ -327,7 +327,7 @@ extension PushNotificationPayload {
                 "patient_id": patientId.uuidString,
                 "streak_count": String(streakCount),
                 "streak_type": streakType,
-                "deep_link": "modus://streak"
+                "deep_link": "korza://streak"
             ],
             scheduledFor: nil,
             priority: .low

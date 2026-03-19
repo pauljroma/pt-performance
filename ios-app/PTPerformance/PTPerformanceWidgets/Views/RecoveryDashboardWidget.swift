@@ -122,7 +122,7 @@ struct RecoveryDashboardWidgetView: View {
             }
         }
         .padding(.horizontal, Spacing.xxs)
-        .widgetURL(URL(string: "modus://recovery"))
+        .widgetURL(URL(string: "korza://recovery"))
     }
 
     private func statusColor(_ status: WidgetWorkout.WorkoutStatus) -> Color {

@@ -285,7 +285,7 @@ class WHOOPWearableAdapter: WearableProvider {
         return try await withCheckedThrowingContinuation { continuation in
             let session = ASWebAuthenticationSession(
                 url: authURL,
-                callbackURLScheme: "modus"
+                callbackURLScheme: "korza"
             ) { callbackURL, error in
                 if let error = error {
                     continuation.resume(throwing: error)

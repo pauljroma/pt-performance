@@ -54,10 +54,10 @@ class OuraWearableAdapter: WearableProvider {
     private let tokenURL = "https://api.ouraring.com/oauth/token"
 
     /// Callback scheme for OAuth redirect
-    private let callbackScheme = "modus"
+    private let callbackScheme = "korza"
 
     /// OAuth redirect URI
-    private let redirectURI = "modus://oura-callback"
+    private let redirectURI = "korza://oura-callback"
 
     /// Required Oura API scopes
     /// - daily: Daily readiness, sleep, and activity scores

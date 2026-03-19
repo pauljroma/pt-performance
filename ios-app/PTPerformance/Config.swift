@@ -1,6 +1,6 @@
 import Foundation
 
-/// Configuration for Modus app
+/// Configuration for Korza Training app
 /// Contains Supabase credentials and other app settings
 enum Config {
     // MARK: - Supabase Configuration
@@ -36,7 +36,7 @@ enum Config {
         /// Baseball Pack one-time purchase product ID
         static let baseballPackProductID = "com.getmodus.app.baseballpack"
         /// Subscription group identifier
-        static let groupID = "Modus Premium"
+        static let groupID = "Korza Training Premium"
 
         // ACP-986: Elite tier product IDs
         /// Monthly subscription product ID (Elite tier)

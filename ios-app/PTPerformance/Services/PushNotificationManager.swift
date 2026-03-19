@@ -330,7 +330,7 @@ actor PushNotificationManager {
         content.categoryIdentifier = NotificationType.checkInReminder.categoryIdentifier
         content.userInfo = [
             "notification_type": NotificationType.checkInReminder.rawValue,
-            "deep_link": "modus://check-in"
+            "deep_link": "korza://check-in"
         ]
 
         // Create daily repeating trigger
@@ -392,7 +392,7 @@ actor PushNotificationManager {
             "notification_type": NotificationType.taskDue.rawValue,
             "task_id": task.id.uuidString,
             "task_type": task.taskType.rawValue,
-            "deep_link": "modus://task/\(task.id.uuidString)"
+            "deep_link": "korza://task/\(task.id.uuidString)"
         ]
 
         // Calculate reminder time
@@ -498,28 +498,28 @@ actor PushNotificationManager {
     private func constructDeepLink(for type: NotificationType, with payload: [AnyHashable: Any]) -> URL? {
         switch type {
         case .checkInReminder:
-            return URL(string: "modus://check-in")
+            return URL(string: "korza://check-in")
 
         case .taskDue:
             if let taskId = payload["task_id"] as? String {
-                return URL(string: "modus://task/\(taskId)")
+                return URL(string: "korza://task/\(taskId)")
             }
-            return URL(string: "modus://today")
+            return URL(string: "korza://today")
 
         case .briefAvailable:
             if let briefId = payload["brief_id"] as? String {
-                return URL(string: "modus://brief/\(briefId)")
+                return URL(string: "korza://brief/\(briefId)")
             }
-            return URL(string: "modus://briefs")
+            return URL(string: "korza://briefs")
 
         case .safetyAlert:
             if let patientId = payload["patient_id"] as? String {
-                return URL(string: "modus://patient/\(patientId)/safety")
+                return URL(string: "korza://patient/\(patientId)/safety")
             }
-            return URL(string: "modus://patients")
+            return URL(string: "korza://patients")
 
         case .streakMilestone:
-            return URL(string: "modus://streak")
+            return URL(string: "korza://streak")
         }
     }
 

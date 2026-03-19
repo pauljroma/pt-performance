@@ -77,7 +77,7 @@ serve(async (req) => {
     const APNS_KEY_ID = Deno.env.get('APNS_KEY_ID')
     const APNS_TEAM_ID = Deno.env.get('APNS_TEAM_ID')
     const APNS_AUTH_KEY = Deno.env.get('APNS_AUTH_KEY')
-    const APNS_BUNDLE_ID = Deno.env.get('APNS_BUNDLE_ID') || 'com.getmodus.app'
+    const APNS_BUNDLE_ID = Deno.env.get('APNS_BUNDLE_ID') || 'com.ptperformance.app'
     const APNS_ENVIRONMENT = Deno.env.get('APNS_ENVIRONMENT') || 'development'
 
     if (!APNS_KEY_ID || !APNS_TEAM_ID || !APNS_AUTH_KEY) {

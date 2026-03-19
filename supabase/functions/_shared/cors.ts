@@ -1,5 +1,5 @@
 // Shared CORS Module for Edge Functions
-// Provides origin-validated CORS headers for the Modus app.
+// Provides origin-validated CORS headers for the Korza Training app.
 //
 // Replaces the blanket `Access-Control-Allow-Origin: *` pattern with
 // a whitelist of known origins, while still allowing local development.
@@ -9,8 +9,8 @@
 // ============================================================================
 
 const ALLOWED_ORIGINS: string[] = [
-  'https://app.moduspt.com',
-  'https://www.app.moduspt.com',
+  'https://app.getkorza.app',
+  'https://www.app.getkorza.app',
   'capacitor://localhost',   // iOS Capacitor app
   'http://localhost',        // Local development
   'http://localhost:3000',   // Local dev (common port)
@@ -66,7 +66,7 @@ export function corsHeaders(origin?: string | null): Record<string, string> {
   // This prevents the browser from accepting the response for unknown origins.
   return {
     ...BASE_HEADERS,
-    'Access-Control-Allow-Origin': 'https://app.moduspt.com',
+    'Access-Control-Allow-Origin': 'https://app.getkorza.app',
     'Vary': 'Origin',
   };
 }

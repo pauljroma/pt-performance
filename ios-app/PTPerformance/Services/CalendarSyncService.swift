@@ -45,7 +45,7 @@ final class CalendarSyncService: ObservableObject {
     // MARK: - Private Properties
 
     private let eventStore = EKEventStore()
-    private let calendarName = "Modus"
+    private let calendarName = "Korza Training"
     private let calendarIdentifierKey = "PTPerformanceCalendarIdentifier"
     private let settingsKey = "CalendarSyncSettings"
     private let eventMappingKey = "CalendarEventMapping" // Maps session ID to calendar event ID

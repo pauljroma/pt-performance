@@ -97,13 +97,13 @@ final class SecurityMonitor: ObservableObject {
     @Published var isMonitoring: Bool = false
 
     /// Maximum failed login attempts before lockout
-    private let maxFailedAttempts = 5
+    private let maxFailedAttempts = 8
 
     /// Window for counting failed login attempts (15 minutes)
     private let failedLoginWindow: TimeInterval = 15 * 60
 
     /// Lockout duration in seconds
-    private let lockoutDuration: TimeInterval = 30 * 60 // 30 minutes
+    private let lockoutDuration: TimeInterval = 5 * 60 // 5 minutes
 
     /// API rate limit: max calls per minute per endpoint
     private let apiRateLimitPerMinute = 60

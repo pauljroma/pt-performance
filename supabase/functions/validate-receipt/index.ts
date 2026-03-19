@@ -60,7 +60,7 @@ const APPLE_STATUS = {
 
 // Expected bundle ID for the app
 // Note: This should match the bundle ID in the iOS app's Info.plist
-const EXPECTED_BUNDLE_ID = 'com.getmodus.app'
+const EXPECTED_BUNDLE_ID = 'com.ptperformance.app'
 
 // Valid product IDs - must match Config.Subscription in iOS app
 // These are the only product IDs that will be accepted for validation

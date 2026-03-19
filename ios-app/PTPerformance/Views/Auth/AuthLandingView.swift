@@ -80,7 +80,7 @@ struct AuthLandingView: View {
                         .opacity(logoOpacity)
                         .accessibilityHidden(true)
 
-                        Text("Modus")
+                        Text("Korza")
                             .font(.system(size: 38, weight: .bold, design: .rounded))
                             .foregroundColor(.modusDeepTeal)
                             .opacity(logoOpacity)

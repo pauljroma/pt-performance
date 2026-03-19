@@ -111,7 +111,7 @@ final class ReportPDFGenerator {
         var y = yPosition
 
         // Logo placeholder (app name)
-        let logoText = "Modus"
+        let logoText = "Korza Training"
         let logoAttributes: [NSAttributedString.Key: Any] = [
             .font: UIFont.systemFont(ofSize: 14, weight: .bold),
             .foregroundColor: primaryColor

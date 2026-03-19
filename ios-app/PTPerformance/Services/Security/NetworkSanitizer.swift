@@ -294,8 +294,8 @@ final class NetworkSanitizer {
 
         // Require HTTPS scheme
         guard let scheme = url.scheme?.lowercased(), scheme == "https" else {
-            // Allow modus:// scheme for deep links
-            if url.scheme?.lowercased() == "modus" {
+            // Allow korza:// scheme for deep links
+            if url.scheme?.lowercased() == "korza" {
                 return true
             }
             DebugLogger.shared.warning("[NetworkSanitizer] URL has non-HTTPS scheme: \(url.scheme ?? "nil")")

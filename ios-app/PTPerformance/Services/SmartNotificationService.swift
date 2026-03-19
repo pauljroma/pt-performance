@@ -577,7 +577,7 @@ actor SmartNotificationService {
         content.userInfo = [
             "prescription_id": prescription.id.uuidString,
             "notification_type": PushNotificationType.prescriptionAssigned.rawValue,
-            "deep_link": "modus://prescription/\(prescription.id.uuidString)"
+            "deep_link": "korza://prescription/\(prescription.id.uuidString)"
         ]
 
         // Use thread ID for grouping related notifications
@@ -718,7 +718,7 @@ actor SmartNotificationService {
             "prescription_id": prescription.id.uuidString,
             "notification_type": notificationType.rawValue,
             "hours_remaining": hoursRemaining,
-            "deep_link": "modus://prescription/\(prescription.id.uuidString)"
+            "deep_link": "korza://prescription/\(prescription.id.uuidString)"
         ]
         content.threadIdentifier = "prescription_\(prescription.id.uuidString)"
 
@@ -751,7 +751,7 @@ actor SmartNotificationService {
         content.userInfo = [
             "prescription_id": prescription.id.uuidString,
             "notification_type": PushNotificationType.prescriptionOverdue.rawValue,
-            "deep_link": "modus://prescription/\(prescription.id.uuidString)"
+            "deep_link": "korza://prescription/\(prescription.id.uuidString)"
         ]
         content.threadIdentifier = "prescription_\(prescription.id.uuidString)"
 
@@ -829,7 +829,7 @@ actor SmartNotificationService {
             "notification_type": PushNotificationType.therapistFollowUp.rawValue,
             "prescription_id": prescriptionId?.uuidString ?? "",
             "follow_up_reason": reason.rawValue,
-            "deep_link": "modus://patient/\(patientId.uuidString)"
+            "deep_link": "korza://patient/\(patientId.uuidString)"
         ]
 
         let trigger = UNCalendarNotificationTrigger(

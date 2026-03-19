@@ -315,7 +315,7 @@ class ReEngagementService: ObservableObject {
                 repeats: false,
                 data: [
                     "threshold": String(threshold.rawValue),
-                    "deep_link": "modus://today"
+                    "deep_link": "korza://today"
                 ]
             )
 

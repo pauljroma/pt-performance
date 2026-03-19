@@ -61,8 +61,8 @@ final class NetworkSanitizerTests: XCTestCase {
         XCTAssertTrue(sut.validateURL(url))
     }
 
-    func testValidateURL_ModusScheme_ReturnsTrue() {
-        let url = URL(string: "modus://deeplink/action")!
+    func testValidateURL_KorzaScheme_ReturnsTrue() {
+        let url = URL(string: "korza://deeplink/action")!
         XCTAssertTrue(sut.validateURL(url))
     }
 

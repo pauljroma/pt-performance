@@ -131,7 +131,7 @@ class PTSupabaseClient: ObservableObject {
         // By providing `storageKey` explicitly, we bypass the SDK's dangerous code path entirely.
         // This prevents EXC_BREAKPOINT/SIGTRAP crashes on iOS versions where URL.host may
         // return nil (observed on iOS 26.x with new URL parser behavior).
-        let projectRef = url.host?.split(separator: ".").first.map(String.init) ?? "modus"
+        let projectRef = url.host?.split(separator: ".").first.map(String.init) ?? "korza"
         let authStorageKey = "sb-\(projectRef)-auth-token"
 
         // Use flexible decoder for all database queries
@@ -143,7 +143,7 @@ class PTSupabaseClient: ObservableObject {
             options: SupabaseClientOptions(
                 db: SupabaseClientOptions.DatabaseOptions(decoder: PTSupabaseClient.flexibleDecoder),
                 auth: SupabaseClientOptions.AuthOptions(
-                    redirectToURL: URL(string: "modus://auth"),
+                    redirectToURL: URL(string: "korza://auth"),
                     storageKey: authStorageKey,
                     flowType: .pkce,
                     autoRefreshToken: true
@@ -438,12 +438,12 @@ class PTSupabaseClient: ObservableObject {
     ///
     /// - Throws: Supabase authentication errors if the request fails
     ///
-    /// - Note: The magic link redirects to `modus://auth` and logs user in directly
+    /// - Note: The magic link redirects to `korza://auth` and logs user in directly
     func sendMagicLink(email: String) async throws {
         do {
             try await client.auth.signInWithOTP(
                 email: email,
-                redirectTo: URL(string: "modus://auth")
+                redirectTo: URL(string: "korza://auth")
             )
             DebugLogger.shared.success("SupabaseClient", "Magic link sent to \(email)")
         } catch {
@@ -459,7 +459,7 @@ class PTSupabaseClient: ObservableObject {
         do {
             try await client.auth.resetPasswordForEmail(
                 email,
-                redirectTo: URL(string: "modus://reset-password")
+                redirectTo: URL(string: "korza://reset-password")
             )
             DebugLogger.shared.success("SupabaseClient", "Password reset email sent to \(email)")
         } catch {

@@ -94,7 +94,7 @@ enum TimelineDataSource: String, Codable, Hashable {
         case .garmin: return "Garmin"
         case .fitbit: return "Fitbit"
         case .appleWatch: return "Apple Watch"
-        case .supabase: return "Modus"
+        case .supabase: return "Korza Training"
         }
     }
 

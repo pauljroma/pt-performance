@@ -91,16 +91,16 @@ struct BiometricLockScreen: View {
                 .foregroundColor(.modusCyan)
                 .accessibilityHidden(true)
 
-            Text("PT Performance")
+            Text("Korza Training")
                 .font(.title2)
                 .fontWeight(.bold)
 
-            Text("Modus")
+            Text("Train Smarter. Recover Faster.")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
         }
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("PT Performance by Modus")
+        .accessibilityLabel("Korza Training")
     }
 
     // MARK: - Biometric Icon

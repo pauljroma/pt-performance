@@ -1034,11 +1034,11 @@ struct AboutView: View {
                         .foregroundStyle(Color.modusCyan)
                         .accessibilityHidden(true)
 
-                    Text("PT Performance")
+                    Text("Korza Training")
                         .font(.title)
                         .fontWeight(.bold)
 
-                    Text("Modus")
+                    Text("Train Smarter. Recover Faster.")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                 }

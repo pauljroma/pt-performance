@@ -373,7 +373,7 @@ class StreakService: ObservableObject {
             repeats: false,
             data: [
                 "streak_count": String(currentStreak),
-                "deep_link": "modus://streak"
+                "deep_link": "korza://streak"
             ]
         )
 
@@ -422,7 +422,7 @@ class StreakService: ObservableObject {
                 scheduledDate: Date().addingTimeInterval(1),
                 data: [
                     "streak_count": String(currentStreak),
-                    "deep_link": "modus://streak"
+                    "deep_link": "korza://streak"
                 ]
             )
             await PushNotificationService.shared.scheduleLocalNotification(notification)

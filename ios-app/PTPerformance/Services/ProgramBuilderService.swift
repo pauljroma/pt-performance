@@ -778,7 +778,7 @@ class ProgramBuilderService: ObservableObject {
             therapistId: supabase.userId,
             isFeatured: isFeatured,
             tags: tags,
-            author: "Modus"
+            author: "Korza Training"
         )
 
         do {

@@ -5,8 +5,8 @@
 //  ACP-999: Deep Link Attribution — Universal links, campaign tracking, deferred deep links
 //
 //  Handles all deep link routing, UTM attribution extraction, and deferred deep link
-//  resolution. Works with both the custom `modus://` scheme and universal links from
-//  `https://app.moduspt.com`.
+//  resolution. Works with both the custom `korza://` scheme and universal links from
+//  `https://app.getkorza.app`.
 //
 
 import Foundation
@@ -25,8 +25,8 @@ extension DeepLinkDestination {
 
 /// Centralized deep link handling with attribution tracking and deferred deep link support.
 ///
-/// Parses incoming URLs from both custom scheme (`modus://`) and universal links
-/// (`https://app.moduspt.com/...`), extracts UTM parameters for attribution, and
+/// Parses incoming URLs from both custom scheme (`korza://`) and universal links
+/// (`https://app.getkorza.app/...`), extracts UTM parameters for attribution, and
 /// routes users to the correct in-app destination.
 ///
 /// ## Features
@@ -65,18 +65,18 @@ class DeepLinkService: ObservableObject {
 
     /// UserDefaults keys for attribution persistence
     private enum Keys {
-        static let firstInstallAttribution = "com.getmodus.attribution.firstInstall"
-        static let hasCheckedDeferredLink = "com.getmodus.attribution.hasCheckedDeferred"
-        static let attributionHistory = "com.getmodus.attribution.history"
-        static let isFirstLaunch = "com.getmodus.attribution.isFirstLaunch"
-        static let queuedDeepLinkURL = "com.getmodus.attribution.queuedURL"
+        static let firstInstallAttribution = "com.getkorza.attribution.firstInstall"
+        static let hasCheckedDeferredLink = "com.getkorza.attribution.hasCheckedDeferred"
+        static let attributionHistory = "com.getkorza.attribution.history"
+        static let isFirstLaunch = "com.getkorza.attribution.isFirstLaunch"
+        static let queuedDeepLinkURL = "com.getkorza.attribution.queuedURL"
     }
 
     /// Universal link host
-    private let universalLinkHost = "app.moduspt.com"
+    private let universalLinkHost = "app.getkorza.app"
 
     /// Custom URL scheme
-    private let customScheme = "modus"
+    private let customScheme = "korza"
 
     // MARK: - Initialization
 
@@ -236,7 +236,7 @@ class DeepLinkService: ObservableObject {
 
     // MARK: - Custom Scheme Parsing
 
-    /// Parse custom scheme URLs: modus://...
+    /// Parse custom scheme URLs: korza://...
     /// Extends existing DeepLinkDestination.from(url:) with attribution-aware patterns.
     private func parseCustomScheme(_ url: URL) -> DeepLinkDestination? {
         guard url.scheme == customScheme else { return nil }

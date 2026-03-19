@@ -118,7 +118,7 @@ struct PrescriptionNotificationPayload: NotificationPayloadProtocol, Codable {
 
     /// Deep link URL for navigating to the prescription
     var deepLinkURL: URL? {
-        URL(string: "modus://prescription/\(prescriptionId.uuidString)")
+        URL(string: "korza://prescription/\(prescriptionId.uuidString)")
     }
 
     enum CodingKeys: String, CodingKey {
@@ -149,9 +149,9 @@ struct TherapistFollowUpPayload: NotificationPayloadProtocol, Codable {
     /// Deep link URL for navigating to the patient
     var deepLinkURL: URL? {
         if let prescriptionId = prescriptionId {
-            return URL(string: "modus://prescription/\(prescriptionId.uuidString)")
+            return URL(string: "korza://prescription/\(prescriptionId.uuidString)")
         }
-        return URL(string: "modus://patient/\(patientId.uuidString)")
+        return URL(string: "korza://patient/\(patientId.uuidString)")
     }
 
     enum CodingKeys: String, CodingKey {
