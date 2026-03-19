@@ -199,6 +199,11 @@ struct EmailSignInView: View {
                 appState.userId = supabase.userId
                 appState.isAuthenticated = true
                 isLoading = false
+
+                // Grant premium access to demo accounts for App Store Review
+                if trimmedEmail.hasSuffix("@ptperformance.app") && trimmedEmail.hasPrefix("demo") {
+                    StoreKitService.shared.debugPremiumOverride = true
+                }
             }
         } catch {
             // Record failed login attempt

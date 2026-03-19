@@ -431,6 +431,12 @@ struct RootView: View {
                 appState.userRole = supabase.userRole ?? .patient
                 appState.isAuthenticated = true
                 isCheckingSession = false
+
+                // Grant premium access to demo accounts for App Store Review
+                if let email = session.user.email,
+                   email.hasSuffix("@ptperformance.app") && email.hasPrefix("demo") {
+                    StoreKitService.shared.debugPremiumOverride = true
+                }
             }
 
             // ACP-932/945: Defer non-critical work to after UI is displayed
