@@ -3,6 +3,8 @@ import SwiftUI
 
 struct AIHealthCoachView: View {
     @StateObject private var viewModel = HealthCoachViewModel()
+    @StateObject private var consentManager = ConsentManager.shared
+    @State private var showAIConsentPrompt = false
 
     var body: some View {
         NavigationStack {
@@ -75,7 +77,16 @@ struct AIHealthCoachView: View {
             .navigationTitle("AI Health Coach")
             .navigationBarTitleDisplayMode(.inline)
             .task {
-                await viewModel.loadData()
+                if consentManager.isGranted(.aiPersonalization) {
+                    await viewModel.loadData()
+                } else {
+                    showAIConsentPrompt = true
+                }
+            }
+            .sheet(isPresented: $showAIConsentPrompt) {
+                AIConsentPromptView {
+                    Task { await viewModel.loadData() }
+                }
             }
         }
     }

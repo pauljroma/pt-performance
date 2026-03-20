@@ -38,10 +38,20 @@ final class AICoachService: ObservableObject {
 
     // MARK: - Ask Coach
 
+    /// Whether the user has granted AI personalization consent
+    var hasAIConsent: Bool {
+        ConsentManager.shared.isGranted(.aiPersonalization)
+    }
+
     /// Sends a question to the AI coach and receives a contextual response
     /// Includes caching to avoid redundant requests for identical questions
     /// ACP-1023: Now passes client-side context for faster personalization
     func askCoach(question: String) async -> UnifiedCoachResponse? {
+        guard hasAIConsent else {
+            DebugLogger.shared.info("AICoachService", "AI consent not granted — skipping request")
+            return nil
+        }
+
         isLoading = true
         error = nil
 
@@ -122,6 +132,11 @@ final class AICoachService: ObservableObject {
     /// Includes caching to avoid redundant network calls
     /// ACP-1023: Now passes client-side context for faster personalization
     func getProactiveInsights() async {
+        guard hasAIConsent else {
+            DebugLogger.shared.info("AICoachService", "AI consent not granted — skipping proactive insights")
+            return
+        }
+
         isLoading = true
         error = nil
 

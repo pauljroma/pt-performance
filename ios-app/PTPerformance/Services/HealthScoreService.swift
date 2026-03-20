@@ -440,6 +440,16 @@ final class HealthScoreService: ObservableObject {
     /// Calls the unified-ai-coach edge function for personalized responses.
     /// Falls back to a generic message if the AI service is unavailable.
     func sendMessage(_ message: String) async -> HealthCoachMessage {
+        guard await ConsentManager.shared.isGranted(.aiPersonalization) else {
+            return HealthCoachMessage(
+                id: UUID(),
+                role: .assistant,
+                content: "AI coaching requires your consent to process data. Please enable AI Personalization in Settings > Data Access.",
+                timestamp: Date(),
+                category: .general
+            )
+        }
+
         do {
             let userId = supabase.client.auth.currentUser?.id.uuidString ?? ""
 

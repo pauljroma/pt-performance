@@ -55,7 +55,7 @@ enum PrivacyConsentType: String, CaseIterable, Codable, Identifiable {
         case .workoutSharing:
             return "Share your workout history and exercise data to enable progress tracking and program recommendations."
         case .aiPersonalization:
-            return "Allow AI to analyze your patterns and provide personalized training recommendations and insights."
+            return "Your workout history, readiness scores, and health metrics are sent to OpenAI's API to generate personalized training recommendations. Data is processed per OpenAI's API data usage policy and is not used to train their models."
         case .crashReporting:
             return "Automatically send crash reports to help us identify and fix bugs faster."
         case .pushMarketing:

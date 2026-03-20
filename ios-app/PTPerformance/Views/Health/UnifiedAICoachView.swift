@@ -2,8 +2,10 @@ import SwiftUI
 
 struct UnifiedAICoachView: View {
     @StateObject private var viewModel = AICoachViewModel()
+    @StateObject private var consentManager = ConsentManager.shared
     @FocusState private var isInputFocused: Bool
     @State private var insightsAppeared = false
+    @State private var showAIConsentPrompt = false
 
     var body: some View {
         NavigationStack {
@@ -118,7 +120,16 @@ struct UnifiedAICoachView: View {
                 }
             }
             .task {
-                await viewModel.loadInitialInsights()
+                if consentManager.isGranted(.aiPersonalization) {
+                    await viewModel.loadInitialInsights()
+                } else {
+                    showAIConsentPrompt = true
+                }
+            }
+            .sheet(isPresented: $showAIConsentPrompt) {
+                AIConsentPromptView {
+                    Task { await viewModel.loadInitialInsights() }
+                }
             }
         }
     }

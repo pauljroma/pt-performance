@@ -140,6 +140,23 @@ struct SubscriptionView: View {
                         } else if storeKit.isLoading {
                             ProgressView("Loading plans...")
                                 .padding()
+                        } else {
+                            // Products failed to load — show retry
+                            VStack(spacing: Spacing.sm) {
+                                Image(systemName: "exclamationmark.triangle")
+                                    .font(.title2)
+                                    .foregroundStyle(.secondary)
+                                Text("Unable to load subscription plans")
+                                    .font(.subheadline)
+                                    .foregroundStyle(.secondary)
+                                Button("Try Again") {
+                                    Task { await storeKit.loadProducts() }
+                                }
+                                .font(.subheadline.weight(.semibold))
+                                .foregroundColor(.modusCyan)
+                            }
+                            .padding()
+                            .accessibilityElement(children: .combine)
                         }
 
                         // MARK: - Purchase Button
