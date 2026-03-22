@@ -99,4 +99,55 @@ cd ios-app/PTPerformance && xcodebuild test -scheme PTPerformance -destination '
 
 ## Current Build
 
-Build **543** (check `CURRENT_PROJECT_VERSION` in `project.pbxproj` for latest). Bundle ID: `com.ptperformance.app`. Scheme: `PTPerformance`.
+Build **637** (check `CURRENT_PROJECT_VERSION` in `project.pbxproj` for latest). Bundle ID: `com.ptperformance.app`. Scheme: `PTPerformance`. App name: **Korza Training**.
+
+## Workflow Orchestration
+
+### 1. Plan Mode Default
+- Enter plan mode for any non-trivial task (3+ steps or architectural decisions).
+- If something goes sideways, stop and re-plan immediately.
+- Use plan mode for verification steps, not just building.
+- Write detailed specs upfront to reduce ambiguity.
+
+### 2. Subagent Strategy
+- Use subagents liberally to keep the main context window clean.
+- Offload research, exploration, and parallel analysis to subagents.
+- For complex problems, throw more compute at it via subagents.
+- Use one task per subagent for focused execution.
+
+### 3. Self-Improvement Loop
+- After any correction from the user, update `tasks/lessons.md` with the pattern.
+- Write rules that prevent the same mistake from recurring.
+- Ruthlessly iterate on these lessons until the mistake rate drops.
+- Review lessons at session start for the relevant project.
+
+### 4. Verification Before Done
+- Never mark a task complete without proving it works.
+- Diff behavior between main and your changes when relevant.
+- Ask: "Would a staff engineer approve this?"
+- Run tests, check logs, and demonstrate correctness.
+
+### 5. Demand Elegance (Balanced)
+- For non-trivial changes, pause and ask: "Is there a more elegant way?"
+- If a fix feels hacky, reframe: "Knowing everything I know now, implement the elegant solution."
+- Skip this for simple, obvious fixes; do not over-engineer.
+- Challenge your own work before presenting it.
+
+### 6. Autonomous Bug Fixing
+- When given a bug report, just fix it. Do not ask for hand-holding.
+- Identify logs, errors, and failing tests, then resolve them.
+- Require zero context switching from the user.
+- Go fix failing CI tests without being told how.
+
+## Task Management
+1. **Plan First:** Write the plan to `tasks/todo.md` with checkable items.
+2. **Verify Plan:** Check in before starting implementation.
+3. **Track Progress:** Mark items complete as you go.
+4. **Explain Changes:** Provide a high-level summary at each step.
+5. **Document Results:** Add a review section to `tasks/todo.md`.
+6. **Capture Lessons:** Update `tasks/lessons.md` after corrections.
+
+## Core Principles
+- **Simplicity First:** Make every change as simple as possible. Minimize code impact.
+- **No Laziness:** Find root causes. Avoid temporary fixes. Maintain senior developer standards.
+- **Minimal Impact:** Only touch what is necessary. Avoid side effects and new bugs.
