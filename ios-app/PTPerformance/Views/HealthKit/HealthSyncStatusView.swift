@@ -410,25 +410,31 @@ struct HealthSyncStatusView: View {
                 .opacity((healthKitService.isLoading || isRefreshing) ? 0.6 : 1.0)
                 .accessibilityLabel(isRefreshing ? "Syncing health data" : "Sync health data now")
             } else {
-                Button {
-                    HapticFeedback.medium()
-                    Task {
-                        _ = try? await healthKitService.requestAuthorization()
+                if !HKHealthStore.isHealthDataAvailable() {
+                    Text("Apple Health is not available on this device.")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                } else {
+                    Button {
+                        HapticFeedback.medium()
+                        Task {
+                            _ = try? await healthKitService.requestAuthorization()
+                        }
+                    } label: {
+                        HStack(spacing: 6) {
+                            Image(systemName: "heart.circle")
+                            Text("Connect")
+                        }
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, Spacing.sm)
+                        .background(Color.modusTealAccent)
+                        .foregroundColor(.white)
+                        .cornerRadius(CornerRadius.sm)
                     }
-                } label: {
-                    HStack(spacing: 6) {
-                        Image(systemName: "heart.circle")
-                        Text("Connect")
-                    }
-                    .font(.subheadline)
-                    .fontWeight(.medium)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, Spacing.sm)
-                    .background(Color.modusTealAccent)
-                    .foregroundColor(.white)
-                    .cornerRadius(CornerRadius.sm)
+                    .accessibilityLabel("Connect to Apple Health")
                 }
-                .accessibilityLabel("Connect to Apple Health")
             }
         }
     }

@@ -1,11 +1,13 @@
 // DARK MODE: See ModeThemeModifier.swift for central theme control
 import SwiftUI
+import HealthKit
 
 /// ACP-901: Main Recovery Tracking Dashboard with Training Adjustment Recommendations
 /// Displays recovery score, training recommendations, quick-log buttons, weekly trends, and streak tracking
 struct RecoveryTrackingView: View {
     @StateObject private var viewModel = RecoveryTrackingViewModel()
     @Environment(\.colorScheme) private var colorScheme
+    @State private var healthKitError: String?
 
     var body: some View {
         NavigationStack {
@@ -160,7 +162,14 @@ struct RecoveryTrackingView: View {
                 Spacer()
             }
 
+            if let healthKitError {
+                Text(healthKitError)
+                    .font(.caption)
+                    .foregroundColor(.orange)
+            }
+
             Button {
+                healthKitError = nil
                 Task {
                     do {
                         _ = try await HealthKitService.shared.requestAuthorization()
@@ -168,6 +177,11 @@ struct RecoveryTrackingView: View {
                         await viewModel.loadData()
                     } catch {
                         DebugLogger.shared.error("RecoveryTrackingView", "HealthKit authorization failed: \(error)")
+                        if !HKHealthStore.isHealthDataAvailable() {
+                            healthKitError = "Apple Health is not available on this device."
+                        } else {
+                            healthKitError = "Could not connect to Apple Health. Please enable access in Settings > Privacy > Health."
+                        }
                     }
                 }
             } label: {
@@ -177,7 +191,7 @@ struct RecoveryTrackingView: View {
                     .foregroundColor(.white)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, Spacing.sm)
-                    .background(Color.pink)
+                    .background(HKHealthStore.isHealthDataAvailable() ? Color.pink : Color.gray)
                     .cornerRadius(CornerRadius.sm)
             }
         }
