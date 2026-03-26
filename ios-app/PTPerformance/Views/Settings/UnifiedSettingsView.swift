@@ -411,23 +411,8 @@ struct UnifiedSettingsView: View {
         var items: [SettingItem] = []
 
         // Profile & Subscription
-        // ACP-986: Navigate to SubscriptionSettingsView for tier management
-        items.append(SettingItem(
-            id: "subscription",
-            icon: subscriptionManager.currentTier.icon,
-            iconColor: subscriptionManager.isSubscribed ? .yellow : .gray,
-            title: "Subscription",
-            subtitle: subscriptionPlanText,
-            badge: subscriptionManager.isSubscribed ? subscriptionManager.currentTier.displayName.uppercased() : nil,
-            badgeColor: subscriptionManager.isSubscribed ? .modusCyan : nil,
-            type: .navigation(
-                AnyView(
-                    SubscriptionSettingsView()
-                        .environmentObject(storeKit)
-                        .environmentObject(subscriptionManager)
-                )
-            )
-        ))
+        // v1.0: Subscription row hidden — no IAP products configured yet
+        // Restore in v1.1 when App Store Connect IAP products are created
 
         // Therapist Linking (gated behind feature flag)
         if isTherapistLinkingEnabled {

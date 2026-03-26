@@ -80,8 +80,9 @@ class StoreKitService: ObservableObject {
         didSet { updateIsPremium() }
     }
 
+    // v1.0: All features free — no IAP products configured yet
     // Changed isPremium from computed to @Published for reliable SwiftUI updates
-    @Published private(set) var isPremium: Bool = false
+    @Published private(set) var isPremium: Bool = true
 
     // MARK: - ACP-986: Subscription Tier
 
@@ -142,26 +143,10 @@ class StoreKitService: ObservableObject {
 
     /// Update isPremium and currentTier whenever override or subscription status changes
     private func updateIsPremium() {
-        let oldValue = isPremium
-        let oldTier = currentTier
-
-        if let override = debugPremiumOverride {
-            isPremium = override
-            // ACP-986: Debug override sets tier to Pro by default
-            currentTier = override ? .pro : .free
-            logger.info("StoreKit", "Premium override: \(override) (was: \(oldValue))")
-        } else {
-            isPremium = subscriptionStatus == .active || subscriptionStatus == .gracePeriod
-            // ACP-986: Derive tier from purchased product IDs
-            currentTier = SubscriptionTier.from(purchasedProductIDs: purchasedProductIDs)
-            logger.info("StoreKit", "Premium from subscription: \(isPremium) (status: \(subscriptionStatus), was: \(oldValue))")
-        }
-
-        if oldTier != currentTier {
-            logger.info("StoreKit", "Tier changed: \(oldTier.displayName) -> \(currentTier.displayName)")
-            // ACP-986: Persist tier to UserDefaults as fallback cache
-            UserDefaults.standard.set(currentTier.rawValue, forKey: "cached_subscription_tier")
-        }
+        // v1.0: All features free — no IAP products configured yet
+        // Force premium for all users until subscriptions are set up in App Store Connect
+        isPremium = true
+        currentTier = .pro
     }
 
     var monthlyProduct: Product? {

@@ -14,7 +14,16 @@
 	<key>com.apple.developer.healthkit</key>
 	<true/>
 	<key>com.apple.developer.healthkit.access</key>
-	<array/>
+	<array>
+		<string>HKQuantityTypeIdentifierHeartRateVariabilitySDNN</string>
+		<string>HKQuantityTypeIdentifierRestingHeartRate</string>
+		<string>HKQuantityTypeIdentifierActiveEnergyBurned</string>
+		<string>HKQuantityTypeIdentifierAppleExerciseTime</string>
+		<string>HKQuantityTypeIdentifierStepCount</string>
+		<string>HKQuantityTypeIdentifierOxygenSaturation</string>
+		<string>HKCategoryTypeIdentifierSleepAnalysis</string>
+		<string>HKWorkoutTypeIdentifier</string>
+	</array>
 	<key>aps-environment</key>
 	<string>production</string>
 </dict>
