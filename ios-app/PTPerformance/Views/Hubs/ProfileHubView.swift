@@ -34,20 +34,8 @@ struct ProfileHubView: View {
 
     // MARK: - Computed Properties
 
-    /// Current subscription plan display text
-    private var subscriptionPlanText: String {
-        if storeKit.isPremium {
-            if storeKit.purchasedProductIDs.contains("com.getmodus.app.annual") {
-                return "Annual Premium"
-            } else if storeKit.purchasedProductIDs.contains("com.getmodus.app.monthly") {
-                return "Monthly Premium"
-            } else {
-                return "Premium Active"
-            }
-        } else {
-            return "Free Plan"
-        }
-    }
+    // v1.0: No subscriptions — all features free
+    private var subscriptionPlanText: String { "" }
 
     /// Therapist link status display text
     private var therapistLinkStatusText: String {
@@ -123,9 +111,7 @@ struct ProfileHubView: View {
                 supportSection
                     .staggeredAnimation(index: 7)
 
-                // Subscription Section
-                subscriptionSection
-                    .staggeredAnimation(index: 8)
+                // v1.0: Subscription section hidden — no IAP products
 
                 // Account Section
                 accountSection

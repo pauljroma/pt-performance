@@ -81,8 +81,8 @@ class StoreKitService: ObservableObject {
     }
 
     // v1.0: All features free — no IAP products configured yet
-    // Changed isPremium from computed to @Published for reliable SwiftUI updates
-    @Published private(set) var isPremium: Bool = true
+    // isPremium stays false; premium gates removed from UI directly
+    @Published private(set) var isPremium: Bool = false
 
     // MARK: - ACP-986: Subscription Tier
 
@@ -143,10 +143,7 @@ class StoreKitService: ObservableObject {
 
     /// Update isPremium and currentTier whenever override or subscription status changes
     private func updateIsPremium() {
-        // v1.0: All features free — no IAP products configured yet
-        // Force premium for all users until subscriptions are set up in App Store Connect
-        isPremium = true
-        currentTier = .pro
+        // v1.0: No IAP products — isPremium stays false, features unlocked via UI changes
     }
 
     var monthlyProduct: Product? {
