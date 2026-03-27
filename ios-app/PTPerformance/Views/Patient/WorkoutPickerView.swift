@@ -106,7 +106,7 @@ struct WorkoutPickerView: View {
                     Text(error)
                 }
             }
-            .alert("Premium Workout", isPresented: Binding(
+            .alert("Workout Unavailable", isPresented: Binding(
                 get: { premiumTemplate != nil },
                 set: { if !$0 { premiumTemplate = nil } }
             )) {
@@ -114,7 +114,7 @@ struct WorkoutPickerView: View {
                     premiumTemplate = nil
                 }
             } message: {
-                Text("This workout is part of our premium program library. Premium programs are coming soon!")
+                Text("This workout template is not yet available. Check back soon!")
             }
         }
     }
@@ -605,16 +605,8 @@ private struct WorkoutRecommendationCard: View {
 
                     Spacer()
 
-                    if isPremium {
-                        Label("Premium", systemImage: "lock.fill")
-                            .font(.caption)
-                            .fontWeight(.semibold)
-                            .padding(.horizontal, Spacing.xs)
-                            .padding(.vertical, Spacing.xxs)
-                            .background(Color.purple.opacity(0.2))
-                            .foregroundColor(.purple)
-                            .cornerRadius(CornerRadius.sm)
-                    } else if let duration = template.durationDisplay {
+                    // v1.0: Premium badge removed — all workouts free
+                    if let duration = template.durationDisplay {
                         Text(duration)
                             .font(.caption)
                             .padding(.horizontal, Spacing.xs)

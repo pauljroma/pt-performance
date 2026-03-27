@@ -235,51 +235,9 @@ struct ContentHubView: View {
         .padding(.vertical, Spacing.xxl)
     }
 
-    // MARK: - Premium Upsell
-
+    // v1.0: All features free — premium upsell removed
     private var premiumUpsell: some View {
-        let lockedCount = service.lockedArticleCount(isPremium: storeKit.isPremium)
-
-        return Group {
-            if lockedCount > 0 {
-                VStack(spacing: Spacing.sm) {
-                    Image(systemName: "lock.fill")
-                        .font(.title2)
-                        .foregroundColor(.modusCyan)
-
-                    Text("Unlock \(lockedCount) More Article\(lockedCount == 1 ? "" : "s")")
-                        .font(.subheadline)
-                        .fontWeight(.semibold)
-                        .foregroundColor(.primary)
-
-                    Text("Upgrade to Pro for full access to all training content")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                        .multilineTextAlignment(.center)
-
-                    Button {
-                        HapticFeedback.medium()
-                        showingPaywall = true
-                    } label: {
-                        Text("Upgrade to Pro")
-                            .font(.caption)
-                            .fontWeight(.semibold)
-                            .foregroundColor(.white)
-                            .padding(.horizontal, Spacing.lg)
-                            .padding(.vertical, Spacing.xs)
-                            .background(Color.modusCyan)
-                            .cornerRadius(CornerRadius.lg)
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityLabel("Upgrade to Pro for full content access")
-                }
-                .padding(Spacing.md)
-                .frame(maxWidth: .infinity)
-                .background(Color(.systemGray6))
-                .cornerRadius(CornerRadius.md)
-                .padding(.horizontal, Spacing.md)
-            }
-        }
+        EmptyView()
     }
 }
 
@@ -335,20 +293,7 @@ struct ArticleRowView: View {
 
                     Spacer()
 
-                    // Premium badge
-                    if article.isPremium {
-                        HStack(spacing: Spacing.xxs) {
-                            Image(systemName: isLocked ? "lock.fill" : "star.fill")
-                                .font(.system(size: 8))
-                            Text("PRO")
-                                .font(.system(size: 9, weight: .bold))
-                        }
-                        .foregroundColor(isLocked ? .secondary : .modusCyan)
-                        .padding(.horizontal, Spacing.xxs)
-                        .padding(.vertical, Spacing.xxs)
-                        .background(isLocked ? Color(.systemGray5) : Color.modusCyan.opacity(0.1))
-                        .cornerRadius(CornerRadius.xs)
-                    }
+                    // v1.0: Premium badge removed — all content free
                 }
             }
         }

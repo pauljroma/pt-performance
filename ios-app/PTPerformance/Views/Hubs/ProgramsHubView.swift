@@ -133,17 +133,8 @@ struct ProgramsHubView: View {
     @ViewBuilder
     private var historyContent: some View {
         if let patientId = supabase.userId {
-            // Premium-gated history view
-            if storeKit.isPremium {
-                HistoryView(patientId: patientId)
-            } else {
-                PremiumLockedView(
-                    feature: "History",
-                    icon: "clock.arrow.circlepath",
-                    description: "Track all your sessions and see your workout history"
-                )
-                .environmentObject(storeKit)
-            }
+            // v1.0: All features free
+            HistoryView(patientId: patientId)
         } else {
             // No patient ID available
             EmptyStateView(
@@ -161,17 +152,8 @@ struct ProgramsHubView: View {
     private var trendsContent: some View {
         if let patientIdString = supabase.userId,
            let patientId = UUID(uuidString: patientIdString) {
-            // Premium-gated trends view
-            if storeKit.isPremium {
-                HistoricalTrendsView(patientId: patientId)
-            } else {
-                PremiumLockedView(
-                    feature: "Trends",
-                    icon: "chart.line.uptrend.xyaxis",
-                    description: "Analyze your progress trends over time with advanced analytics"
-                )
-                .environmentObject(storeKit)
-            }
+            // v1.0: All features free
+            HistoricalTrendsView(patientId: patientId)
         } else {
             // No patient ID available
             EmptyStateView(

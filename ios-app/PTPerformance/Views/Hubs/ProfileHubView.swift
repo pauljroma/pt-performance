@@ -842,33 +842,18 @@ struct ProfileHubView: View {
     // MARK: - Premium Badge
 
     @ViewBuilder
+    // v1.0: All features free — no premium badge needed
     private var premiumBadgeIfNeeded: some View {
-        if !storeKit.isPremium {
-            Text("PRO")
-                .font(.caption2)
-                .fontWeight(.bold)
-                .padding(.horizontal, 6)
-                .padding(.vertical, 2)
-                .background(Color.yellow.opacity(0.2))
-                .foregroundColor(.orange)
-                .cornerRadius(CornerRadius.xs)
-                .accessibilityHidden(true)
-        }
+        EmptyView()
     }
 
-    // MARK: - Premium Gated View Helper
-
+    // v1.0: All features free — always show the premium view
     @ViewBuilder
     private func premiumGatedView<Premium: View, Locked: View>(
         @ViewBuilder premium: () -> Premium,
         @ViewBuilder locked: () -> Locked
     ) -> some View {
-        if storeKit.isPremium {
-            premium()
-        } else {
-            locked()
-                .environmentObject(storeKit)
-        }
+        premium()
     }
 
     // MARK: - Logout

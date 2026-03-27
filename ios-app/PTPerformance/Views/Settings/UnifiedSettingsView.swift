@@ -632,20 +632,15 @@ struct UnifiedSettingsView: View {
     private var supportSection: SettingsSection {
         var items: [SettingItem] = []
 
-        // Help & Learn
+        // Help & Learn — v1.0: all features free, no PRO badge
         items.append(SettingItem(
             id: "help",
             icon: "book.fill",
             iconColor: .modusCyan,
             title: "Help & Learn",
             subtitle: "Guides and tutorials",
-            badge: storeKit.isPremium ? nil : "PRO",
-            badgeColor: .orange,
             type: .navigation(
-                AnyView(premiumGatedView(
-                    premium: { HelpView() },
-                    locked: { PremiumLockedView(feature: "Help", icon: "book.fill", description: "Access comprehensive guides and tutorials") }
-                ))
+                AnyView(HelpView())
             )
         ))
 
