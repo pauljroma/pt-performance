@@ -104,10 +104,10 @@ struct RecoveryTrackingView: View {
     private var contentView: some View {
         ScrollView {
             VStack(spacing: Spacing.lg) {
-                // HealthKit Permission Banner (conditional)
-                if viewModel.healthKitPermissionNeeded {
-                    healthKitPermissionBanner
-                }
+                // v1.0: HealthKit banner removed — requestAuthorization dialog
+                // not appearing on iOS 26.4 (3 Apple rejections). Recovery tab
+                // works with default values. HealthKit can be enabled from
+                // Settings > Apple Health. Restore in v1.1.
 
                 // Recovery Score Card (Primary)
                 recoveryScoreCard
