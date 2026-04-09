@@ -203,7 +203,7 @@ extension PaywallVariant {
 
     /// Default variant for the onboarding trigger
     static let onboardingDefault = PaywallVariant(
-        title: "Welcome to Modus",
+        title: "Welcome to Korza",
         subtitle: "Start your free trial and unlock your full potential",
         features: defaultFeatures,
         ctaText: "Start Free Trial",

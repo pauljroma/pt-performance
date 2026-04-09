@@ -31,7 +31,7 @@ struct HealthKitAuthorizationView: View {
                         .font(.title.bold())
 
                     // Description
-                    Text("Modus can read health data from your Apple Watch to automatically fill in your daily readiness check-in.")
+                    Text("Korza Training can read health data from your Apple Watch to automatically fill in your daily readiness check-in.")
                         .font(.body)
                         .foregroundColor(.secondary)
                         .multilineTextAlignment(.center)
@@ -174,7 +174,7 @@ struct HealthKitAuthorizationView: View {
             } else {
                 // User may have denied permissions or has no data
                 // Still dismiss but they can try again from settings
-                errorMessage = "HealthKit access was not fully granted. You can enable it in Settings > Privacy > Health > Modus."
+                errorMessage = "HealthKit access was not fully granted. You can enable it in Settings > Privacy > Health > Korza Training."
                 showError = true
             }
         } catch {

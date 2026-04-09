@@ -127,11 +127,11 @@ class HelpContentLoader: ObservableObject {
             // MARK: Getting Started
             HelpArticle(
                 id: UUID(uuidString: "a0000000-0000-0000-0000-000000000001") ?? UUID(),
-                title: "Welcome to Modus",
+                title: "Welcome to Korza Training",
                 content: """
-                # Welcome to Modus
+                # Welcome to Korza Training
 
-                Modus helps you train smarter and recover faster. Whether you're rehabbing an injury, building strength, or chasing performance goals, the app keeps you on track.
+                Korza Training helps you train smarter and recover faster. Whether you're rehabbing an injury, building strength, or chasing performance goals, the app keeps you on track.
 
                 ## What You Can Do
 
@@ -160,7 +160,7 @@ class HelpContentLoader: ObservableObject {
 
                 ## Quick Setup
 
-                When you first open Modus, you'll go through a short setup:
+                When you first open Korza, you'll go through a short setup:
 
                 1. **Choose Your Mode** — Rehab, Strength, or Performance. This customizes your dashboard
                 2. **Pick Your Goals** — Select up to 3 focus areas to track
@@ -280,7 +280,7 @@ class HelpContentLoader: ObservableObject {
                 content: """
                 # Exercise Substitutions
 
-                Can't do a prescribed exercise? Modus can suggest alternatives.
+                Can't do a prescribed exercise? Korza can suggest alternatives.
 
                 ## When to Substitute
 
@@ -341,7 +341,7 @@ class HelpContentLoader: ObservableObject {
                 content: """
                 # Weekly Summaries
 
-                Every week, Modus generates a summary of your training.
+                Every week, Korza generates a summary of your training.
 
                 ## What's Included
 

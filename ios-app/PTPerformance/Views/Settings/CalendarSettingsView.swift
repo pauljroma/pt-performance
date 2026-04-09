@@ -218,7 +218,7 @@ struct CalendarSettingsView: View {
            let calendar = availableCalendars.first(where: { $0.id == targetId }) {
             return calendar.title
         }
-        return "Modus (Default)"
+        return "Korza (Default)"
     }
 
     // MARK: - Reminder Section

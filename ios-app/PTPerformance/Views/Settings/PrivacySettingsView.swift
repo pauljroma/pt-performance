@@ -200,7 +200,7 @@ struct PrivacySettingsView: View {
     private func categoryFooterText(_ category: PrivacyConsentCategory) -> some View {
         switch category {
         case .dataSharing:
-            Text("Controls what personal data is shared with the Modus platform and your care team. Disabling sharing may limit some features.")
+            Text("Controls what personal data is shared with the Korza platform and your care team. Disabling sharing may limit some features.")
         case .analyticsPersonalization:
             Text("Analytics data is anonymized and never sold to third parties. AI personalization uses your data only within the app.")
         case .marketing:

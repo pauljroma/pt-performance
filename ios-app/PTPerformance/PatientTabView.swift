@@ -476,7 +476,7 @@ struct PatientTabView: View {
         UITabBar.appearance().standardAppearance = appearance
         UITabBar.appearance().scrollEdgeAppearance = appearance
 
-        // Configure UINavigationBar with Modus branding
+        // Configure UINavigationBar with Korza branding
         let navAppearance = UINavigationBarAppearance()
         navAppearance.configureWithDefaultBackground()
         UINavigationBar.appearance().standardAppearance = navAppearance

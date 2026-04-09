@@ -271,7 +271,7 @@ struct HealthKitSettingsView: View {
                 } header: {
                     Text("Currently Shared Data")
                 } footer: {
-                    Text("To change what Modus can access, go to Settings > Privacy & Security > Health > Modus on your device.")
+                    Text("To change what Korza Training can access, go to Settings > Privacy & Security > Health > Korza Training on your device.")
                 }
             }
 
@@ -304,7 +304,7 @@ struct HealthKitSettingsView: View {
             } header: {
                 Text("Bidirectional Sync")
             } footer: {
-                Text("Modus imports your health data to personalize recovery, and exports completed workouts to Apple Health.")
+                Text("Korza Training imports your health data to personalize recovery, and exports completed workouts to Apple Health.")
             }
 
             // How It's Used Section

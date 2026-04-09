@@ -395,7 +395,7 @@ struct ShareCardView: View {
             Image(systemName: "bolt.circle.fill")
                 .font(.caption2)
                 .foregroundColor(.white.opacity(0.3))
-            Text("Powered by Modus")
+            Text("Powered by Korza")
                 .font(.caption2)
                 .foregroundColor(.white.opacity(0.3))
         }

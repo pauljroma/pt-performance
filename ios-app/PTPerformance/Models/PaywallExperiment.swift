@@ -437,7 +437,7 @@ extension PaywallExperimentVariant {
         weight: 25,
         paywallVariant: PaywallVariant(
             title: "Join 50,000+ Athletes",
-            subtitle: "See why top performers choose Modus Premium",
+            subtitle: "See why top performers choose Korza",
             features: PaywallVariant.defaultFeatures,
             ctaText: "Join Premium",
             layout: .standard,

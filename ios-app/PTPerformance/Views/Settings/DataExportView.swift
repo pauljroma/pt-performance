@@ -81,7 +81,7 @@ struct DataExportView: View {
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
 
-                Text("This export includes all data stored in your Modus account. The file can be opened with any text editor or data analysis tool.")
+                Text("This export includes all data stored in your Korza account. The file can be opened with any text editor or data analysis tool.")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
             }

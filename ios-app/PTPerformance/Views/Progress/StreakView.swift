@@ -484,7 +484,7 @@ struct StreakView: View {
 
     private var shareButton: some View {
         ShareLink(
-            item: "I'm on a \(streakService.currentStreak)-day training streak with Modus Performance! #ConsistencyWins"
+            item: "I'm on a \(streakService.currentStreak)-day training streak with Korza Training! #ConsistencyWins"
         ) {
             HStack {
                 Image(systemName: "square.and.arrow.up")

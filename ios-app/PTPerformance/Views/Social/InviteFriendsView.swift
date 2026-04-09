@@ -98,7 +98,7 @@ struct InviteFriendsView: View {
 
     private var inviteMessage: String {
         let code = referralService.referralCode.isEmpty ? "" : " Use my referral code \(referralService.referralCode) to get started."
-        return "Hey! I've been using Modus PT for my training and it's been awesome.\(code) Check it out: https://app.moduspt.com/invite/\(referralService.referralCode)"
+        return "Hey! I've been using Korza Training for my training and it's been awesome.\(code) Check it out: https://app.moduspt.com/invite/\(referralService.referralCode)"
     }
 
     // MARK: - Body
@@ -281,7 +281,7 @@ struct InviteFriendsView: View {
     private var contactsPermissionView: some View {
         EmptyStateView(
             title: "Contacts Access Required",
-            message: "Allow Modus to access your contacts to invite friends. You can also share your referral link directly.",
+            message: "Allow Korza to access your contacts to invite friends. You can also share your referral link directly.",
             icon: "person.crop.circle.badge.exclamationmark",
             iconColor: .modusCyan,
             action: EmptyStateView.EmptyStateAction(
@@ -580,12 +580,12 @@ struct InviteFriendsView: View {
             }
         case .email:
             if let email = contact.emailAddress,
-               let url = URL(string: "mailto:\(email)?subject=Join%20Modus%20PT&body=\(inviteMessage.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")") {
+               let url = URL(string: "mailto:\(email)?subject=Join%20Korza&body=\(inviteMessage.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")") {
                 UIApplication.shared.open(url)
             }
         case .shareLink:
             let content = ShareContent(
-                title: "Join Modus PT",
+                title: "Join Korza Training",
                 text: inviteMessage,
                 image: nil,
                 url: referralService.generateReferralLink()

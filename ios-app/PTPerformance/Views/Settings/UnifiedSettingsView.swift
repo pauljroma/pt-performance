@@ -700,7 +700,7 @@ struct UnifiedSettingsView: View {
             icon: "cross.case.fill",
             iconColor: .red,
             title: "Medical Disclaimer",
-            subtitle: "Modus is not a medical device",
+            subtitle: "Korza Training is not a medical device",
             type: .navigation(
                 AnyView(MedicalDisclaimerView())
             )
@@ -1057,13 +1057,13 @@ struct AboutView: View {
             }
 
             Section {
-                Text("Modus is not a medical device and does not provide medical advice. Always consult your healthcare provider before starting any exercise program. Stop exercising immediately if you feel pain, dizziness, or shortness of breath.")
+                Text("Korza Training is not a medical device and does not provide medical advice. Always consult your healthcare provider before starting any exercise program. Stop exercising immediately if you feel pain, dizziness, or shortness of breath.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
 
             Section {
-                Text("© 2026 Modus. All rights reserved.")
+                Text("© 2026 Korza Training. All rights reserved.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, alignment: .center)
@@ -1096,7 +1096,7 @@ struct MedicalDisclaimerView: View {
             }
 
             Section {
-                Text("Modus is not a medical device and does not provide medical advice. Always consult your healthcare provider before starting any exercise program. Stop exercising immediately if you feel pain, dizziness, or shortness of breath.")
+                Text("Korza Training is not a medical device and does not provide medical advice. Always consult your healthcare provider before starting any exercise program. Stop exercising immediately if you feel pain, dizziness, or shortness of breath.")
                     .font(.body)
                     .foregroundStyle(.primary)
                     .padding(.vertical, Spacing.xs)

@@ -655,8 +655,8 @@ class VisitSummaryViewModel: ObservableObject {
     func generatePDF() async throws -> URL {
         // Create PDF document
         let pdfMetaData = [
-            kCGPDFContextCreator: "Modus",
-            kCGPDFContextAuthor: "Modus App",
+            kCGPDFContextCreator: "Korza Training",
+            kCGPDFContextAuthor: "Korza Training",
             kCGPDFContextTitle: "Visit Summary - \(patientName)"
         ]
 

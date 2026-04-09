@@ -396,7 +396,7 @@ private struct ComparisonExportView: View {
                 .cornerRadius(8)
             }
 
-            Text("Modus")
+            Text("Korza")
                 .font(.caption2)
                 .foregroundColor(.secondary)
         }

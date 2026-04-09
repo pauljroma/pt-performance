@@ -41,7 +41,7 @@ enum AchievementShareHelper {
         }
 
         return """
-        I just unlocked the "\(achievement.title)" achievement in Modus! 🏆
+        I just unlocked the "\(achievement.title)" achievement in Korza Training! 🏆
 
         \(achievement.description)
 
@@ -49,7 +49,7 @@ enum AchievementShareHelper {
         Tier: \(achievement.tier.displayName)
         Rarity: \(achievement.rarity.displayName)
 
-        #Modus #FitnessGoals #Achievement
+        #KorzaTraining #FitnessGoals #Achievement
         """
     }
 }

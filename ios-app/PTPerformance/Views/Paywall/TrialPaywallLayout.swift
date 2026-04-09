@@ -108,7 +108,7 @@ struct TrialPaywallLayout: View {
                 .multilineTextAlignment(.center)
 
             Text(variant.subtitle.isEmpty
-                ? "Experience everything Modus Premium has to offer"
+                ? "Experience everything Korza has to offer"
                 : variant.subtitle)
                 .font(.body)
                 .foregroundStyle(.secondary)

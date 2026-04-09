@@ -16,7 +16,7 @@ import SwiftUI
 /// Inline review prompt that appears after positive user moments.
 ///
 /// Flow:
-/// 1. "Enjoying Modus?" with star rating selector
+/// 1. "Enjoying Korza?" with star rating selector
 /// 2. If 4-5 stars → triggers SKStoreReviewController system dialog
 /// 3. If 1-3 stars → shows in-app feedback form
 /// 4. "Not now" dismisses with cooldown, "Don't ask again" permanently dismisses
@@ -64,7 +64,7 @@ struct AppStoreReviewPromptView: View {
                 .foregroundStyle(Color.modusCyan)
                 .accessibilityHidden(true)
 
-            Text("Enjoying Modus?")
+            Text("Enjoying Korza?")
                 .font(.title3)
                 .fontWeight(.semibold)
                 .foregroundStyle(.primary)
@@ -118,7 +118,7 @@ struct AppStoreReviewPromptView: View {
             }
         }
         .accessibilityElement(children: .contain)
-        .accessibilityLabel("Rate Modus from 1 to 5 stars")
+        .accessibilityLabel("Rate Korza from 1 to 5 stars")
     }
 
     // MARK: - Submit Button
@@ -176,7 +176,7 @@ struct AppStoreReviewPromptView: View {
                 .font(.title3)
                 .fontWeight(.semibold)
 
-            Text("We'd love to hear what would make Modus better for you.")
+            Text("We'd love to hear what would make Korza better for you.")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
@@ -219,7 +219,7 @@ struct AppStoreReviewPromptView: View {
                         )
                 }
                 .disabled(feedbackText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-                .accessibilityHint("Send your feedback to the Modus team")
+                .accessibilityHint("Send your feedback to the Korza team")
             }
         }
     }

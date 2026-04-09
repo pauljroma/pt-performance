@@ -114,7 +114,7 @@ struct DataConsentView: View {
                 .fontWeight(.bold)
                 .accessibilityAddTraits(.isHeader)
 
-            Text("Choose which external sources can share data with Modus. You can change these settings at any time.")
+            Text("Choose which external sources can share data with Korza Training. You can change these settings at any time.")
                 .font(.subheadline)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
